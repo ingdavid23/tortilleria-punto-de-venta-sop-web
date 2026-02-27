@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Punto de Venta Multi-Sucursal - Tortillería</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
   
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -28,7 +28,6 @@
       #ticket-modal { position: absolute; left: 0; top: 0; width: 100%; }
     }
     
-    /* Scrollbars elegantes para PC y ocultos en móvil para el menú */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #f1f1f1; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -100,6 +99,7 @@
     <div class="max-w-7xl mx-auto px-2 sm:px-4">
      <div class="flex gap-1 sm:gap-2 overflow-x-auto no-scrollbar py-1 sm:py-0">
         <button onclick="switchTab('punto-venta')" class="tab-btn active px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-amber-500 text-amber-600 text-sm sm:text-base hover:bg-amber-50 transition-all"> 🛒 Punto de Venta </button> 
+        <button onclick="switchTab('almacen')" class="tab-btn px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-transparent text-gray-600 text-sm sm:text-base hover:bg-gray-50 transition-all"> 🌾 Almacén </button> 
         <button onclick="switchTab('reporte-diario')" class="tab-btn px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-transparent text-gray-600 text-sm sm:text-base hover:bg-gray-50 transition-all"> 📊 Diario </button> 
         <button onclick="switchTab('reporte-semanal')" class="tab-btn px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-transparent text-gray-600 text-sm sm:text-base hover:bg-gray-50 transition-all"> 📈 Semanal </button> 
         <button onclick="switchTab('estadisticas')" class="tab-btn px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-transparent text-gray-600 text-sm sm:text-base hover:bg-gray-50 transition-all"> 📉 Estadísticas </button>
@@ -133,13 +133,13 @@
         </div>
 
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-            <button onclick="quickSaleByMoney(5)" class="btn-action bg-white/20 hover:bg-white/30 backdrop-blur rounded-xl p-3 sm:p-4 text-center transition-all"> <p class="text-xl sm:text-2xl font-bold">$5</p><p id="quick-5" class="text-xs sm:text-sm opacity-80">0g</p></button> 
-            <button onclick="quickSaleByMoney(10)" class="btn-action bg-white/20 hover:bg-white/30 backdrop-blur rounded-xl p-3 sm:p-4 text-center transition-all"> <p class="text-xl sm:text-2xl font-bold">$10</p><p id="quick-10" class="text-xs sm:text-sm opacity-80">0g</p></button> 
-            <button onclick="quickSaleByMoney(20)" class="btn-action bg-white/20 hover:bg-white/30 backdrop-blur rounded-xl p-3 sm:p-4 text-center transition-all"> <p class="text-xl sm:text-2xl font-bold">$20</p><p id="quick-20" class="text-xs sm:text-sm opacity-80">0g</p></button> 
-            <button onclick="quickSaleByMoney(50)" class="btn-action bg-white/20 hover:bg-white/30 backdrop-blur rounded-xl p-3 sm:p-4 text-center transition-all"> <p class="text-xl sm:text-2xl font-bold">$50</p><p id="quick-50" class="text-xs sm:text-sm opacity-80">0g</p></button>
+            <button onclick="quickSaleByMoney(5)" class="btn-action bg-white/20 hover:bg-white/30 backdrop-blur rounded-xl p-3 sm:p-4 text-center transition-all"> <p class="text-xl sm:text-2xl font-bold">$5</p><p id="quick-5" class="text-xs sm:text-sm opacity-80">-</p></button> 
+            <button onclick="quickSaleByMoney(10)" class="btn-action bg-white/20 hover:bg-white/30 backdrop-blur rounded-xl p-3 sm:p-4 text-center transition-all"> <p class="text-xl sm:text-2xl font-bold">$10</p><p id="quick-10" class="text-xs sm:text-sm opacity-80">-</p></button> 
+            <button onclick="quickSaleByMoney(20)" class="btn-action bg-white/20 hover:bg-white/30 backdrop-blur rounded-xl p-3 sm:p-4 text-center transition-all"> <p class="text-xl sm:text-2xl font-bold">$20</p><p id="quick-20" class="text-xs sm:text-sm opacity-80">-</p></button> 
+            <button onclick="quickSaleByMoney(50)" class="btn-action bg-white/20 hover:bg-white/30 backdrop-blur rounded-xl p-3 sm:p-4 text-center transition-all"> <p class="text-xl sm:text-2xl font-bold">$50</p><p id="quick-50" class="text-xs sm:text-sm opacity-80">-</p></button>
         </div>
         <div class="mt-4 flex flex-col sm:flex-row gap-2 sm:gap-3">
-            <input type="number" id="custom-money" placeholder="Cantidad personalizada" class="flex-1 bg-white/20 backdrop-blur rounded-xl px-4 py-3 placeholder-white/60 text-white border-2 border-white/30 focus:border-white focus:outline-none text-sm sm:text-base"> 
+            <input type="number" id="custom-money" placeholder="Monto a cobrar" class="flex-1 bg-white/20 backdrop-blur rounded-xl px-4 py-3 placeholder-white/60 text-white border-2 border-white/30 focus:border-white focus:outline-none text-sm sm:text-base"> 
             <button onclick="quickSaleCustomMoney()" class="btn-action bg-white text-green-600 px-6 py-3 rounded-xl font-bold hover:bg-green-50 transition-all text-sm sm:text-base"> Agregar </button>
         </div>
        </section>
@@ -184,6 +184,51 @@
       </div>
       
      </div>
+    </div>
+
+    <div id="tab-almacen" class="tab-content hidden">
+        <div class="flex flex-col gap-4 sm:gap-6">
+            <section id="almacen-admin-panel" class="bg-white rounded-2xl shadow-xl p-4 sm:p-6 hidden">
+                <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <span class="text-2xl">📦</span> Enviar Harina a Sucursal
+                </h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div class="lg:col-span-1">
+                        <label class="text-xs sm:text-sm font-semibold text-gray-600 block mb-1">Destino</label>
+                        <select id="inv-branch" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-amber-500 focus:outline-none bg-white">
+                        </select>
+                    </div>
+                    <div class="lg:col-span-1">
+                        <label class="text-xs sm:text-sm font-semibold text-gray-600 block mb-1">Maseca Premium</label>
+                        <input type="number" id="inv-maseca" min="0" placeholder="Cant. bultos" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-amber-500 focus:outline-none">
+                    </div>
+                    <div class="lg:col-span-1">
+                        <label class="text-xs sm:text-sm font-semibold text-gray-600 block mb-1">Harimasa Blanca</label>
+                        <input type="number" id="inv-blanca" min="0" placeholder="Cant. bultos" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-amber-500 focus:outline-none">
+                    </div>
+                    <div class="lg:col-span-1">
+                        <label class="text-xs sm:text-sm font-semibold text-gray-600 block mb-1">Harimasa Amarilla</label>
+                        <input type="number" id="inv-amarilla" min="0" placeholder="Cant. bultos" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-amber-500 focus:outline-none">
+                    </div>
+                    <div class="lg:col-span-1 flex items-end">
+                        <button onclick="enviarHarina()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 rounded-xl transition-all shadow-md h-[42px]">
+                            Enviar Bultos
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="bg-white rounded-2xl shadow-xl p-4 sm:p-6">
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2">
+                        <span class="text-2xl">📋</span> Inventario Actual
+                    </h2>
+                    <p class="text-sm text-gray-500">* Cada bulto rinde 41 Kg de tortilla. Los productos "Por Pieza" no restan inventario.</p>
+                </div>
+                <div id="almacen-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                </div>
+            </section>
+        </div>
     </div>
 
     <div id="tab-reporte-diario" class="tab-content hidden">
@@ -285,8 +330,22 @@
         <div class="bg-gradient-to-r from-amber-500 to-orange-500 text-white p-3 sm:p-4 rounded-t-2xl"><h3 id="modal-title" class="text-lg sm:text-xl font-bold">Nuevo Producto</h3></div>
         <form id="product-form" class="p-4 sm:p-6 space-y-3 sm:space-y-4" onsubmit="saveProduct(event)">
          <input type="hidden" id="product-id">
+         
+         <div>
+             <label class="text-xs sm:text-sm text-gray-600 font-semibold">Tipo de Venta</label> 
+             <select id="product-sale-type" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 sm:px-4 sm:py-2 mt-1 focus:border-amber-500 focus:outline-none bg-white" onchange="updatePriceLabel()"> 
+                 <option value="kg">Por Kilo (Ej. Tortillas)</option> 
+                 <option value="pieza">Por Pieza (Ej. Queso, Salsa)</option> 
+             </select>
+         </div>
+
          <div><label class="text-xs sm:text-sm text-gray-600 font-semibold">Nombre</label> <input type="text" id="product-name" required class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 sm:px-4 sm:py-2 mt-1 text-sm sm:text-base focus:border-amber-500 focus:outline-none"></div>
-         <div><label class="text-xs sm:text-sm text-gray-600 font-semibold">Precio por Kg</label> <input type="number" step="0.01" id="product-price" required class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 sm:px-4 sm:py-2 mt-1 text-sm sm:text-base focus:border-amber-500 focus:outline-none"></div>
+         
+         <div>
+             <label id="label-product-price" class="text-xs sm:text-sm text-gray-600 font-semibold">Precio por Kg</label> 
+             <input type="number" step="0.01" id="product-price" required class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 sm:px-4 sm:py-2 mt-1 text-sm sm:text-base focus:border-amber-500 focus:outline-none">
+         </div>
+         
          <div><label class="text-xs sm:text-sm text-gray-600 font-semibold">Emoji/Ícono</label> <input type="text" id="product-emoji" maxlength="2" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 sm:px-4 sm:py-2 mt-1 focus:border-amber-500 focus:outline-none text-xl sm:text-2xl text-center" value="🫓"></div>
          <div><label class="text-xs sm:text-sm text-gray-600 font-semibold">Color de tarjeta</label> 
           <select id="product-color" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 sm:px-4 sm:py-2 mt-1 text-sm sm:text-base focus:border-amber-500 focus:outline-none bg-white"> 
@@ -327,21 +386,31 @@
 
   <div id="quantity-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm animate-slide">
-        <div class="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-3 sm:p-4 rounded-t-2xl"><h3 id="quantity-modal-title" class="text-lg sm:text-xl font-bold">Agregar al Carrito</h3></div>
+        <div class="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-3 sm:p-4 rounded-t-2xl"><h3 class="text-lg sm:text-xl font-bold">Agregar al Carrito</h3></div>
         <div class="p-4 sm:p-6 space-y-3 sm:space-y-4">
          <input type="hidden" id="selected-product-id">
-         <div class="text-center mb-2 sm:mb-4"><p class="text-sm sm:text-base text-gray-600">Precio: <span id="selected-product-price" class="font-bold text-lg sm:text-xl">$0.00</span>/Kg</p></div>
-         
-         <div>
-             <label class="text-xs sm:text-sm text-gray-600 font-semibold block mb-1">Gramos a vender:</label> 
-             <input type="number" id="quantity-grams" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 sm:px-4 sm:py-3 text-lg sm:text-xl text-center focus:border-blue-500 focus:outline-none" placeholder="500" oninput="updateQuantityPreview()">
+         <div class="text-center mb-2 sm:mb-4">
+             <h4 id="quantity-modal-title" class="text-lg font-bold text-gray-800">Producto</h4>
+             <p class="text-sm sm:text-base text-gray-600">Precio: <span id="selected-product-price" class="font-bold text-lg sm:text-xl">$0.00</span></p>
          </div>
          
-         <div class="grid grid-cols-4 gap-1 sm:gap-2">
-          <button type="button" onclick="setGrams(250)" class="bg-gray-100 hover:bg-gray-200 py-2 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold transition-colors">250g</button> 
-          <button type="button" onclick="setGrams(500)" class="bg-gray-100 hover:bg-gray-200 py-2 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold transition-colors">500g</button> 
-          <button type="button" onclick="setGrams(1000)" class="bg-gray-100 hover:bg-gray-200 py-2 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold transition-colors">1Kg</button> 
-          <button type="button" onclick="setGrams(2000)" class="bg-gray-100 hover:bg-gray-200 py-2 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold transition-colors">2Kg</button>
+         <div>
+             <label id="quantity-label" class="text-xs sm:text-sm text-gray-600 font-semibold block mb-1">Gramos a vender:</label> 
+             <input type="number" id="quantity-input" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 sm:px-4 sm:py-3 text-lg sm:text-xl text-center focus:border-blue-500 focus:outline-none" placeholder="500" oninput="updateQuantityPreview()">
+         </div>
+         
+         <div id="btn-group-kg" class="grid grid-cols-4 gap-1 sm:gap-2">
+          <button type="button" onclick="setQty(250)" class="bg-gray-100 hover:bg-gray-200 py-2 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold transition-colors">250g</button> 
+          <button type="button" onclick="setQty(500)" class="bg-gray-100 hover:bg-gray-200 py-2 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold transition-colors">500g</button> 
+          <button type="button" onclick="setQty(1000)" class="bg-gray-100 hover:bg-gray-200 py-2 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold transition-colors">1Kg</button> 
+          <button type="button" onclick="setQty(2000)" class="bg-gray-100 hover:bg-gray-200 py-2 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold transition-colors">2Kg</button>
+         </div>
+
+         <div id="btn-group-pz" class="grid grid-cols-4 gap-1 sm:gap-2 hidden">
+          <button type="button" onclick="setQty(1)" class="bg-gray-100 hover:bg-gray-200 py-2 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold transition-colors">+1 Pz</button> 
+          <button type="button" onclick="setQty(2)" class="bg-gray-100 hover:bg-gray-200 py-2 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold transition-colors">+2 Pz</button> 
+          <button type="button" onclick="setQty(3)" class="bg-gray-100 hover:bg-gray-200 py-2 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold transition-colors">+3 Pz</button> 
+          <button type="button" onclick="setQty(5)" class="bg-gray-100 hover:bg-gray-200 py-2 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold transition-colors">+5 Pz</button>
          </div>
          
          <div class="bg-blue-50 rounded-xl p-3 sm:p-4 text-center mt-2">
@@ -414,12 +483,12 @@
     // ============ ESTADO GLOBAL ============
     let state = {
       businessName: 'Tortillería El Maíz Dorado',
-      defaultPricePerKg: 22,
       products: [],
       cart: [],
       salesHistory: [],
       weeklyHistory: [],
-      users: []
+      users: [],
+      inventory: {} 
     };
 
     let currentUser = null;
@@ -434,7 +503,7 @@
     async function saveState() {
       try {
         const dataToSave = { ...state };
-        delete dataToSave.cart; // Nunca subir el carrito actual local
+        delete dataToSave.cart; 
         await db.collection('datos_sistema').doc('punto_de_venta').set(dataToSave);
       } catch (error) { showToast("Error al guardar en la nube", "error"); }
     }
@@ -446,12 +515,21 @@
           const parsed = doc.data();
           state = { ...state, ...parsed };
           
+          if(!state.inventory) state.inventory = {};
+
+          // Normalizar productos antiguos
+          if(state.products) {
+              state.products = state.products.map(p => ({
+                  ...p,
+                  price: p.price !== undefined ? p.price : p.pricePerKg,
+                  saleType: p.saleType || 'kg'
+              }));
+          }
+
           if (!state.users || state.users.length === 0) {
             state.users = [
               { id: 1, username: 'Admin', password: 'Admin', role: 'admin', branch: 'Todas' },
-              { id: 2, username: 'sucursal uno', password: '1234', role: 'empleado', branch: 'Sucursal 1' },
-              { id: 3, username: 'sucursal dos', password: '1234', role: 'empleado', branch: 'Sucursal 2' },
-              { id: 4, username: 'sucursal tres', password: '1234', role: 'empleado', branch: 'Sucursal 3' }
+              { id: 2, username: 'sucursal uno', password: '1234', role: 'empleado', branch: 'Sucursal 1' }
             ];
             await saveState();
           }
@@ -475,13 +553,15 @@
             await saveState();
           }
         } else {
-          state.products = [{ id: 1, name: 'Tortilla de Maíz', pricePerKg: 22, emoji: '🫓', color: 'amber' }, { id: 2, name: 'Tortilla de Harina', pricePerKg: 35, emoji: '🥙', color: 'yellow' }];
+          state.products = [
+              { id: 1, name: 'Tortilla de Maíz', price: 22, saleType: 'kg', emoji: '🫓', color: 'amber' }, 
+              { id: 2, name: 'Queso Fresco', price: 45, saleType: 'pieza', emoji: '🧀', color: 'yellow' }
+          ];
           state.users = [
             { id: 1, username: 'Admin', password: 'Admin', role: 'admin', branch: 'Todas' },
-            { id: 2, username: 'sucursal uno', password: '1234', role: 'empleado', branch: 'Sucursal 1' },
-            { id: 3, username: 'sucursal dos', password: '1234', role: 'empleado', branch: 'Sucursal 2' },
-            { id: 4, username: 'sucursal tres', password: '1234', role: 'empleado', branch: 'Sucursal 3' }
+            { id: 2, username: 'sucursal uno', password: '1234', role: 'empleado', branch: 'Sucursal 1' }
           ];
+          state.inventory = {};
           await db.collection('datos_sistema').doc('control_fechas').set({ ultimaFecha: new Date().toDateString() });
           await saveState();
         }
@@ -494,7 +574,8 @@
         if(doc.exists) {
             const parsed = doc.data();
             state = { ...state, ...parsed };
-            updateStatistics(); renderSalesHistory(); showToast('Actualizado');
+            if(!state.inventory) state.inventory = {};
+            updateStatistics(); renderSalesHistory(); renderAlmacen(); showToast('Actualizado');
         }
     }
 
@@ -542,7 +623,10 @@
         document.getElementById('btn-new-product').style.display = isAdmin ? 'flex' : 'none';
         document.getElementById('btn-clear-history').style.display = isAdmin ? 'block' : 'none';
 
-        // LÓGICA DE VISTAS (Ocultar carrito al admin y expandir espacio)
+        const adminPanelAlmacen = document.getElementById('almacen-admin-panel');
+        if (isAdmin) adminPanelAlmacen.classList.remove('hidden');
+        else adminPanelAlmacen.classList.add('hidden');
+
         const quickSaleSec = document.getElementById('quick-sale-section');
         const rightPanel = document.getElementById('pos-right-panel');
         const leftPanel = document.getElementById('pos-left-panel');
@@ -566,7 +650,85 @@
     function startApp() {
         document.getElementById('login-screen').classList.add('hidden'); document.getElementById('login-screen').classList.remove('flex');
         document.getElementById('loading-screen').classList.add('hidden'); document.getElementById('app').classList.remove('hidden');
-        applyRolePermissions(); renderCart(); renderSalesHistory();
+        applyRolePermissions(); renderCart(); renderSalesHistory(); renderAlmacen();
+    }
+
+    // ============ GESTIÓN DE ALMACÉN E INVENTARIO ============
+    function renderAlmacen() {
+        const grid = document.getElementById('almacen-grid');
+        if (!grid) return;
+
+        if (currentUser.role === 'admin') {
+            const select = document.getElementById('inv-branch');
+            const uniqueBranches = [...new Set(state.users.map(u => u.branch))].filter(b => b && b !== 'Todas');
+            if(select) {
+                select.innerHTML = '<option value="">Seleccione...</option>' + uniqueBranches.map(b => `<option value="${b}">${b}</option>`).join('');
+            }
+        }
+
+        const branchesToRender = currentUser.role === 'admin' 
+            ? [...new Set(state.users.map(u => u.branch))].filter(b => b && b !== 'Todas')
+            : [currentUser.branch];
+
+        if (branchesToRender.length === 0) {
+            grid.innerHTML = '<p class="text-gray-500">No hay sucursales disponibles.</p>';
+            return;
+        }
+
+        grid.innerHTML = branchesToRender.map(branchName => {
+            const inv = state.inventory[branchName] || { maseca: 0, blanca: 0, amarilla: 0, yieldRemainingKg: 0 };
+            const bultosRestantes = inv.yieldRemainingKg / 41; 
+
+            return `
+            <div class="bg-gray-50 p-4 rounded-xl border-2 border-amber-200 relative shadow-sm">
+                ${currentUser.role === 'admin' ? `
+                <button onclick="resetInventario('${branchName}')" class="absolute top-3 right-3 text-red-400 hover:text-red-600 bg-white rounded p-1 shadow-sm text-xs" title="Reiniciar datos">🔄 Reiniciar</button>
+                ` : ''}
+                <h3 class="font-bold text-lg text-amber-800 mb-3 flex items-center gap-2"><span class="text-xl">🏬</span> ${branchName}</h3>
+                <div class="space-y-2 text-sm text-gray-700 bg-white p-3 rounded-lg border border-gray-100 mb-3">
+                    <p class="flex justify-between"><span>Maseca Premium:</span> <span class="font-bold">${inv.maseca} bultos</span></p>
+                    <p class="flex justify-between"><span>Harimasa Blanca:</span> <span class="font-bold">${inv.blanca} bultos</span></p>
+                    <p class="flex justify-between"><span>Harimasa Amarilla:</span> <span class="font-bold">${inv.amarilla} bultos</span></p>
+                </div>
+                <div class="bg-amber-100/50 p-3 rounded-lg border border-amber-200">
+                    <p class="text-amber-900 text-xs mb-1">Rendimiento Estimado Disponible</p>
+                    <p class="text-xl font-bold text-amber-600">${inv.yieldRemainingKg.toFixed(2)} Kg</p>
+                    <p class="text-xs text-gray-500 mt-1">Aprox. ${bultosRestantes.toFixed(2)} bultos físicos</p>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    async function enviarHarina() {
+        const branch = document.getElementById('inv-branch').value;
+        const maseca = parseInt(document.getElementById('inv-maseca').value) || 0;
+        const blanca = parseInt(document.getElementById('inv-blanca').value) || 0;
+        const amarilla = parseInt(document.getElementById('inv-amarilla').value) || 0;
+
+        if(!branch) return showToast('Selecciona una sucursal destino', 'error');
+        
+        const totalBultosEnviados = maseca + blanca + amarilla;
+        if(totalBultosEnviados <= 0) return showToast('Debes enviar al menos 1 bulto', 'error');
+
+        if(!state.inventory[branch]) { state.inventory[branch] = { maseca: 0, blanca: 0, amarilla: 0, yieldRemainingKg: 0 }; }
+
+        state.inventory[branch].maseca += maseca;
+        state.inventory[branch].blanca += blanca;
+        state.inventory[branch].amarilla += amarilla;
+        state.inventory[branch].yieldRemainingKg += (totalBultosEnviados * 41);
+
+        document.getElementById('inv-maseca').value = '';
+        document.getElementById('inv-blanca').value = '';
+        document.getElementById('inv-amarilla').value = '';
+
+        await saveState(); renderAlmacen(); showToast(`Enviados ${totalBultosEnviados} bultos a ${branch}`);
+    }
+
+    async function resetInventario(branchName) {
+        if(confirm(`¿Estás seguro de reiniciar a 0 el inventario de ${branchName}?`)) {
+            state.inventory[branchName] = { maseca: 0, blanca: 0, amarilla: 0, yieldRemainingKg: 0 };
+            await saveState(); renderAlmacen(); showToast('Inventario reiniciado');
+        }
     }
 
     // ============ GESTIÓN DE USUARIOS ============
@@ -630,6 +792,7 @@
       if (tabName === 'reporte-diario') generateDailyReport(); 
       else if (tabName === 'reporte-semanal') generateWeeklyReport(); 
       else if (tabName === 'estadisticas') { if(currentUser && currentUser.role === 'admin') refreshAdminData(); else updateStatistics(); }
+      else if (tabName === 'almacen') renderAlmacen();
     }
 
     // ============ RENDERIZADO (PRODUCTOS, VENTAS RÁPIDAS Y CARRITO) ============
@@ -638,13 +801,16 @@
       if (state.products.length === 0) { grid.innerHTML = '<p class="col-span-full text-gray-400 text-center py-8">No hay productos.</p>'; return; }
       
       const isAdmin = currentUser && currentUser.role === 'admin';
-      grid.innerHTML = state.products.map(product => `
+      grid.innerHTML = state.products.map(product => {
+        const unitLabel = product.saleType === 'pieza' ? 'Pz' : 'Kg';
+        return `
         <div class="product-card bg-gradient-to-br from-${product.color}-100 to-${product.color}-50 rounded-xl p-3 sm:p-4 cursor-pointer transition-all border-2 border-${product.color}-200 hover:border-${product.color}-400 hover:shadow-lg relative group flex flex-col items-center justify-center" onclick="${isAdmin ? '' : `openQuantityModal(${product.id})`}">
           ${isAdmin ? `<div class="absolute top-1 sm:top-2 right-1 sm:right-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity flex gap-1"><button onclick="event.stopPropagation(); editProduct(${product.id})" class="bg-white/80 hover:bg-white p-1 sm:p-2 rounded-lg text-xs shadow-sm">✏️</button><button onclick="event.stopPropagation(); deleteProduct(${product.id})" class="bg-white/80 hover:bg-red-100 p-1 sm:p-2 rounded-lg text-xs shadow-sm">🗑️</button></div>` : ''}
           <div class="text-3xl sm:text-4xl text-center mb-1 sm:mb-2">${product.emoji}</div>
           <h3 class="font-bold text-gray-800 text-center text-xs sm:text-sm leading-tight">${product.name}</h3>
-          <p class="text-${product.color}-600 font-bold text-center text-xs sm:text-sm mt-1">$${product.pricePerKg.toFixed(2)}/Kg</p>
-        </div>`).join('');
+          <p class="text-${product.color}-600 font-bold text-center text-xs sm:text-sm mt-1">$${product.price.toFixed(2)}/${unitLabel}</p>
+        </div>`
+      }).join('');
         
       renderQuickSaleProducts();
     }
@@ -654,7 +820,10 @@
         if (!select) return;
         
         const currentSelection = select.value;
-        select.innerHTML = state.products.map(p => `<option value="${p.id}" class="text-gray-800 bg-white">${p.emoji} ${p.name} ($${p.pricePerKg}/Kg)</option>`).join('');
+        select.innerHTML = state.products.map(p => {
+            const label = p.saleType === 'pieza' ? 'Pz' : 'Kg';
+            return `<option value="${p.id}" class="text-gray-800 bg-white">${p.emoji} ${p.name} ($${p.price}/${label})</option>`;
+        }).join('');
 
         if (currentSelection && state.products.find(p => p.id === parseInt(currentSelection))) {
             select.value = currentSelection;
@@ -675,12 +844,23 @@
       
       if (!product) return showToast('No hay productos disponibles', 'error');
       
+      let qty = 0;
+      let totalCobrar = 0;
+
+      if(product.saleType === 'pieza') {
+          qty = Math.floor(amount / product.price);
+          if (qty < 1) return showToast(`$${amount} no alcanza para 1 pieza de ${product.name}`, 'error');
+          totalCobrar = qty * product.price;
+      } else {
+          qty = Math.round((amount / product.price) * 1000); // gramos
+          totalCobrar = amount;
+      }
+      
       state.cart.push({ 
           productId: product.id, name: product.name, emoji: product.emoji, 
-          grams: Math.round((amount / product.pricePerKg) * 1000), 
-          pricePerKg: product.pricePerKg, total: amount 
+          saleType: product.saleType, qty: qty, price: product.price, total: totalCobrar 
       });
-      renderCart(); showToast(`$${amount} de ${product.name} agregado`);
+      renderCart(); showToast(`Agregado al carrito`);
     }
 
     function updateQuickSaleButtons() {
@@ -689,10 +869,17 @@
       const product = state.products.find(p => p.id === parseInt(select.value));
       if (!product) return;
 
-      const price = product.pricePerKg;
+      const price = product.price;
       [5, 10, 20, 50].forEach(a => { 
           const el = document.getElementById(`quick-${a}`); 
-          if(el) el.textContent = `${Math.round((a / price) * 1000)}g`; 
+          if(el) {
+              if (product.saleType === 'pieza') {
+                  const pz = Math.floor(a / price);
+                  el.textContent = pz > 0 ? `${pz} pz` : '-';
+              } else {
+                  el.textContent = `${Math.round((a / price) * 1000)}g`; 
+              }
+          }
       });
     }
 
@@ -705,29 +892,51 @@
     function openQuantityModal(productId) {
       if(!currentUser || currentUser.role === 'admin') return;
       const product = state.products.find(p => p.id === productId); if (!product) return;
-      document.getElementById('quantity-modal-title').textContent = product.name; document.getElementById('selected-product-id').value = productId;
-      document.getElementById('selected-product-price').textContent = `$${product.pricePerKg.toFixed(2)}`;
-      document.getElementById('quantity-grams').value = ''; document.getElementById('quantity-preview-total').textContent = '$0.00';
-      document.getElementById('quantity-modal').classList.replace('hidden', 'flex'); setTimeout(()=> document.getElementById('quantity-grams').focus(), 100);
+      
+      const isKg = product.saleType === 'kg';
+      
+      document.getElementById('quantity-modal-title').textContent = product.name; 
+      document.getElementById('selected-product-id').value = productId;
+      document.getElementById('selected-product-price').textContent = `$${product.price.toFixed(2)}${isKg ? '/Kg' : '/Pz'}`;
+      
+      document.getElementById('quantity-label').textContent = isKg ? 'Gramos a vender:' : 'Cantidad (piezas):';
+      document.getElementById('quantity-input').value = ''; 
+      document.getElementById('quantity-input').placeholder = isKg ? '500' : '1';
+      document.getElementById('quantity-preview-total').textContent = '$0.00';
+      
+      document.getElementById('btn-group-kg').style.display = isKg ? 'grid' : 'none';
+      document.getElementById('btn-group-pz').style.display = isKg ? 'none' : 'grid';
+
+      document.getElementById('quantity-modal').classList.replace('hidden', 'flex'); 
+      setTimeout(()=> document.getElementById('quantity-input').focus(), 100);
     }
     
     function closeQuantityModal() { document.getElementById('quantity-modal').classList.replace('flex', 'hidden'); }
-    function setGrams(grams) { document.getElementById('quantity-grams').value = grams; updateQuantityPreview(); }
+    
+    function setQty(val) { document.getElementById('quantity-input').value = val; updateQuantityPreview(); }
     
     function updateQuantityPreview() {
       const p = state.products.find(p => p.id === parseInt(document.getElementById('selected-product-id').value));
-      const g = parseFloat(document.getElementById('quantity-grams').value) || 0;
-      if (p) document.getElementById('quantity-preview-total').textContent = `$${((g / 1000) * p.pricePerKg).toFixed(2)}`;
+      const val = parseFloat(document.getElementById('quantity-input').value) || 0;
+      if (p) {
+          const total = p.saleType === 'kg' ? (val / 1000) * p.price : val * p.price;
+          document.getElementById('quantity-preview-total').textContent = `$${total.toFixed(2)}`;
+      }
     }
     
     function addToCartConfirm() {
       const p = state.products.find(p => p.id === parseInt(document.getElementById('selected-product-id').value));
-      const g = parseFloat(document.getElementById('quantity-grams').value) || 0;
-      if (!p || g <= 0) return showToast('Cantidad inválida', 'error');
-      state.cart.push({ productId: p.id, name: p.name, emoji: p.emoji, grams: g, pricePerKg: p.pricePerKg, total: (g / 1000) * p.pricePerKg });
+      const val = parseFloat(document.getElementById('quantity-input').value) || 0;
+      if (!p || val <= 0) return showToast('Cantidad inválida', 'error');
+      
+      const total = p.saleType === 'kg' ? (val / 1000) * p.price : val * p.price;
+
+      state.cart.push({ 
+          productId: p.id, name: p.name, emoji: p.emoji, 
+          saleType: p.saleType, qty: val, price: p.price, total: total 
+      });
       renderCart(); closeQuantityModal(); showToast(`${p.name} agregado`);
       
-      // Auto-scroll en móviles hacia abajo para que vean que se agregó
       if(window.innerWidth < 1024) { setTimeout(() => { document.getElementById('pos-right-panel').scrollIntoView({ behavior: 'smooth' }); }, 100); }
     }
     
@@ -742,7 +951,8 @@
       let subtotal = 0;
       cartDiv.innerHTML = state.cart.map((item, idx) => {
         subtotal += item.total;
-        return `<div class="flex items-center justify-between bg-gray-50 rounded-xl p-2 sm:p-3 animate-slide"><div class="flex items-center gap-2 sm:gap-3"><span class="text-xl sm:text-2xl">${item.emoji}</span><div><p class="font-semibold text-gray-800 text-xs sm:text-sm">${item.name}</p><p class="text-gray-500 text-[10px] sm:text-xs">${item.grams}g × $${item.pricePerKg}/Kg</p></div></div><div class="flex items-center gap-1 sm:gap-2"><span class="font-bold text-gray-800 text-sm sm:text-base">$${item.total.toFixed(2)}</span><button onclick="removeFromCart(${idx})" class="text-red-400 hover:text-red-600 p-2 sm:p-1 text-lg leading-none">&times;</button></div></div>`;
+        const desc = item.saleType === 'pieza' ? `${item.qty} pz × $${item.price.toFixed(2)}/Pz` : `${item.qty}g × $${item.price.toFixed(2)}/Kg`;
+        return `<div class="flex items-center justify-between bg-gray-50 rounded-xl p-2 sm:p-3 animate-slide"><div class="flex items-center gap-2 sm:gap-3"><span class="text-xl sm:text-2xl">${item.emoji}</span><div><p class="font-semibold text-gray-800 text-xs sm:text-sm">${item.name}</p><p class="text-gray-500 text-[10px] sm:text-xs">${desc}</p></div></div><div class="flex items-center gap-1 sm:gap-2"><span class="font-bold text-gray-800 text-sm sm:text-base">$${item.total.toFixed(2)}</span><button onclick="removeFromCart(${idx})" class="text-red-400 hover:text-red-600 p-2 sm:p-1 text-lg leading-none">&times;</button></div></div>`;
       }).join('');
       document.getElementById('cart-subtotal').textContent = `$${subtotal.toFixed(2)}`; document.getElementById('cart-total').textContent = `$${subtotal.toFixed(2)}`;
     }
@@ -769,6 +979,13 @@
     async function completeSale() {
       if (state.cart.length === 0) return showToast('Carrito vacío', 'error');
       const total = state.cart.reduce((sum, item) => sum + item.total, 0);
+      
+      // SOLO DESCONTAR KILOS DE LOS PRODUCTOS TIPO 'kg'
+      const kilosVendidos = state.cart.reduce((sum, item) => {
+          if (item.saleType === 'kg') return sum + (item.qty / 1000);
+          return sum; // Si es por pieza, no suma kilos
+      }, 0);
+
       const now = new Date();
       
       const newSale = {
@@ -776,6 +993,14 @@
         total: total, items: [...state.cart], timestamp: now.getTime(),
         user: currentUser.username, branch: currentUser.branch
       };
+
+      if(kilosVendidos > 0) {
+          if(state.inventory && state.inventory[currentUser.branch]) {
+              state.inventory[currentUser.branch].yieldRemainingKg -= kilosVendidos;
+          } else {
+              state.inventory[currentUser.branch] = { maseca: 0, blanca: 0, amarilla: 0, yieldRemainingKg: -kilosVendidos };
+          }
+      }
 
       try {
         const docRef = db.collection('datos_sistema').doc('punto_de_venta');
@@ -785,11 +1010,12 @@
             cloudData.salesHistory = cloudData.salesHistory || [];
             cloudData.salesHistory.push(newSale);
             state.salesHistory = cloudData.salesHistory; 
+            cloudData.inventory = state.inventory;
             await docRef.set(cloudData);
         } else {
             state.salesHistory.push(newSale); await saveState();
         }
-        clearCart(); renderSalesHistory(); showToast(`Venta procesada: $${total.toFixed(2)}`);
+        clearCart(); renderSalesHistory(); renderAlmacen(); showToast(`Venta procesada: $${total.toFixed(2)}`);
       } catch (error) { showToast("Error al procesar venta en la red", "error"); }
     }
 
@@ -797,7 +1023,6 @@
     function renderSalesHistory() {
       const historyDiv = document.getElementById('sales-history');
       if(!historyDiv) return;
-      
       const visibleSales = getVisibleSales();
 
       if (visibleSales.length === 0) { historyDiv.innerHTML = '<p class="text-gray-400 text-sm sm:text-base text-center py-4">Sin ventas hoy</p>'; document.getElementById('daily-total').textContent = '$0.00'; return; }
@@ -815,14 +1040,14 @@
             <span class="font-bold text-green-600 cursor-pointer text-sm sm:text-base" onclick="showHistoricSale(${sale.timestamp})">$${sale.total.toFixed(2)}</span>
             ${isAdmin ? `<button onclick="event.stopPropagation(); deleteIndividualSale(${sale.timestamp})" class="text-red-400 hover:text-red-600 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity p-2 sm:p-1" title="Eliminar">🗑️</button>` : ''}
           </div>
-        </div>`).reverse().join(''); // Invertir para ver el más nuevo arriba
+        </div>`).reverse().join(''); 
         
       document.getElementById('daily-total').textContent = `$${visibleSales.reduce((sum, s) => sum + s.total, 0).toFixed(2)}`;
     }
 
     async function deleteIndividualSale(timestamp) {
         if (currentUser.role !== 'admin') return showToast('No tienes permisos', 'error');
-        if (confirm('¿Estás seguro de que deseas eliminar este ticket? Esto restará el dinero de las estadísticas y no se puede deshacer.')) {
+        if (confirm('¿Estás seguro de eliminar este ticket? Esto restará el dinero y no se puede deshacer.')) {
             state.salesHistory = state.salesHistory.filter(s => s.timestamp !== timestamp);
             await saveState(); renderSalesHistory(); updateStatistics(); showToast('Venta eliminada');
         }
@@ -831,7 +1056,7 @@
     async function clearDailySales() {
         if(currentUser.role !== 'admin') return showToast('No tienes permisos', 'error');
         if(confirm('¿Seguro que deseas limpiar TODAS las ventas de TODAS las sucursales del día de hoy?')) {
-            state.salesHistory = []; await saveState(); renderSalesHistory(); updateStatistics(); showToast('Historial global limpiado');
+            state.salesHistory = []; await saveState(); renderSalesHistory(); updateStatistics(); showToast('Historial limpiado');
         }
     }
 
@@ -849,9 +1074,9 @@
         
         let bestProductToday = '-';
         const productCountToday = {};
-        visibleSales.forEach(sale => { sale.items.forEach(item => { productCountToday[item.name] = (productCountToday[item.name] || 0) + item.grams; }); });
+        visibleSales.forEach(sale => { sale.items.forEach(item => { productCountToday[item.name] = (productCountToday[item.name] || 0) + 1; }); }); // Contando veces que aparece en ticket para simplicidad mixta
         const maxProduct = Object.entries(productCountToday).sort((a, b) => b[1] - a[1])[0];
-        if (maxProduct) { bestProductToday = `${maxProduct[0]} (${(maxProduct[1]/1000).toFixed(1)}kg)`; }
+        if (maxProduct) { bestProductToday = `${maxProduct[0]}`; }
         document.getElementById('stat-daily-best').textContent = bestProductToday;
 
         const adminPanel = document.getElementById('admin-branches-stats');
@@ -867,7 +1092,7 @@
                     const bTotal = bSales.reduce((sum, s) => sum + s.total, 0);
                     let bBest = 'N/A';
                     const bProductCount = {};
-                    bSales.forEach(sale => { sale.items.forEach(item => { bProductCount[item.name] = (bProductCount[item.name] || 0) + item.grams; }); });
+                    bSales.forEach(sale => { sale.items.forEach(item => { bProductCount[item.name] = (bProductCount[item.name] || 0) + 1; }); });
                     const bMax = Object.entries(bProductCount).sort((a, b) => b[1] - a[1])[0];
                     if (bMax) bBest = bMax[0];
 
@@ -907,7 +1132,6 @@
         if (totalWeekly === 0) { chartDiv.innerHTML = '<p class="text-gray-400 text-xs sm:text-sm text-center py-8 w-full">No hay ventas registradas.</p>'; } 
         else {
             chartDiv.innerHTML = last7Days.map(day => {
-                // Ajustamos la altura de la gráfica para móviles (máximo 120px en móvil, 150px en PC)
                 const height = Math.max(10, (day.total / maxDailyTotal) * (window.innerWidth < 640 ? 120 : 150));
                 const dayDate = new Date(day.date);
                 let dayName = dayDate.toLocaleDateString('es-MX', { weekday: 'short' });
@@ -920,23 +1144,45 @@
     }
 
     // ============ MODALES DE PRODUCTOS (ADMIN) ============
+    function updatePriceLabel() {
+        const type = document.getElementById('product-sale-type').value;
+        document.getElementById('label-product-price').textContent = type === 'kg' ? 'Precio por Kg' : 'Precio por Pieza';
+    }
+
     function openProductModal(productId = null) {
       if(currentUser.role !== 'admin') return;
-      document.getElementById('product-form').reset(); document.getElementById('product-emoji').value = '🫓';
+      document.getElementById('product-form').reset(); 
+      document.getElementById('product-emoji').value = '🫓';
       if (productId) {
         const product = state.products.find(p => p.id === productId);
         if (product) {
-          document.getElementById('modal-title').textContent = 'Editar Producto'; document.getElementById('product-id').value = product.id;
-          document.getElementById('product-name').value = product.name; document.getElementById('product-price').value = product.pricePerKg;
-          document.getElementById('product-emoji').value = product.emoji; document.getElementById('product-color').value = product.color;
+          document.getElementById('modal-title').textContent = 'Editar Producto'; 
+          document.getElementById('product-id').value = product.id;
+          document.getElementById('product-name').value = product.name; 
+          document.getElementById('product-price').value = product.price;
+          document.getElementById('product-sale-type').value = product.saleType || 'kg';
+          document.getElementById('product-emoji').value = product.emoji; 
+          document.getElementById('product-color').value = product.color;
         }
-      } else { document.getElementById('modal-title').textContent = 'Nuevo Producto'; document.getElementById('product-id').value = ''; }
+      } else { 
+          document.getElementById('modal-title').textContent = 'Nuevo Producto'; 
+          document.getElementById('product-id').value = ''; 
+          document.getElementById('product-sale-type').value = 'kg';
+      }
+      updatePriceLabel();
       document.getElementById('product-modal').classList.replace('hidden', 'flex');
     }
     function closeProductModal() { document.getElementById('product-modal').classList.replace('flex', 'hidden'); }
+    
     async function saveProduct(e) {
       e.preventDefault(); const id = document.getElementById('product-id').value;
-      const data = { name: document.getElementById('product-name').value, pricePerKg: parseFloat(document.getElementById('product-price').value), emoji: document.getElementById('product-emoji').value || '🫓', color: document.getElementById('product-color').value };
+      const data = { 
+          name: document.getElementById('product-name').value, 
+          price: parseFloat(document.getElementById('product-price').value), 
+          saleType: document.getElementById('product-sale-type').value,
+          emoji: document.getElementById('product-emoji').value || '🫓', 
+          color: document.getElementById('product-color').value 
+      };
       if (id) { const i = state.products.findIndex(p => p.id === parseInt(id)); if (i !== -1) { state.products[i] = { ...state.products[i], ...data }; showToast('Actualizado'); } } 
       else { state.products.push({ id: state.products.length > 0 ? Math.max(...state.products.map(p => p.id)) + 1 : 1, ...data }); showToast('Agregado'); }
       await saveState(); renderProducts(); closeProductModal();
@@ -952,7 +1198,10 @@
       const pagoCliente = parseFloat(document.getElementById('payment-amount').value) || 0;
 
       let t = `================================\n      ${state.businessName}\n       ${currentUser.branch}\n================================\nCajero: ${currentUser.username}\nFecha: ${new Date().toLocaleDateString('es-MX')}\nHora:  ${new Date().toLocaleTimeString('es-MX')}\n--------------------------------\nPRODUCTOS:\n`;
-      state.cart.forEach(i => t += `${i.name}\n  ${i.grams}g × $${i.pricePerKg}/Kg -> $${i.total.toFixed(2)}\n`);
+      state.cart.forEach(i => {
+          const unitTxt = i.saleType === 'pieza' ? `${i.qty}pz × $${i.price.toFixed(2)}/Pz` : `${i.qty}g × $${i.price.toFixed(2)}/Kg`;
+          t += `${i.name}\n  ${unitTxt} -> $${i.total.toFixed(2)}\n`;
+      });
       t += `--------------------------------\nTOTAL:          $${total.toFixed(2)}\n`;
 
       if (pagoCliente > 0) {
@@ -972,7 +1221,10 @@
     function showHistoricSale(timestamp) {
       const sale = state.salesHistory.find(s => s.timestamp === timestamp); if (!sale) return;
       let t = `================================\n      ${state.businessName}\n       ${sale.branch}\n================================\nCajero: ${sale.user}\nHora:  ${sale.time}\nFecha: ${new Date().toLocaleDateString('es-MX')}\n--------------------------------\nPRODUCTOS:\n`;
-      sale.items.forEach(i => t += `${i.name}\n  ${i.grams}g × $${i.pricePerKg}/Kg -> $${i.total.toFixed(2)}\n`);
+      sale.items.forEach(i => {
+          const unitTxt = i.saleType === 'pieza' ? `${i.qty}pz × $${i.price.toFixed(2)}/Pz` : `${i.qty}g × $${i.price.toFixed(2)}/Kg`;
+          t += `${i.name}\n  ${unitTxt} -> $${i.total.toFixed(2)}\n`;
+      });
       t += `--------------------------------\nTOTAL:          $${sale.total.toFixed(2)}\n================================`;
       document.getElementById('historic-sale-content').textContent = t; document.getElementById('historic-sale-modal').classList.replace('hidden','flex');
     }
@@ -984,7 +1236,10 @@
         let report = `REPORTE DIARIO DE VENTAS - ${currentUser.role === 'admin' ? 'TODAS LAS SUCURSALES' : currentUser.branch}\nGenerado: ${new Date().toLocaleTimeString('es-MX')}\n\nTotal: $${dailyTotal.toFixed(2)}\nTransacciones: ${visibleSales.length}\n\nDetalle:\n`;
         visibleSales.forEach((sale, i) => {
             report += `#${i+1} [${sale.time}] ${sale.branch}: $${sale.total.toFixed(2)}\n`;
-            sale.items.forEach(item => report += `  - ${item.grams}g ${item.name}\n`);
+            sale.items.forEach(item => {
+                const unt = item.saleType === 'pieza' ? 'pz' : 'g';
+                report += `  - ${item.qty}${unt} ${item.name}\n`;
+            });
         });
         document.getElementById('daily-report-container').textContent = report;
     }
@@ -1026,8 +1281,8 @@
                     branchSummary[sale.branch].total += sale.total; branchSummary[sale.branch].count++;
                 }
                 sale.items.forEach(item => {
-                    if (!productSummary[item.name]) productSummary[item.name] = { grams: 0, total: 0, emoji: item.emoji };
-                    productSummary[item.name].grams += item.grams; productSummary[item.name].total += item.total;
+                    if (!productSummary[item.name]) productSummary[item.name] = { qty: 0, total: 0, emoji: item.emoji, type: item.saleType };
+                    productSummary[item.name].qty += item.qty; productSummary[item.name].total += item.total;
                 });
             });
 
@@ -1073,8 +1328,13 @@
         report += `══════════════════════════════════════════════════════════════\n`;
         const topProducts = Object.entries(productSummary).sort((a, b) => b[1].total - a[1].total); 
         topProducts.forEach(([name, data], index) => {
-            const kilos = (data.grams / 1000).toFixed(2);
-            report += `  ${String(index + 1).padStart(2, '0')}. ${data.emoji} ${name.padEnd(22)} ${kilos.padStart(6)} Kg  ->  $${data.total.toFixed(2)}\n`;
+            let amountTxt = "";
+            if(data.type === 'pieza') {
+                amountTxt = `${data.qty} Pz`;
+            } else {
+                amountTxt = `${(data.qty / 1000).toFixed(2)} Kg`;
+            }
+            report += `  ${String(index + 1).padStart(2, '0')}. ${data.emoji} ${name.padEnd(22)} ${amountTxt.padStart(9)}  ->  $${data.total.toFixed(2)}\n`;
         });
         report += `\n`;
 
