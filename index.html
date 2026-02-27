@@ -20,12 +20,15 @@
     @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
     .animate-slide { animation: slideIn 0.3s ease-out; }
     
-    .ticket-print { font-family: 'Courier New', monospace; white-space: pre-wrap; }
+    .ticket-print { font-family: 'Courier New', monospace; }
     
+    /* BLOQUE CORREGIDO PARA IMPRESIÓN */
     @media print {
+      html, body { height: auto !important; overflow: visible !important; }
       body * { visibility: hidden; }
-      #ticket-modal, #ticket-modal * { visibility: visible; }
-      #ticket-modal { position: absolute; left: 0; top: 0; width: 100%; }
+      .ticket-print, .ticket-print * { visibility: visible; }
+      .ticket-print { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
+      .no-print { display: none !important; }
     }
     
     ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -68,7 +71,7 @@
   </div>
 
   <div id="app" class="h-full overflow-auto flex flex-col hidden">
-   <header class="bg-gradient-to-r from-amber-600 to-orange-500 text-white shadow-lg shrink-0">
+   <header class="bg-gradient-to-r from-amber-600 to-orange-500 text-white shadow-lg shrink-0 no-print">
     <div class="max-w-7xl mx-auto px-4 py-3 sm:py-4">
      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
       
@@ -95,7 +98,7 @@
     </div>
    </header>
 
-   <div class="bg-white shadow-md border-b-2 sm:border-b-4 border-amber-500 sticky top-0 z-40 shrink-0">
+   <div class="bg-white shadow-md border-b-2 sm:border-b-4 border-amber-500 sticky top-0 z-40 shrink-0 no-print">
     <div class="max-w-7xl mx-auto px-2 sm:px-4">
      <div class="flex gap-1 sm:gap-2 overflow-x-auto no-scrollbar py-1 sm:py-0">
         <button onclick="switchTab('punto-venta')" class="tab-btn active px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-amber-500 text-amber-600 text-sm sm:text-base hover:bg-amber-50 transition-all"> 🛒 Punto de Venta </button> 
@@ -108,7 +111,7 @@
     </div>
    </div>
    
-   <main class="flex-1 overflow-x-hidden overflow-y-auto max-w-7xl mx-auto w-full px-3 sm:px-4 py-4 sm:py-6">
+   <main class="flex-1 overflow-x-hidden overflow-y-auto max-w-7xl mx-auto w-full px-3 sm:px-4 py-4 sm:py-6 no-print">
     
     <div id="tab-punto-venta" class="tab-content active">
      <div class="flex flex-col lg:grid lg:grid-cols-3 gap-4 sm:gap-6">
@@ -192,7 +195,7 @@
                 <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                     <span class="text-2xl">📦</span> Enviar Harina a Sucursal
                 </h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
                     <div class="lg:col-span-1">
                         <label class="text-xs sm:text-sm font-semibold text-gray-600 block mb-1">Destino</label>
                         <select id="inv-branch" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-amber-500 focus:outline-none bg-white">
@@ -200,16 +203,21 @@
                     </div>
                     <div class="lg:col-span-1">
                         <label class="text-xs sm:text-sm font-semibold text-gray-600 block mb-1">Maseca Premium</label>
-                        <input type="number" id="inv-maseca" min="0" placeholder="Cant. bultos" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-amber-500 focus:outline-none">
+                        <input type="number" id="inv-maseca" min="0" placeholder="Bultos" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-amber-500 focus:outline-none">
                     </div>
                     <div class="lg:col-span-1">
                         <label class="text-xs sm:text-sm font-semibold text-gray-600 block mb-1">Harimasa Blanca</label>
-                        <input type="number" id="inv-blanca" min="0" placeholder="Cant. bultos" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-amber-500 focus:outline-none">
+                        <input type="number" id="inv-blanca" min="0" placeholder="Bultos" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-amber-500 focus:outline-none">
                     </div>
                     <div class="lg:col-span-1">
                         <label class="text-xs sm:text-sm font-semibold text-gray-600 block mb-1">Harimasa Amarilla</label>
-                        <input type="number" id="inv-amarilla" min="0" placeholder="Cant. bultos" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-amber-500 focus:outline-none">
+                        <input type="number" id="inv-amarilla" min="0" placeholder="Bultos" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-amber-500 focus:outline-none">
                     </div>
+                    <div class="lg:col-span-1">
+                        <label class="text-xs sm:text-sm font-semibold text-gray-600 block mb-1">Harimasa Fardo</label>
+                        <input type="number" id="inv-fardo" min="0" placeholder="Bultos" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-amber-500 focus:outline-none">
+                    </div>
+
                     <div class="lg:col-span-1 flex items-end">
                         <button onclick="enviarHarina()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 rounded-xl transition-all shadow-md h-[42px]">
                             Enviar Bultos
@@ -428,14 +436,14 @@
 
   <div id="ticket-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm animate-slide flex flex-col max-h-[90vh]">
-        <div class="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3 sm:p-4 rounded-t-2xl flex justify-between items-center shrink-0">
+        <div class="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3 sm:p-4 rounded-t-2xl flex justify-between items-center shrink-0 no-print">
             <h3 class="text-lg sm:text-xl font-bold">🎫 Ticket de Venta</h3>
             <button onclick="closeTicketModal()" class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
         </div>
-        <div class="p-3 sm:p-4 overflow-y-auto flex-1">
-            <div id="ticket-content" class="ticket-print bg-gray-50 p-3 sm:p-4 rounded-xl text-xs sm:text-sm border-2 border-dashed border-gray-300"></div>
+        <div class="p-4 overflow-y-auto flex-1 bg-gray-100 flex justify-center print:bg-white print:p-0">
+            <div id="ticket-content" class="w-full"></div>
         </div>
-        <div class="p-3 sm:p-4 border-t bg-white shrink-0 rounded-b-2xl">
+        <div class="p-3 sm:p-4 border-t bg-white shrink-0 rounded-b-2xl no-print">
             <div class="flex gap-2 sm:gap-3">
                 <button onclick="closeTicketModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 sm:py-3 rounded-xl text-sm sm:text-base font-bold transition-all"> Cerrar </button> 
                 <button onclick="printTicket()" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white py-2 sm:py-3 rounded-xl text-sm sm:text-base font-bold transition-all flex items-center justify-center gap-2"> 🖨️ <span class="hidden sm:inline">Imprimir</span> </button>
@@ -446,16 +454,17 @@
 
   <div id="historic-sale-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm animate-slide flex flex-col max-h-[90vh]">
-        <div class="bg-gradient-to-r from-indigo-500 to-blue-500 text-white p-3 sm:p-4 rounded-t-2xl flex justify-between items-center shrink-0">
+        <div class="bg-gradient-to-r from-indigo-500 to-blue-500 text-white p-3 sm:p-4 rounded-t-2xl flex justify-between items-center shrink-0 no-print">
             <h3 class="text-lg sm:text-xl font-bold">🎫 Detalles de Venta</h3>
             <button onclick="closeHistoricSaleModal()" class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
         </div>
-        <div class="p-3 sm:p-4 overflow-y-auto flex-1">
-            <div id="historic-sale-content" class="ticket-print bg-gray-50 p-3 sm:p-4 rounded-xl text-xs sm:text-sm border-2 border-dashed border-gray-300"></div>
+        <div class="p-4 overflow-y-auto flex-1 bg-gray-100 flex justify-center print:bg-white print:p-0">
+            <div id="historic-sale-content" class="w-full"></div>
         </div>
-        <div class="p-3 sm:p-4 border-t bg-white shrink-0 rounded-b-2xl">
+        <div class="p-3 sm:p-4 border-t bg-white shrink-0 rounded-b-2xl no-print">
             <div class="flex gap-2 sm:gap-3">
                 <button onclick="closeHistoricSaleModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 sm:py-3 rounded-xl text-sm sm:text-base font-bold transition-all"> Cerrar </button>
+                <button onclick="printTicket()" class="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white py-2 sm:py-3 rounded-xl text-sm sm:text-base font-bold transition-all flex items-center justify-center gap-2"> 🖨️ <span class="hidden sm:inline">Imprimir</span> </button>
             </div>
         </div>
     </div>
@@ -517,7 +526,6 @@
           
           if(!state.inventory) state.inventory = {};
 
-          // Normalizar productos antiguos
           if(state.products) {
               state.products = state.products.map(p => ({
                   ...p,
@@ -676,7 +684,7 @@
         }
 
         grid.innerHTML = branchesToRender.map(branchName => {
-            const inv = state.inventory[branchName] || { maseca: 0, blanca: 0, amarilla: 0, yieldRemainingKg: 0 };
+            const inv = state.inventory[branchName] || { maseca: 0, blanca: 0, amarilla: 0, fardo: 0, yieldRemainingKg: 0 };
             const bultosRestantes = inv.yieldRemainingKg / 41; 
 
             return `
@@ -686,9 +694,10 @@
                 ` : ''}
                 <h3 class="font-bold text-lg text-amber-800 mb-3 flex items-center gap-2"><span class="text-xl">🏬</span> ${branchName}</h3>
                 <div class="space-y-2 text-sm text-gray-700 bg-white p-3 rounded-lg border border-gray-100 mb-3">
-                    <p class="flex justify-between"><span>Maseca Premium:</span> <span class="font-bold">${inv.maseca} bultos</span></p>
-                    <p class="flex justify-between"><span>Harimasa Blanca:</span> <span class="font-bold">${inv.blanca} bultos</span></p>
-                    <p class="flex justify-between"><span>Harimasa Amarilla:</span> <span class="font-bold">${inv.amarilla} bultos</span></p>
+                    <p class="flex justify-between"><span>Maseca Premium:</span> <span class="font-bold">${inv.maseca || 0} bultos</span></p>
+                    <p class="flex justify-between"><span>Harimasa Blanca:</span> <span class="font-bold">${inv.blanca || 0} bultos</span></p>
+                    <p class="flex justify-between"><span>Harimasa Amarilla:</span> <span class="font-bold">${inv.amarilla || 0} bultos</span></p>
+                    <p class="flex justify-between"><span>Harimasa Fardo:</span> <span class="font-bold">${inv.fardo || 0} bultos</span></p>
                 </div>
                 <div class="bg-amber-100/50 p-3 rounded-lg border border-amber-200">
                     <p class="text-amber-900 text-xs mb-1">Rendimiento Estimado Disponible</p>
@@ -704,29 +713,32 @@
         const maseca = parseInt(document.getElementById('inv-maseca').value) || 0;
         const blanca = parseInt(document.getElementById('inv-blanca').value) || 0;
         const amarilla = parseInt(document.getElementById('inv-amarilla').value) || 0;
+        const fardo = parseInt(document.getElementById('inv-fardo').value) || 0;
 
         if(!branch) return showToast('Selecciona una sucursal destino', 'error');
         
-        const totalBultosEnviados = maseca + blanca + amarilla;
+        const totalBultosEnviados = maseca + blanca + amarilla + fardo;
         if(totalBultosEnviados <= 0) return showToast('Debes enviar al menos 1 bulto', 'error');
 
-        if(!state.inventory[branch]) { state.inventory[branch] = { maseca: 0, blanca: 0, amarilla: 0, yieldRemainingKg: 0 }; }
+        if(!state.inventory[branch]) { state.inventory[branch] = { maseca: 0, blanca: 0, amarilla: 0, fardo: 0, yieldRemainingKg: 0 }; }
 
-        state.inventory[branch].maseca += maseca;
-        state.inventory[branch].blanca += blanca;
-        state.inventory[branch].amarilla += amarilla;
+        state.inventory[branch].maseca = (state.inventory[branch].maseca || 0) + maseca;
+        state.inventory[branch].blanca = (state.inventory[branch].blanca || 0) + blanca;
+        state.inventory[branch].amarilla = (state.inventory[branch].amarilla || 0) + amarilla;
+        state.inventory[branch].fardo = (state.inventory[branch].fardo || 0) + fardo;
         state.inventory[branch].yieldRemainingKg += (totalBultosEnviados * 41);
 
         document.getElementById('inv-maseca').value = '';
         document.getElementById('inv-blanca').value = '';
         document.getElementById('inv-amarilla').value = '';
+        document.getElementById('inv-fardo').value = '';
 
         await saveState(); renderAlmacen(); showToast(`Enviados ${totalBultosEnviados} bultos a ${branch}`);
     }
 
     async function resetInventario(branchName) {
         if(confirm(`¿Estás seguro de reiniciar a 0 el inventario de ${branchName}?`)) {
-            state.inventory[branchName] = { maseca: 0, blanca: 0, amarilla: 0, yieldRemainingKg: 0 };
+            state.inventory[branchName] = { maseca: 0, blanca: 0, amarilla: 0, fardo: 0, yieldRemainingKg: 0 };
             await saveState(); renderAlmacen(); showToast('Inventario reiniciado');
         }
     }
@@ -852,7 +864,7 @@
           if (qty < 1) return showToast(`$${amount} no alcanza para 1 pieza de ${product.name}`, 'error');
           totalCobrar = qty * product.price;
       } else {
-          qty = Math.round((amount / product.price) * 1000); // gramos
+          qty = Math.round((amount / product.price) * 1000); 
           totalCobrar = amount;
       }
       
@@ -980,10 +992,9 @@
       if (state.cart.length === 0) return showToast('Carrito vacío', 'error');
       const total = state.cart.reduce((sum, item) => sum + item.total, 0);
       
-      // SOLO DESCONTAR KILOS DE LOS PRODUCTOS TIPO 'kg'
       const kilosVendidos = state.cart.reduce((sum, item) => {
           if (item.saleType === 'kg') return sum + (item.qty / 1000);
-          return sum; // Si es por pieza, no suma kilos
+          return sum; 
       }, 0);
 
       const now = new Date();
@@ -998,7 +1009,7 @@
           if(state.inventory && state.inventory[currentUser.branch]) {
               state.inventory[currentUser.branch].yieldRemainingKg -= kilosVendidos;
           } else {
-              state.inventory[currentUser.branch] = { maseca: 0, blanca: 0, amarilla: 0, yieldRemainingKg: -kilosVendidos };
+              state.inventory[currentUser.branch] = { maseca: 0, blanca: 0, amarilla: 0, fardo: 0, yieldRemainingKg: -kilosVendidos };
           }
       }
 
@@ -1074,7 +1085,7 @@
         
         let bestProductToday = '-';
         const productCountToday = {};
-        visibleSales.forEach(sale => { sale.items.forEach(item => { productCountToday[item.name] = (productCountToday[item.name] || 0) + 1; }); }); // Contando veces que aparece en ticket para simplicidad mixta
+        visibleSales.forEach(sale => { sale.items.forEach(item => { productCountToday[item.name] = (productCountToday[item.name] || 0) + 1; }); }); 
         const maxProduct = Object.entries(productCountToday).sort((a, b) => b[1] - a[1])[0];
         if (maxProduct) { bestProductToday = `${maxProduct[0]}`; }
         document.getElementById('stat-daily-best').textContent = bestProductToday;
@@ -1143,93 +1154,103 @@
         }
     }
 
-    // ============ MODALES DE PRODUCTOS (ADMIN) ============
-    function updatePriceLabel() {
-        const type = document.getElementById('product-sale-type').value;
-        document.getElementById('label-product-price').textContent = type === 'kg' ? 'Precio por Kg' : 'Precio por Pieza';
-    }
+    // ============ FORMATO DE TICKET PROFESIONAL ============
+    function generateHTMLTicket(businessName, branch, cajero, fecha, hora, items, total, pagoCliente = 0, timestamp = null) {
+        // Se genera un número de folio de 6 dígitos
+        const folio = timestamp ? Math.floor(timestamp / 1000).toString().slice(-6) : Math.floor(Date.now() / 1000).toString().slice(-6);
+        
+        let html = `
+        <div class="ticket-print bg-white p-4 shadow-sm mx-auto text-black border border-gray-300 print:border-none print:shadow-none" style="max-width: 320px; font-size: 12px; line-height: 1.4;">
+            <div class="text-center mb-4">
+                <h2 class="text-lg font-bold uppercase leading-tight mb-1">${businessName}</h2>
+                <p class="text-xs font-semibold text-gray-700">${branch}</p>
+            </div>
+            
+            <div class="border-t border-b border-dashed border-gray-400 py-2 mb-3 space-y-1">
+                <div class="flex justify-between"><span>FECHA: ${fecha}</span><span>HORA: ${hora}</span></div>
+                <div class="flex justify-between"><span>CAJERO: ${cajero.toUpperCase()}</span><span>FOLIO: #${folio}</span></div>
+            </div>
+            
+            <table class="w-full mb-3">
+                <thead class="border-b border-dashed border-gray-400">
+                    <tr>
+                        <th class="text-left pb-1 font-bold w-1/4">CANT</th>
+                        <th class="text-left pb-1 font-bold w-1/2">DESC</th>
+                        <th class="text-right pb-1 font-bold w-1/4">IMP</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-dashed divide-gray-200">`;
 
-    function openProductModal(productId = null) {
-      if(currentUser.role !== 'admin') return;
-      document.getElementById('product-form').reset(); 
-      document.getElementById('product-emoji').value = '🫓';
-      if (productId) {
-        const product = state.products.find(p => p.id === productId);
-        if (product) {
-          document.getElementById('modal-title').textContent = 'Editar Producto'; 
-          document.getElementById('product-id').value = product.id;
-          document.getElementById('product-name').value = product.name; 
-          document.getElementById('product-price').value = product.price;
-          document.getElementById('product-sale-type').value = product.saleType || 'kg';
-          document.getElementById('product-emoji').value = product.emoji; 
-          document.getElementById('product-color').value = product.color;
+        items.forEach(i => {
+            const qtyLabel = i.saleType === 'pieza' ? `${i.qty}PZ` : `${(i.qty / 1000).toFixed(2)}KG`;
+            const priceLabel = i.saleType === 'pieza' ? 'pz' : 'kg';
+            html += `
+                    <tr>
+                        <td class="py-1.5 align-top font-bold">${qtyLabel}</td>
+                        <td class="py-1.5 align-top pr-1 uppercase">
+                            ${i.name}
+                            <div class="text-[10px] text-gray-500 lowercase mt-0.5">$${i.price.toFixed(2)}/${priceLabel}</div>
+                        </td>
+                        <td class="py-1.5 align-top text-right font-bold">$${i.total.toFixed(2)}</td>
+                    </tr>`;
+        });
+
+        html += `
+                </tbody>
+            </table>
+            
+            <div class="border-t border-dashed border-gray-400 pt-2 mb-4">
+                <div class="flex justify-between items-center font-bold text-sm mb-1">
+                    <span>TOTAL:</span>
+                    <span class="text-base">$${total.toFixed(2)}</span>
+                </div>`;
+
+        if (pagoCliente > 0) {
+            html += `<div class="flex justify-between mt-1 text-gray-700"><span>EFECTIVO:</span><span>$${pagoCliente.toFixed(2)}</span></div>`;
+            if (pagoCliente >= total) {
+                const cambio = pagoCliente - total;
+                html += `<div class="flex justify-between font-bold mt-0.5 text-gray-900"><span>CAMBIO:</span><span>$${cambio.toFixed(2)}</span></div>`;
+            }
         }
-      } else { 
-          document.getElementById('modal-title').textContent = 'Nuevo Producto'; 
-          document.getElementById('product-id').value = ''; 
-          document.getElementById('product-sale-type').value = 'kg';
-      }
-      updatePriceLabel();
-      document.getElementById('product-modal').classList.replace('hidden', 'flex');
-    }
-    function closeProductModal() { document.getElementById('product-modal').classList.replace('flex', 'hidden'); }
-    
-    async function saveProduct(e) {
-      e.preventDefault(); const id = document.getElementById('product-id').value;
-      const data = { 
-          name: document.getElementById('product-name').value, 
-          price: parseFloat(document.getElementById('product-price').value), 
-          saleType: document.getElementById('product-sale-type').value,
-          emoji: document.getElementById('product-emoji').value || '🫓', 
-          color: document.getElementById('product-color').value 
-      };
-      if (id) { const i = state.products.findIndex(p => p.id === parseInt(id)); if (i !== -1) { state.products[i] = { ...state.products[i], ...data }; showToast('Actualizado'); } } 
-      else { state.products.push({ id: state.products.length > 0 ? Math.max(...state.products.map(p => p.id)) + 1 : 1, ...data }); showToast('Agregado'); }
-      await saveState(); renderProducts(); closeProductModal();
-    }
-    function editProduct(id) { openProductModal(id); }
-    async function deleteProduct(id) { if(confirm('¿Eliminar producto?')) { state.products = state.products.filter(p => p.id !== id); await saveState(); renderProducts(); showToast('Eliminado'); } }
 
-    // ============ TICKETS Y REPORTES ============
+        html += `
+            </div>
+            <div class="text-center mt-2 text-gray-700">
+                <p class="font-bold text-sm text-black">¡GRACIAS POR SU COMPRA!</p>
+                <p class="mt-1 text-[10px]">Vuelva pronto</p>
+            </div>
+        </div>`;
+        
+        return html;
+    }
+
     function generateTicket() { 
       if (state.cart.length === 0) return showToast('El carrito está vacío', 'error');
       
       const total = state.cart.reduce((s, i) => s + i.total, 0);
       const pagoCliente = parseFloat(document.getElementById('payment-amount').value) || 0;
+      const fecha = new Date().toLocaleDateString('es-MX');
+      const hora = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
 
-      let t = `================================\n      ${state.businessName}\n       ${currentUser.branch}\n================================\nCajero: ${currentUser.username}\nFecha: ${new Date().toLocaleDateString('es-MX')}\nHora:  ${new Date().toLocaleTimeString('es-MX')}\n--------------------------------\nPRODUCTOS:\n`;
-      state.cart.forEach(i => {
-          const unitTxt = i.saleType === 'pieza' ? `${i.qty}pz × $${i.price.toFixed(2)}/Pz` : `${i.qty}g × $${i.price.toFixed(2)}/Kg`;
-          t += `${i.name}\n  ${unitTxt} -> $${i.total.toFixed(2)}\n`;
-      });
-      t += `--------------------------------\nTOTAL:          $${total.toFixed(2)}\n`;
-
-      if (pagoCliente > 0) {
-          t += `EFECTIVO:       $${pagoCliente.toFixed(2)}\n`;
-          if (pagoCliente >= total) {
-              const cambio = pagoCliente - total;
-              t += `CAMBIO:         $${cambio.toFixed(2)}\n`;
-          }
-      }
-
-      t += `================================\n   ¡Gracias por su compra!\n================================`;
-      document.getElementById('ticket-content').textContent = t; document.getElementById('ticket-modal').classList.replace('hidden','flex');
+      document.getElementById('ticket-content').innerHTML = generateHTMLTicket(state.businessName, currentUser.branch, currentUser.username, fecha, hora, state.cart, total, pagoCliente);
+      document.getElementById('ticket-modal').classList.replace('hidden','flex');
     }
+    
     function closeTicketModal() { document.getElementById('ticket-modal').classList.replace('flex','hidden'); }
     function printTicket() { window.print(); }
 
     function showHistoricSale(timestamp) {
       const sale = state.salesHistory.find(s => s.timestamp === timestamp); if (!sale) return;
-      let t = `================================\n      ${state.businessName}\n       ${sale.branch}\n================================\nCajero: ${sale.user}\nHora:  ${sale.time}\nFecha: ${new Date().toLocaleDateString('es-MX')}\n--------------------------------\nPRODUCTOS:\n`;
-      sale.items.forEach(i => {
-          const unitTxt = i.saleType === 'pieza' ? `${i.qty}pz × $${i.price.toFixed(2)}/Pz` : `${i.qty}g × $${i.price.toFixed(2)}/Kg`;
-          t += `${i.name}\n  ${unitTxt} -> $${i.total.toFixed(2)}\n`;
-      });
-      t += `--------------------------------\nTOTAL:          $${sale.total.toFixed(2)}\n================================`;
-      document.getElementById('historic-sale-content').textContent = t; document.getElementById('historic-sale-modal').classList.replace('hidden','flex');
+      const d = new Date(timestamp);
+      const fecha = d.toLocaleDateString('es-MX');
+      
+      document.getElementById('historic-sale-content').innerHTML = generateHTMLTicket(state.businessName, sale.branch, sale.user, fecha, sale.time, sale.items, sale.total, 0, timestamp);
+      document.getElementById('historic-sale-modal').classList.replace('hidden','flex');
     }
+    
     function closeHistoricSaleModal() { document.getElementById('historic-sale-modal').classList.replace('flex','hidden'); }
 
+    // ============ REPORTES TEXTUALES (DIARIO Y SEMANAL) ============
     function generateDailyReport() {
         const visibleSales = getVisibleSales();
         const dailyTotal = visibleSales.reduce((sum, s) => sum + s.total, 0);
