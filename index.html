@@ -475,6 +475,86 @@
   </div>
 
   <script>
+
+    // ============ GESTIÓN DE PRODUCTOS ============
+    function updatePriceLabel() {
+        const type = document.getElementById('product-sale-type').value;
+        document.getElementById('label-product-price').textContent = type === 'pieza' ? 'Precio por Pieza' : 'Precio por Kg';
+    }
+
+    function openProductModal(productId = null) {
+        document.getElementById('product-form').reset();
+        updatePriceLabel();
+
+        if (productId) {
+            const product = state.products.find(p => p.id === productId);
+            if (product) {
+                document.getElementById('modal-title').textContent = 'Editar Producto';
+                document.getElementById('product-id').value = product.id;
+                document.getElementById('product-sale-type').value = product.saleType || 'kg';
+                document.getElementById('product-name').value = product.name;
+                document.getElementById('product-price').value = product.price;
+                document.getElementById('product-emoji').value = product.emoji;
+                document.getElementById('product-color').value = product.color;
+                updatePriceLabel();
+            }
+        } else {
+            document.getElementById('modal-title').textContent = 'Nuevo Producto';
+            document.getElementById('product-id').value = '';
+        }
+        
+        document.getElementById('product-modal').classList.remove('hidden');
+        document.getElementById('product-modal').classList.add('flex');
+    }
+
+    function closeProductModal() {
+        document.getElementById('product-modal').classList.add('hidden');
+        document.getElementById('product-modal').classList.remove('flex');
+    }
+
+    async function saveProduct(event) {
+        event.preventDefault();
+        const id = document.getElementById('product-id').value;
+        
+        const productData = {
+            saleType: document.getElementById('product-sale-type').value,
+            name: document.getElementById('product-name').value.trim(),
+            price: parseFloat(document.getElementById('product-price').value),
+            emoji: document.getElementById('product-emoji').value.trim() || '📦',
+            color: document.getElementById('product-color').value
+        };
+
+        if (id) {
+            // Editar existente
+            const index = state.products.findIndex(p => p.id === parseInt(id));
+            if (index !== -1) {
+                state.products[index] = { ...state.products[index], ...productData };
+                showToast('Producto actualizado');
+            }
+        } else {
+            // Crear nuevo
+            const newId = state.products.length > 0 ? Math.max(...state.products.map(p => p.id)) + 1 : 1;
+            state.products.push({ id: newId, ...productData });
+            showToast('Producto creado exitosamente');
+        }
+
+        await saveState();
+        renderProducts();
+        closeProductModal();
+    }
+
+    function editProduct(id) {
+        openProductModal(id);
+    }
+
+    async function deleteProduct(id) {
+        if (confirm('¿Estás seguro de eliminar este producto del sistema?')) {
+            state.products = state.products.filter(p => p.id !== id);
+            await saveState();
+            renderProducts();
+            showToast('Producto eliminado', 'error'); // Usamos 'error' solo para el color rojo del toast
+        }
+    }
     // ============ CONFIGURACIÓN DE FIREBASE ============
     const firebaseConfig = {
       apiKey: "AIzaSyBVqfp2cG4NF-c30EMciz-0dDn8nKlh6fA",
