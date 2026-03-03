@@ -755,6 +755,7 @@
         const grid = document.getElementById('almacen-grid');
         if (!grid) return;
 
+        // Actualizar el selector de envíos si es admin
         if (currentUser.role === 'admin') {
             const select = document.getElementById('inv-branch');
             const uniqueBranches = [...new Set(state.users.map(u => u.branch))].filter(b => b && b !== 'Todas');
@@ -763,6 +764,7 @@
             }
         }
 
+        // Determinar qué sucursales mostrar según el rol
         const branchesToRender = currentUser.role === 'admin' 
             ? [...new Set(state.users.map(u => u.branch))].filter(b => b && b !== 'Todas')
             : [currentUser.branch];
@@ -772,26 +774,79 @@
             return;
         }
 
+        // Dibujar las tarjetas de inventario
         grid.innerHTML = branchesToRender.map(branchName => {
             const inv = state.inventory[branchName] || { maseca: 0, blanca: 0, amarilla: 0, fardo: 0, yieldRemainingKg: 0 };
             const bultosRestantes = inv.yieldRemainingKg / 41; 
+            
+            // Buscar los usuarios asignados a esta sucursal (excluyendo a los admins)
+            const usuariosSucursal = state.users
+                .filter(u => u.branch === branchName && u.role !== 'admin')
+                .map(u => u.username)
+                .join(', ');
+            const encargadoTexto = usuariosSucursal ? usuariosSucursal : 'Sin asignar';
+
+            // --- LÓGICA DE ALERTA DE INVENTARIO BAJO ---
+            // Definimos el límite para la alerta (ejemplo: 3 bultos restantes)
+            const LIMITE_BULTOS = 3;
+            // Evaluamos si el inventario está en estado crítico
+            const alertaBaja = bultosRestantes <= LIMITE_BULTOS;
+
+            // Clases dinámicas dependiendo de si hay alerta o no
+            const boxBgClass = alertaBaja ? 'bg-red-100 border-red-400' : 'bg-amber-100 border-amber-300';
+            const boxTitleClass = alertaBaja ? 'text-red-800' : 'text-amber-800';
+            const boxValueClass = alertaBaja ? 'text-red-600' : 'text-amber-600';
+            const boxSubClass = alertaBaja ? 'text-red-700' : 'text-amber-700';
 
             return `
-            <div class="bg-gray-50 p-4 rounded-xl border-2 border-amber-200 relative shadow-sm">
-                ${currentUser.role === 'admin' ? `
-                <button onclick="resetInventario('${branchName}')" class="absolute top-3 right-3 text-red-400 hover:text-red-600 bg-white rounded p-1 shadow-sm text-xs" title="Reiniciar datos">🔄 Reiniciar</button>
-                ` : ''}
-                <h3 class="font-bold text-lg text-amber-800 mb-3 flex items-center gap-2"><span class="text-xl">🏬</span> ${branchName}</h3>
-                <div class="space-y-2 text-sm text-gray-700 bg-white p-3 rounded-lg border border-gray-100 mb-3">
-                    <p class="flex justify-between"><span>Maseca Premium:</span> <span class="font-bold">${inv.maseca || 0} bultos</span></p>
-                    <p class="flex justify-between"><span>Harimasa Blanca:</span> <span class="font-bold">${inv.blanca || 0} bultos</span></p>
-                    <p class="flex justify-between"><span>Harimasa Amarilla:</span> <span class="font-bold">${inv.amarilla || 0} bultos</span></p>
-                    <p class="flex justify-between"><span>Harimasa Fardo:</span> <span class="font-bold">${inv.fardo || 0} bultos</span></p>
+            <div class="bg-white rounded-2xl border-2 ${alertaBaja ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.4)]' : 'border-amber-200 shadow-md'} relative overflow-hidden flex flex-col transition-all">
+                
+                <div class="bg-gradient-to-r ${alertaBaja ? 'from-red-600 to-red-500' : 'from-amber-500 to-orange-500'} p-3 sm:p-4 text-white flex justify-between items-center shrink-0 transition-colors">
+                    <div>
+                        <h3 class="font-bold text-base sm:text-lg flex items-center gap-2 leading-tight">
+                            <span class="text-xl sm:text-2xl drop-shadow-md">${alertaBaja ? '🚨' : '🏢'}</span> 
+                            Sucursal: ${branchName}
+                        </h3>
+                        <p class="text-xs ${alertaBaja ? 'text-red-100' : 'text-amber-100'} font-medium ml-8 mt-1">
+                            👤 Usuario: ${encargadoTexto}
+                        </p>
+                    </div>
+                    ${currentUser.role === 'admin' ? `
+                    <button onclick="resetInventario('${branchName}')" class="bg-white/20 hover:bg-white/30 text-white rounded-lg px-2 py-2 shadow-sm text-xs font-bold transition-all border border-white/30 whitespace-nowrap self-center" title="Reiniciar datos a 0">🔄 <span class="hidden sm:inline">Reiniciar</span></button>
+                    ` : ''}
                 </div>
-                <div class="bg-amber-100/50 p-3 rounded-lg border border-amber-200">
-                    <p class="text-amber-900 text-xs mb-1">Rendimiento Estimado Disponible</p>
-                    <p class="text-xl font-bold text-amber-600">${inv.yieldRemainingKg.toFixed(2)} Kg</p>
-                    <p class="text-xs text-gray-500 mt-1">Aprox. ${bultosRestantes.toFixed(2)} bultos físicos</p>
+                
+                ${alertaBaja ? `
+                <div class="bg-red-500 text-white text-xs font-bold px-4 py-2 text-center flex justify-center items-center gap-2 uppercase tracking-widest animate-pulse shadow-inner">
+                    ⚠️ Alerta: Inventario Crítico
+                </div>
+                ` : ''}
+
+                <div class="p-4 ${alertaBaja ? 'bg-red-50/30' : 'bg-amber-50/30'} flex-1 transition-colors">
+                    <div class="space-y-2 text-sm text-gray-700 bg-white p-3 rounded-xl border border-gray-200 mb-4 shadow-sm">
+                        <p class="flex justify-between items-center border-b border-gray-100 pb-1.5">
+                            <span class="font-semibold text-gray-600">Maseca Premium:</span> 
+                            <span class="font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md">${inv.maseca || 0} bultos</span>
+                        </p>
+                        <p class="flex justify-between items-center border-b border-gray-100 pb-1.5">
+                            <span class="font-semibold text-gray-600">Harimasa Blanca:</span> 
+                            <span class="font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md">${inv.blanca || 0} bultos</span>
+                        </p>
+                        <p class="flex justify-between items-center border-b border-gray-100 pb-1.5">
+                            <span class="font-semibold text-gray-600">Harimasa Amarilla:</span> 
+                            <span class="font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md">${inv.amarilla || 0} bultos</span>
+                        </p>
+                        <p class="flex justify-between items-center">
+                            <span class="font-semibold text-gray-600">Harimasa Fardo:</span> 
+                            <span class="font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md">${inv.fardo || 0} bultos</span>
+                        </p>
+                    </div>
+                    
+                    <div class="${boxBgClass} p-3 rounded-xl border-2 text-center shadow-inner transition-colors">
+                        <p class="${boxTitleClass} text-[10px] sm:text-xs font-bold mb-1 uppercase tracking-wider">Rendimiento Estimado Disponible</p>
+                        <p class="text-2xl sm:text-3xl font-black ${boxValueClass} drop-shadow-sm">${inv.yieldRemainingKg.toFixed(2)} Kg</p>
+                        <p class="text-xs ${boxSubClass} font-semibold mt-1">Equivale a ~${bultosRestantes.toFixed(2)} bultos</p>
+                    </div>
                 </div>
             </div>`;
         }).join('');
