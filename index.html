@@ -98,9 +98,10 @@
         <p id="current-time" class="text-sm sm:text-xl font-bold"></p>
        </div>
        <div class="border-l border-white/30 pl-4 flex flex-col items-end shrink-0">
-         <span id="display-username" class="font-bold text-xs sm:text-sm bg-white/20 px-3 py-1 rounded-full mb-1">Usuario</span>
-         <button onclick="logout()" class="text-[10px] sm:text-xs text-amber-100 hover:text-white underline">Cerrar sesión</button>
-       </div>
+        <span id="display-username" class="font-bold text-xs sm:text-sm bg-white/20 px-3 py-1 rounded-full mb-1">Usuario</span>
+        <button id="btn-corte-caja" onclick="abrirModalCorte()" class="text-xs sm:text-sm text-white font-bold bg-red-500 hover:bg-red-600 px-3 py-1 rounded-lg mb-1 transition-all shadow-sm">💰 Corte de Caja</button>
+        <button onclick="logout()" class="text-[10px] sm:text-xs text-amber-100 hover:text-white underline">Cerrar sesión</button>
+      </div>
       </div>
 
      </div>
@@ -116,6 +117,7 @@
         <button onclick="switchTab('reporte-semanal')" class="tab-btn px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-transparent text-gray-600 text-sm sm:text-base hover:bg-gray-50 transition-all"> 📈 Semanal </button> 
         <button onclick="switchTab('estadisticas')" class="tab-btn px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-transparent text-gray-600 text-sm sm:text-base hover:bg-gray-50 transition-all"> 📉 Estadísticas </button>
         <button id="tab-btn-usuarios" onclick="switchTab('usuarios')" class="tab-btn px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-transparent text-gray-600 text-sm sm:text-base hover:bg-gray-50 transition-all hidden"> 👥 Usuarios </button>
+        <button id="tab-btn-calendario" onclick="switchTab('calendario')" class="tab-btn px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-transparent text-gray-600 text-sm sm:text-base hover:bg-gray-50 transition-all hidden"> 📅 Calendario </button>
      </div>
     </div>
    </div>
@@ -186,6 +188,18 @@
            <p id="change-amount" class="text-xl sm:text-2xl font-bold text-green-700">$0.00</p>
           </div>
          </div>
+
+         <div id="flour-selector-container" class="mt-3 hidden bg-amber-50 p-3 rounded-xl border border-amber-200">
+            <label class="text-xs sm:text-sm font-bold text-amber-800 block mb-1">🌾 Harina en uso para esta venta:</label>
+            <select id="sale-flour-type" class="w-full border-2 border-amber-300 rounded-xl px-3 py-2 text-sm focus:border-amber-500 focus:outline-none bg-white font-semibold text-gray-700">
+                <option value="">-- Selecciona una opción --</option>
+                <option value="maseca">Maseca Premium</option>
+                <option value="blanca">Harimasa Blanca</option>
+                <option value="amarilla">Harimasa Amarilla</option>
+                <option value="fardo">Harimasa Fardo</option>
+            </select>
+         </div>
+         <div class="grid grid-cols-2 gap-2 sm:gap-3 mt-3 sm:mt-4">
          <div class="grid grid-cols-2 gap-2 sm:gap-3 mt-3 sm:mt-4">
             <button onclick="clearCart()" class="btn-action bg-red-100 hover:bg-red-200 text-red-600 py-2 sm:py-3 rounded-xl text-sm sm:text-base font-bold transition-all flex items-center justify-center gap-1"> 🗑️ <span class="hidden sm:inline">Limpiar</span> </button> 
             <button onclick="generateTicket()" class="btn-action bg-purple-500 hover:bg-purple-600 text-white py-2 sm:py-3 rounded-xl text-sm sm:text-base font-bold transition-all flex items-center justify-center gap-1"> 🎫 <span class="hidden sm:inline">Ticket</span> </button>
@@ -339,6 +353,41 @@
      </section>
     </div>
 
+    <div id="tab-calendario" class="tab-content hidden">
+        <section class="bg-white rounded-2xl shadow-xl p-4 sm:p-6 max-w-4xl mx-auto">
+         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+          <h2 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2"><span class="text-2xl sm:text-3xl">📅</span> Historial de Ventas</h2>
+          <button onclick="clearDateFilter()" class="bg-amber-100 hover:bg-amber-200 text-amber-700 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm">Volver al día de Hoy</button>
+         </div>
+         
+         <div class="bg-gray-50 rounded-xl p-4 border border-gray-200 shadow-inner">
+             <div class="flex items-center justify-between mb-4">
+                 <button onclick="changeHistorialMonth(-1)" class="p-2 bg-white hover:bg-gray-100 rounded-lg transition-colors shadow-sm"><span class="text-xl">⬅️</span></button>
+                 <span id="historial-month-year" class="font-bold text-lg sm:text-xl text-gray-800 capitalize">Cargando...</span>
+                 <button onclick="changeHistorialMonth(1)" class="p-2 bg-white hover:bg-gray-100 rounded-lg transition-colors shadow-sm"><span class="text-xl">➡️</span></button>
+             </div>
+             <div class="grid grid-cols-7 gap-1 sm:gap-2 mb-2 text-center text-xs font-bold text-gray-500 uppercase tracking-wide">
+                 <div>Lu</div><div>Ma</div><div>Mi</div><div>Ju</div><div>Vi</div><div>Sa</div><div>Do</div>
+             </div>
+             <div id="historial-calendar-days" class="grid grid-cols-7 gap-1 sm:gap-2">
+                 </div>
+         </div>
+         
+         <div class="mt-6 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 hidden shadow-sm" id="historial-summary">
+             <h3 class="text-amber-800 font-bold mb-2 text-lg">Resumen del <span id="historial-summary-date" class="underline"></span></h3>
+             <div class="flex justify-between items-center bg-white p-3 rounded-lg mb-2 shadow-sm">
+                <span class="text-gray-600 font-semibold">Total vendido:</span> 
+                <span id="historial-summary-total" class="font-black text-xl text-green-600"></span>
+             </div>
+             <div class="flex justify-between items-center bg-white p-3 rounded-lg mb-3 shadow-sm">
+                <span class="text-gray-600 font-semibold">Transacciones:</span> 
+                <span id="historial-summary-trans" class="font-black text-xl text-gray-800"></span>
+             </div>
+             <p class="text-xs sm:text-sm text-amber-700 bg-amber-100 p-2 rounded-lg font-semibold text-center">💡 Navega a las pestañas "Diario" o "Estadísticas" para ver el detalle de esta fecha.</p>
+         </div>
+        </section>
+       </div>
+
    </main>
   </div>
 
@@ -479,10 +528,35 @@
     </div>
   </div>
 
-  <div id="toast" class="fixed bottom-6 left-4 right-4 sm:left-auto sm:right-6 sm:w-auto bg-green-500 text-white px-5 sm:px-6 py-3 rounded-xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-[300] text-center sm:text-left text-sm sm:text-base font-semibold">
-   <p id="toast-message">Mensaje</p>
-  </div>
+  <div id="historic-sale-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+</div>
 
+<div id="corte-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+<div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm animate-slide flex flex-col">
+  <div class="bg-gradient-to-r from-red-500 to-pink-600 text-white p-4 rounded-t-2xl flex justify-between items-center">
+      <h3 class="text-xl font-bold">💰 Corte de Caja</h3>
+      <button onclick="cerrarModalCorte()" class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
+  </div>
+  <div class="p-6">
+      <p class="text-gray-600 text-sm mb-4">Ingresa el total de dinero físico que hay en caja. El sistema lo comparará con las ventas registradas y enviará el reporte al administrador.</p>
+      
+      <label class="text-sm font-bold text-gray-700 mb-2 block">Efectivo Físico Entregado:</label>
+      <div class="relative">
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-xl">$</span>
+          <input type="number" id="efectivo-entregado" class="w-full border-2 border-gray-200 rounded-xl pl-8 pr-4 py-3 text-xl font-bold focus:border-red-500 focus:outline-none" placeholder="0.00">
+      </div>
+      
+      <button onclick="ejecutarCorte()" class="w-full mt-6 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold text-lg transition-all shadow-md">
+          Confirmar y Enviar Reporte
+      </button>
+  </div>
+</div>
+</div>
+<div id="toast" class="fixed bottom-6 left-4 right-4 sm:left-auto sm:right-6 sm:w-auto bg-green-500 text-white px-5 sm:px-6 py-3 rounded-xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-[300] text-center sm:text-left text-sm sm:text-base font-semibold">
+<p id="toast-message">Mensaje</p>
+</div>
+
+  
   <script>
 
     // ============ GESTIÓN DE PRODUCTOS ============
@@ -579,22 +653,38 @@
     const db = firebase.firestore();
 
     // ============ ESTADO GLOBAL ============
-    let state = {
+   // ============ ESTADO GLOBAL ============
+   let state = {
       businessName: 'Tortillería El Maíz Dorado',
       products: [],
       cart: [],
       salesHistory: [],
-      weeklyHistory: [],
+      weeklyHistory: [], // Historial de fechas anteriores
       users: [],
       inventory: {} 
     };
 
     let currentUser = null;
+    let calendarCurrentDate = new Date();
+    let selectedFilterDate = null; // Variable mágica que filtra toda la app
 
     const getVisibleSales = () => {
       if (!currentUser) return [];
-      if (currentUser.role === 'admin') return state.salesHistory;
-      return state.salesHistory.filter(s => s.branch === currentUser.branch);
+      
+      // Checa si estamos viendo "Hoy" o una fecha del pasado
+      const dateToFilter = selectedFilterDate ? new Date(selectedFilterDate).toDateString() : new Date().toDateString();
+      let targetSales = [];
+      
+      if (dateToFilter === new Date().toDateString()) {
+          targetSales = state.salesHistory || [];
+      } else {
+          // Si es el pasado, busca en el historial
+          const hist = state.weeklyHistory.find(w => w.date === dateToFilter);
+          targetSales = hist ? (hist.sales || []) : [];
+      }
+
+      if (currentUser.role === 'admin') return targetSales;
+      return targetSales.filter(s => s.branch === currentUser.branch);
     };
 
     // ============ BASE DE DATOS ============
@@ -716,9 +806,20 @@
         document.getElementById('branch-title').textContent = currentUser.branch;
         document.getElementById('history-branch-name').textContent = isAdmin ? 'Global' : currentUser.branch;
 
+        // Mostrar/Ocultar pestañas y botones según el rol
         document.getElementById('tab-btn-usuarios').style.display = isAdmin ? 'block' : 'none';
         document.getElementById('btn-new-product').style.display = isAdmin ? 'flex' : 'none';
         document.getElementById('btn-clear-history').style.display = isAdmin ? 'block' : 'none';
+        
+        // Aquí agregas lo del calendario
+        const btnCalendario = document.getElementById('tab-btn-calendario');
+        if (btnCalendario) btnCalendario.style.display = isAdmin ? 'block' : 'none';
+        
+        // AQUÍ OCULTAMOS EL BOTÓN DE CORTE DE CAJA SI ES ADMIN
+        const btnCorte = document.getElementById('btn-corte-caja');
+        if (btnCorte) {
+            btnCorte.style.display = isAdmin ? 'none' : 'block';
+        }
 
         const adminPanelAlmacen = document.getElementById('almacen-admin-panel');
         if (isAdmin) adminPanelAlmacen.classList.remove('hidden');
@@ -755,7 +856,6 @@
         const grid = document.getElementById('almacen-grid');
         if (!grid) return;
 
-        // Actualizar el selector de envíos si es admin
         if (currentUser.role === 'admin') {
             const select = document.getElementById('inv-branch');
             const uniqueBranches = [...new Set(state.users.map(u => u.branch))].filter(b => b && b !== 'Todas');
@@ -764,7 +864,6 @@
             }
         }
 
-        // Determinar qué sucursales mostrar según el rol
         const branchesToRender = currentUser.role === 'admin' 
             ? [...new Set(state.users.map(u => u.branch))].filter(b => b && b !== 'Todas')
             : [currentUser.branch];
@@ -774,25 +873,19 @@
             return;
         }
 
-        // Dibujar las tarjetas de inventario
         grid.innerHTML = branchesToRender.map(branchName => {
             const inv = state.inventory[branchName] || { maseca: 0, blanca: 0, amarilla: 0, fardo: 0, yieldRemainingKg: 0 };
             const bultosRestantes = inv.yieldRemainingKg / 41; 
             
-            // Buscar los usuarios asignados a esta sucursal (excluyendo a los admins)
             const usuariosSucursal = state.users
                 .filter(u => u.branch === branchName && u.role !== 'admin')
                 .map(u => u.username)
                 .join(', ');
             const encargadoTexto = usuariosSucursal ? usuariosSucursal : 'Sin asignar';
 
-            // --- LÓGICA DE ALERTA DE INVENTARIO BAJO ---
-            // Definimos el límite para la alerta (ejemplo: 3 bultos restantes)
             const LIMITE_BULTOS = 3;
-            // Evaluamos si el inventario está en estado crítico
             const alertaBaja = bultosRestantes <= LIMITE_BULTOS;
 
-            // Clases dinámicas dependiendo de si hay alerta o no
             const boxBgClass = alertaBaja ? 'bg-red-100 border-red-400' : 'bg-amber-100 border-amber-300';
             const boxTitleClass = alertaBaja ? 'text-red-800' : 'text-amber-800';
             const boxValueClass = alertaBaja ? 'text-red-600' : 'text-amber-600';
@@ -826,19 +919,19 @@
                     <div class="space-y-2 text-sm text-gray-700 bg-white p-3 rounded-xl border border-gray-200 mb-4 shadow-sm">
                         <p class="flex justify-between items-center border-b border-gray-100 pb-1.5">
                             <span class="font-semibold text-gray-600">Maseca Premium:</span> 
-                            <span class="font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md">${inv.maseca || 0} bultos</span>
+                            <span class="font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md">${Number(inv.maseca || 0).toFixed(2)} bultos</span>
                         </p>
                         <p class="flex justify-between items-center border-b border-gray-100 pb-1.5">
                             <span class="font-semibold text-gray-600">Harimasa Blanca:</span> 
-                            <span class="font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md">${inv.blanca || 0} bultos</span>
+                            <span class="font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md">${Number(inv.blanca || 0).toFixed(2)} bultos</span>
                         </p>
                         <p class="flex justify-between items-center border-b border-gray-100 pb-1.5">
                             <span class="font-semibold text-gray-600">Harimasa Amarilla:</span> 
-                            <span class="font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md">${inv.amarilla || 0} bultos</span>
+                            <span class="font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md">${Number(inv.amarilla || 0).toFixed(2)} bultos</span>
                         </p>
                         <p class="flex justify-between items-center">
                             <span class="font-semibold text-gray-600">Harimasa Fardo:</span> 
-                            <span class="font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md">${inv.fardo || 0} bultos</span>
+                            <span class="font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md">${Number(inv.fardo || 0).toFixed(2)} bultos</span>
                         </p>
                     </div>
                     
@@ -934,6 +1027,79 @@
     function editUser(id) { openUserModal(id); }
     async function deleteUser(id) { if(confirm('¿Eliminar usuario?')) { state.users = state.users.filter(u => u.id !== id); await saveState(); renderUsersTable(); showToast('Eliminado'); } }
 
+    // ============ CORTE DE CAJA Y WHATSAPP (SIN API KEY) ============
+    function abrirModalCorte() {
+        document.getElementById('efectivo-entregado').value = '';
+        document.getElementById('corte-modal').classList.remove('hidden');
+        document.getElementById('corte-modal').classList.add('flex');
+    }
+
+    function cerrarModalCorte() {
+        document.getElementById('corte-modal').classList.add('hidden');
+        document.getElementById('corte-modal').classList.remove('flex');
+    }
+
+    function ejecutarCorte() {
+        const entregado = parseFloat(document.getElementById('efectivo-entregado').value);
+        
+        if (isNaN(entregado) || entregado < 0) {
+            return showToast('Ingresa una cantidad válida', 'error');
+        }
+
+        // 1. Calcular Efectivo Esperado (Suma de ventas de su sucursal hoy)
+        const ventasHoy = state.salesHistory.filter(s => s.branch === currentUser.branch);
+        const esperado = ventasHoy.reduce((sum, s) => sum + s.total, 0);
+
+        // 2. Determinar Estado (Sobrante o Faltante)
+        const diferencia = entregado - esperado;
+        let estado = "";
+        if (diferencia === 0) {
+            estado = "Caja cuadrada exactamente ✅";
+        } else if (diferencia > 0) {
+            estado = `Sobran $${diferencia.toFixed(2)} 🟢`;
+        } else {
+            estado = `Faltan $${Math.abs(diferencia).toFixed(2)} 🔴`;
+        }
+
+        // 3. Preparar datos de fecha y hora
+        const fechaStr = new Date().toLocaleDateString('es-MX');
+        const horaStr = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+
+        // 4. Formatear mensaje exacto
+        const mensajeTexto = `*CORTE DE CAJA*
+Sucursal: ${currentUser.branch}
+Usuario: ${currentUser.username}
+Fecha: ${fechaStr} a las ${horaStr}
+
+Efectivo Esperado: $${esperado.toFixed(2)}
+Efectivo Entregado: $${entregado.toFixed(2)}
+
+ESTADO: ${estado}`;
+
+        // 5. Generar enlace oficial de WhatsApp y abrirlo
+        enviarWhatsAppOficial(mensajeTexto);
+
+        cerrarModalCorte();
+        showToast('Abriendo WhatsApp para enviar reporte...');
+        
+        // Cierra la sesión automáticamente después de 3 segundos para mayor seguridad
+        setTimeout(() => logout(), 3000); 
+    }
+
+    function enviarWhatsAppOficial(mensaje) {
+        // Tu número de administrador ya formateado para la URL (sin el signo + ni espacios)
+        const telefonoAdmin = "529637038597"; 
+
+        // Codificamos el texto para que los saltos de línea y espacios funcionen en WhatsApp
+        const textoCodificado = encodeURIComponent(mensaje);
+        
+        // URL oficial de WhatsApp Click-to-Chat
+        const url = `https://wa.me/${telefonoAdmin}?text=${textoCodificado}`;
+
+        // Abre WhatsApp en una nueva pestaña o en la app del celular
+        window.open(url, '_blank');
+    }
+
     // ============ PESTAÑAS ============
     function switchTab(tabName) {
       document.querySelectorAll('.tab-content').forEach(tab => { tab.classList.add('hidden'); tab.classList.remove('active'); });
@@ -949,6 +1115,94 @@
       else if (tabName === 'reporte-semanal') generateWeeklyReport(); 
       else if (tabName === 'estadisticas') { if(currentUser && currentUser.role === 'admin') refreshAdminData(); else updateStatistics(); }
       else if (tabName === 'almacen') renderAlmacen();
+      else if (tabName === 'calendario') renderHistorialCalendar();
+    }
+
+    // ============ CALENDARIO HISTÓRICO ============
+    function renderHistorialCalendar() {
+        const year = calendarCurrentDate.getFullYear();
+        const month = calendarCurrentDate.getMonth();
+        const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        
+        const labelEl = document.getElementById('historial-month-year');
+        if(labelEl) labelEl.textContent = `${monthNames[month]} ${year}`;
+        
+        // Ajuste para que la semana empiece en Lunes
+        let firstDay = new Date(year, month, 1).getDay();
+        firstDay = firstDay === 0 ? 6 : firstDay - 1; 
+
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        const grid = document.getElementById('historial-calendar-days');
+        if(!grid) return;
+        grid.innerHTML = '';
+        
+        for (let i = 0; i < firstDay; i++) { grid.innerHTML += `<div class="p-2"></div>`; }
+        
+        // Encontrar los días pintados de naranja (Días con ventas)
+        const daysWithSales = new Set();
+        if (state.salesHistory && state.salesHistory.length > 0) daysWithSales.add(new Date().toDateString());
+        if (state.weeklyHistory) {
+            state.weeklyHistory.forEach(w => { if (w.sales && w.sales.length > 0) daysWithSales.add(w.date); });
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateObj = new Date(year, month, day);
+            const dateStr = dateObj.toDateString();
+            const hasSales = daysWithSales.has(dateStr);
+            const isSelected = selectedFilterDate && new Date(selectedFilterDate).toDateString() === dateStr;
+            const isToday = new Date().toDateString() === dateStr;
+            
+            let btnClass = "relative h-12 sm:h-16 rounded-xl flex flex-col items-center justify-center text-sm font-medium transition-all border-2 ";
+            
+            if (isSelected) {
+                btnClass += "bg-amber-500 text-white border-amber-600 shadow-lg transform scale-105 z-10";
+            } else if (hasSales) {
+                btnClass += "bg-orange-50 text-orange-800 border-orange-300 hover:bg-orange-100 cursor-pointer shadow-sm";
+            } else {
+                btnClass += "bg-gray-50 text-gray-400 border-transparent cursor-default";
+            }
+
+            if (isToday && !isSelected) btnClass += " ring-2 ring-amber-400 ring-offset-2";
+
+            grid.innerHTML += `<button onclick="${hasSales ? `selectHistorialDate('${dateStr}')` : ''}" class="${btnClass}">
+                <span class="${isToday ? 'font-black' : ''}">${day}</span>
+                ${hasSales ? '<span class="w-2 h-2 rounded-full bg-orange-500 mt-1 shadow-sm"></span>' : ''}
+            </button>`;
+        }
+
+        const summaryBox = document.getElementById('historial-summary');
+        if (selectedFilterDate && summaryBox) {
+            const filteredSales = getVisibleSales();
+            document.getElementById('historial-summary-date').textContent = new Date(selectedFilterDate).toLocaleDateString('es-MX', {weekday: 'long', day:'numeric', month:'long', year:'numeric'});
+            document.getElementById('historial-summary-total').textContent = `$${filteredSales.reduce((s, i) => s + i.total, 0).toFixed(2)}`;
+            document.getElementById('historial-summary-trans').textContent = filteredSales.length;
+            summaryBox.classList.remove('hidden');
+        } else if(summaryBox) { summaryBox.classList.add('hidden'); }
+    }
+
+    function changeHistorialMonth(offset) {
+        calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + offset);
+        renderHistorialCalendar();
+    }
+
+    function selectHistorialDate(dateStr) {
+        selectedFilterDate = dateStr;
+        renderHistorialCalendar();
+        // Al seleccionar fecha, recargamos TODA la app con los datos pasados
+        renderSalesHistory(); 
+        updateStatistics();
+        if(document.getElementById('tab-reporte-diario').classList.contains('active')) generateDailyReport();
+        showToast(`Viajando al: ${new Date(dateStr).toLocaleDateString('es-MX')}`);
+    }
+    
+    function clearDateFilter() {
+        selectedFilterDate = null;
+        renderHistorialCalendar();
+        renderSalesHistory(); 
+        updateStatistics();
+        if(document.getElementById('tab-reporte-diario').classList.contains('active')) generateDailyReport();
+        showToast('Viendo datos de Hoy');
     }
 
     // ============ RENDERIZADO (PRODUCTOS, VENTAS RÁPIDAS Y CARRITO) ============
@@ -1095,22 +1349,40 @@
       
       if(window.innerWidth < 1024) { setTimeout(() => { document.getElementById('pos-right-panel').scrollIntoView({ behavior: 'smooth' }); }, 100); }
     }
-    
     function renderCart() {
       const cartDiv = document.getElementById('cart-items');
       if(!cartDiv) return;
       
       if(!currentUser || currentUser.role === 'admin') { cartDiv.innerHTML = ''; return; }
       
-      if (state.cart.length === 0) { cartDiv.innerHTML = '<p class="text-gray-400 text-sm sm:text-base text-center py-6 sm:py-8">Carrito vacío</p>'; document.getElementById('cart-subtotal').textContent = '$0.00'; document.getElementById('cart-total').textContent = '$0.00'; return; }
+      if (state.cart.length === 0) { 
+          cartDiv.innerHTML = '<p class="text-gray-400 text-sm sm:text-base text-center py-6 sm:py-8">Carrito vacío</p>'; 
+          document.getElementById('cart-subtotal').textContent = '$0.00'; 
+          document.getElementById('cart-total').textContent = '$0.00'; 
+          document.getElementById('flour-selector-container').classList.add('hidden'); // Ocultar selector
+          return; 
+      }
       
       let subtotal = 0;
+      let tieneKilos = false;
+
       cartDiv.innerHTML = state.cart.map((item, idx) => {
         subtotal += item.total;
+        if (item.saleType === 'kg') tieneKilos = true; // Detectamos si hay productos por kilo
         const desc = item.saleType === 'pieza' ? `${item.qty} pz × $${item.price.toFixed(2)}/Pz` : `${item.qty}g × $${item.price.toFixed(2)}/Kg`;
         return `<div class="flex items-center justify-between bg-gray-50 rounded-xl p-2 sm:p-3 animate-slide"><div class="flex items-center gap-2 sm:gap-3"><span class="text-xl sm:text-2xl">${item.emoji}</span><div><p class="font-semibold text-gray-800 text-xs sm:text-sm">${item.name}</p><p class="text-gray-500 text-[10px] sm:text-xs">${desc}</p></div></div><div class="flex items-center gap-1 sm:gap-2"><span class="font-bold text-gray-800 text-sm sm:text-base">$${item.total.toFixed(2)}</span><button onclick="removeFromCart(${idx})" class="text-red-400 hover:text-red-600 p-2 sm:p-1 text-lg leading-none">&times;</button></div></div>`;
       }).join('');
-      document.getElementById('cart-subtotal').textContent = `$${subtotal.toFixed(2)}`; document.getElementById('cart-total').textContent = `$${subtotal.toFixed(2)}`;
+      
+      document.getElementById('cart-subtotal').textContent = `$${subtotal.toFixed(2)}`; 
+      document.getElementById('cart-total').textContent = `$${subtotal.toFixed(2)}`;
+
+      // Mostramos u ocultamos el selector de harina
+      const flourContainer = document.getElementById('flour-selector-container');
+      if (tieneKilos) {
+          flourContainer.classList.remove('hidden');
+      } else {
+          flourContainer.classList.add('hidden');
+      }
     }
     
     function removeFromCart(index) { state.cart.splice(index, 1); renderCart(); }
@@ -1132,14 +1404,56 @@
       else { cd.classList.add('hidden'); }
     }
 
+
     async function completeSale() {
       if (state.cart.length === 0) return showToast('Carrito vacío', 'error');
       const total = state.cart.reduce((sum, item) => sum + item.total, 0);
       
+      // Calculamos cuántos kilos en total se están vendiendo
       const kilosVendidos = state.cart.reduce((sum, item) => {
           if (item.saleType === 'kg') return sum + (item.qty / 1000);
           return sum; 
       }, 0);
+
+      // --- INICIO: VALIDACIÓN ESTRICTA POR TIPO DE HARINA ---
+      let selectedFlour = '';
+      if (kilosVendidos > 0) {
+          const selectElement = document.getElementById('sale-flour-type');
+          selectedFlour = selectElement.value;
+          
+          if (!selectedFlour) {
+              return showToast('❌ Selecciona la harina que estás usando', 'error');
+          }
+
+          // Obtenemos el nombre de la harina para los mensajes
+          const nombreHarina = selectElement.options[selectElement.selectedIndex].text;
+          const inv = state.inventory[currentUser.branch] || { maseca: 0, blanca: 0, amarilla: 0, fardo: 0, yieldRemainingKg: 0 };
+          
+          // Calculamos la fracción de bulto que requiere esta venta específica
+          const bultosNecesarios = kilosVendidos / 41;
+          const stockHarinaSeleccionada = inv[selectedFlour] || 0;
+
+          // Si los bultos en sistema son menores a los que se requieren para la venta
+          if (stockHarinaSeleccionada < bultosNecesarios) {
+              showToast(`❌ Venta denegada: No hay suficiente ${nombreHarina}`, 'error');
+              
+              const mensajeAlerta = `*ALERTA CRÍTICA DE INVENTARIO* 🚨
+Sucursal: ${currentUser.branch}
+Usuario: ${currentUser.username}
+Hora: ${new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
+
+Se intentó procesar una venta de *${kilosVendidos.toFixed(2)} Kg* seleccionando *${nombreHarina}*.
+
+Bultos necesarios: *${bultosNecesarios.toFixed(2)}*
+Bultos disponibles: *${stockHarinaSeleccionada.toFixed(2)}*
+
+⚠️ *VENTA BLOQUEADA.* Se requiere enviar ${nombreHarina} inmediatamente a la sucursal.`;
+
+              enviarWhatsAppOficial(mensajeAlerta);
+              return; // Bloquea la venta
+          }
+      }
+      // --- FIN VALIDACIÓN ---
 
       const now = new Date();
       
@@ -1149,14 +1463,27 @@
         user: currentUser.username, branch: currentUser.branch
       };
 
-      if(kilosVendidos > 0) {
-          if(state.inventory && state.inventory[currentUser.branch]) {
-              state.inventory[currentUser.branch].yieldRemainingKg -= kilosVendidos;
-          } else {
-              state.inventory[currentUser.branch] = { maseca: 0, blanca: 0, amarilla: 0, fardo: 0, yieldRemainingKg: -kilosVendidos };
+      // --- DESCUENTO FÍSICO DEL BULTO SELECCIONADO ---
+      if (kilosVendidos > 0) {
+          let inv = state.inventory[currentUser.branch];
+          if (!inv) {
+              inv = { maseca: 0, blanca: 0, amarilla: 0, fardo: 0, yieldRemainingKg: 0 };
+              state.inventory[currentUser.branch] = inv;
+          }
+
+          // 1. Restamos el rendimiento general
+          inv.yieldRemainingKg -= kilosVendidos;
+          
+          // 2. Descontamos la fracción de bulto de la harina SELECCIONADA
+          let bultosADescontar = kilosVendidos / 41;
+          if (inv[selectedFlour] !== undefined) {
+              inv[selectedFlour] -= bultosADescontar;
+              // Ajuste de seguridad por si hay micro-decimales
+              if (inv[selectedFlour] < 0) inv[selectedFlour] = 0; 
           }
       }
 
+      // Guardamos la venta en Firebase
       try {
         const docRef = db.collection('datos_sistema').doc('punto_de_venta');
         const docSnap = await docRef.get();
@@ -1165,14 +1492,25 @@
             cloudData.salesHistory = cloudData.salesHistory || [];
             cloudData.salesHistory.push(newSale);
             state.salesHistory = cloudData.salesHistory; 
-            cloudData.inventory = state.inventory;
+            cloudData.inventory = state.inventory; 
             await docRef.set(cloudData);
         } else {
-            state.salesHistory.push(newSale); await saveState();
+            state.salesHistory.push(newSale); 
+            await saveState();
         }
-        clearCart(); renderSalesHistory(); renderAlmacen(); showToast(`Venta procesada: $${total.toFixed(2)}`);
-      } catch (error) { showToast("Error al procesar venta en la red", "error"); }
+        
+        clearCart(); 
+        document.getElementById('sale-flour-type').value = ''; // Reiniciamos el selector
+        renderSalesHistory(); 
+        renderAlmacen(); 
+        showToast(`Venta procesada: $${total.toFixed(2)}`);
+        
+      } catch (error) { 
+          showToast("Error al procesar venta en la red", "error"); 
+      }
     }
+
+    
 
     // ============ HISTORIAL Y ESTADÍSTICAS ============
     function renderSalesHistory() {
@@ -1251,10 +1589,23 @@
                     const bMax = Object.entries(bProductCount).sort((a, b) => b[1] - a[1])[0];
                     if (bMax) bBest = bMax[0];
 
+                    // --- INICIO NUEVO: Buscar usuarios de la sucursal ---
+                    const usuariosSucursal = state.users
+                        .filter(u => u.branch === bName && u.role !== 'admin')
+                        .map(u => u.username)
+                        .join(', ');
+                    const encargadoTexto = usuariosSucursal ? usuariosSucursal : 'Sin asignar';
+                    // --- FIN NUEVO ---
+
                     return `
                     <div class="bg-white rounded-2xl shadow border-2 border-gray-100 p-4 sm:p-5 relative overflow-hidden transition-all hover:shadow-lg hover:border-blue-200 group">
                         <div class="absolute -right-4 -top-4 text-5xl sm:text-6xl opacity-10 group-hover:scale-110 transition-transform">🏬</div>
-                        <h4 class="text-base sm:text-lg font-bold text-gray-800 mb-2 sm:mb-3 border-b border-gray-100 pb-2">${bName}</h4>
+                        
+                        <div class="border-b border-gray-100 pb-2 mb-2 sm:mb-3">
+                            <h4 class="text-base sm:text-lg font-bold text-gray-800 leading-tight">${bName}</h4>
+                            <p class="text-xs text-blue-600 font-semibold mt-0.5">👤 ${encargadoTexto}</p>
+                        </div>
+                        
                         <div class="space-y-1 sm:space-y-2 text-xs sm:text-sm">
                             <div class="flex justify-between"><span class="text-gray-500">Ventas:</span> <span class="font-bold text-blue-600">$${bTotal.toFixed(2)}</span></div>
                             <div class="flex justify-between"><span class="text-gray-500">Tickets:</span> <span class="font-bold text-gray-800">${bSales.length}</span></div>
@@ -1297,7 +1648,6 @@
             }).join('');
         }
     }
-
     // ============ FORMATO DE TICKET PROFESIONAL ============
     function generateHTMLTicket(businessName, branch, cajero, fecha, hora, items, total, pagoCliente = 0, timestamp = null) {
         // Se genera un número de folio de 6 dígitos
@@ -1398,9 +1748,21 @@
     function generateDailyReport() {
         const visibleSales = getVisibleSales();
         const dailyTotal = visibleSales.reduce((sum, s) => sum + s.total, 0);
-        let report = `REPORTE DIARIO DE VENTAS - ${currentUser.role === 'admin' ? 'TODAS LAS SUCURSALES' : currentUser.branch}\nGenerado: ${new Date().toLocaleTimeString('es-MX')}\n\nTotal: $${dailyTotal.toFixed(2)}\nTransacciones: ${visibleSales.length}\n\nDetalle:\n`;
+        
+        // --- INICIO NUEVO: Agregar usuarios en la cabecera ---
+        let headerText = `REPORTE DIARIO DE VENTAS - ${currentUser.role === 'admin' ? 'TODAS LAS SUCURSALES' : currentUser.branch}\n`;
+        
+        if (currentUser.role !== 'admin') {
+            const usuariosSucursal = state.users.filter(u => u.branch === currentUser.branch && u.role !== 'admin').map(u => u.username).join(', ');
+            headerText += `👤 Encargado(s): ${usuariosSucursal || 'Sin asignar'}\n`;
+        }
+        // --- FIN NUEVO ---
+
+        let report = `${headerText}Generado: ${new Date().toLocaleTimeString('es-MX')}\n\nTotal: $${dailyTotal.toFixed(2)}\nTransacciones: ${visibleSales.length}\n\nDetalle:\n`;
+        
         visibleSales.forEach((sale, i) => {
-            report += `#${i+1} [${sale.time}] ${sale.branch}: $${sale.total.toFixed(2)}\n`;
+            // Aquí agregamos "(Cajero: nombre)" al lado de la sucursal
+            report += `#${i+1} [${sale.time}] ${sale.branch} (Cajero: ${sale.user}): $${sale.total.toFixed(2)}\n`;
             sale.items.forEach(item => {
                 const unt = item.saleType === 'pieza' ? 'pz' : 'g';
                 report += `  - ${item.qty}${unt} ${item.name}\n`;
@@ -1483,9 +1845,17 @@
             report += `══════════════════════════════════════════════════════════════\n`;
             Object.entries(branchSummary).sort((a, b) => b[1].total - a[1].total).forEach(([branch, data]) => {
                     const percentage = ((data.total / totalSemanal) * 100).toFixed(1);
+                    
+                    // --- BUSCAMOS AL USUARIO DE LA SUCURSAL ---
+                    const usuariosSucursal = state.users
+                        .filter(u => u.branch === branch && u.role !== 'admin')
+                        .map(u => u.username)
+                        .join(', ');
+                    const encargadoTexto = usuariosSucursal ? usuariosSucursal : 'Sin asignar';
+
                     report += `  • ${branch.padEnd(16)} $${data.total.toFixed(2).padStart(8)} (${percentage}% del global) | ${data.count} ventas\n`;
+                    report += `    👤 Atendida por: ${encargadoTexto}\n\n`;
                 });
-            report += `\n`;
         }
 
         report += `══════════════════════════════════════════════════════════════\n`;
