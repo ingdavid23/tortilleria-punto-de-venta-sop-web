@@ -131,13 +131,21 @@
       
       <div id="pos-left-panel" class="lg:col-span-2 flex flex-col gap-4 sm:gap-6 order-2 lg:order-1">
        
-       <section class="bg-white rounded-2xl shadow-xl p-4 sm:p-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-         <h2 class="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2"><span class="text-xl sm:text-2xl">📦</span> Productos</h2>
-         <button id="btn-new-product" onclick="openProductModal()" class="btn-action bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl text-sm sm:text-base font-semibold transition-all flex items-center justify-center gap-2"> <span>➕</span> Nuevo </button>
-        </div>
-        <div id="products-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4"></div>
-       </section>
+        <section class="bg-white rounded-2xl shadow-xl p-4 sm:p-6 transition-all duration-300">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+             <div class="flex items-center gap-2 cursor-pointer select-none group" onclick="toggleProductsMenu()" title="Minimizar/Maximizar catálogo">
+                 <h2 class="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2 group-hover:text-amber-600 transition-colors">
+                     <span class="text-xl sm:text-2xl">📦</span> Productos
+                 </h2>
+                 <span id="toggle-products-icon" class="text-gray-400 bg-gray-100 rounded-full w-6 h-6 flex items-center justify-center transition-transform duration-300 transform group-hover:bg-amber-100 group-hover:text-amber-600 text-xs">▼</span>
+             </div>
+             <button id="btn-new-product" onclick="openProductModal()" class="btn-action bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl text-sm sm:text-base font-semibold transition-all flex items-center justify-center gap-2 shadow-md"> <span>➕</span> Nuevo </button>
+            </div>
+            
+            <div id="products-grid-container" class="overflow-hidden transition-all duration-300">
+                <div id="products-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 pb-2"></div>
+            </div>
+           </section>
        
        <section id="quick-sale-section" class="bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl shadow-xl p-4 sm:p-6 text-white">
         <h2 class="text-lg sm:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2"><span class="text-xl sm:text-2xl">💵</span> Venta Rápida</h2>
@@ -415,39 +423,65 @@
 
    </main>
 
-  <div id="product-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-slide">
-        <div class="bg-gradient-to-r from-amber-500 to-orange-500 text-white p-3 sm:p-4 rounded-t-2xl"><h3 id="modal-title" class="text-lg sm:text-xl font-bold">Nuevo Producto</h3></div>
-        <form id="product-form" class="p-4 sm:p-6 space-y-3 sm:space-y-4" onsubmit="saveProduct(event)">
-         <input type="hidden" id="product-id">
-         
-         <div>
-             <label class="text-xs sm:text-sm text-gray-600 font-semibold">Tipo de Venta</label> 
-             <select id="product-sale-type" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 sm:px-4 sm:py-2 mt-1 focus:border-amber-500 focus:outline-none bg-white" onchange="updatePriceLabel()"> 
-                 <option value="kg">Por Kilo (Ej. Tortillas)</option> 
-                 <option value="pieza">Por Pieza (Ej. Queso, Salsa)</option> 
-             </select>
-         </div>
+   <div id="product-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-[100] p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-slide flex flex-col max-h-[90vh]">
+        <div class="bg-gradient-to-r from-amber-500 to-orange-500 text-white p-3 sm:p-4 rounded-t-2xl flex justify-between items-center shrink-0">
+            <h3 id="modal-title" class="text-lg sm:text-xl font-bold">Nuevo Producto</h3>
+            <button type="button" onclick="closeProductModal()" class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
+        </div>
+        
+        <div class="p-4 sm:p-6 overflow-y-auto flex-1">
+            <form id="product-form" class="space-y-3 sm:space-y-4" onsubmit="saveProduct(event)">
+             <input type="hidden" id="product-id">
+             
+             <div>
+                 <label class="text-xs sm:text-sm text-gray-600 font-semibold">Tipo de Venta</label> 
+                 <select id="product-sale-type" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 sm:px-4 sm:py-2 mt-1 focus:border-amber-500 focus:outline-none bg-white cursor-pointer" onchange="updatePriceLabel()"> 
+                     <option value="kg">Por Kilo (Ej. Masa, Tortillas)</option> 
+                     <option value="pieza">Por Pieza (Ej. Queso, Refresco)</option> 
+                     <option value="litro">Por Litro (Ej. Jugo, Salsas)</option> 
+                 </select>
+             </div>
 
-         <div><label class="text-xs sm:text-sm text-gray-600 font-semibold">Nombre</label> <input type="text" id="product-name" required class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 sm:px-4 sm:py-2 mt-1 text-sm sm:text-base focus:border-amber-500 focus:outline-none"></div>
-         
-         <div>
-             <label id="label-product-price" class="text-xs sm:text-sm text-gray-600 font-semibold">Precio por Kg</label> 
-             <input type="number" step="0.01" id="product-price" required class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 sm:px-4 sm:py-2 mt-1 text-sm sm:text-base focus:border-amber-500 focus:outline-none">
-         </div>
-         
-         <div><label class="text-xs sm:text-sm text-gray-600 font-semibold">Emoji/Ícono</label> <input type="text" id="product-emoji" maxlength="2" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 sm:px-4 sm:py-2 mt-1 focus:border-amber-500 focus:outline-none text-xl sm:text-2xl text-center" value="🫓"></div>
-         <div><label class="text-xs sm:text-sm text-gray-600 font-semibold">Color de tarjeta</label> 
-          <select id="product-color" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 sm:px-4 sm:py-2 mt-1 text-sm sm:text-base focus:border-amber-500 focus:outline-none bg-white"> 
-           <option value="amber">Ámbar</option> <option value="yellow">Amarillo</option> <option value="orange">Naranja</option> <option value="blue">Azul</option> <option value="green">Verde</option> <option value="red">Rojo</option> <option value="purple">Morado</option> 
-          </select>
-         </div>
-         <div class="flex gap-2 sm:gap-3 pt-2 sm:pt-4">
-          <button type="button" onclick="closeProductModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 sm:py-3 rounded-xl text-sm sm:text-base font-bold transition-all"> Cancelar </button> 
-          <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white py-2 sm:py-3 rounded-xl text-sm sm:text-base font-bold transition-all"> Guardar </button>
-         </div>
-        </form>
-       </div>
+             <div><label class="text-xs sm:text-sm text-gray-600 font-semibold">Nombre</label> <input type="text" id="product-name" required class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 sm:px-4 sm:py-2 mt-1 text-sm sm:text-base focus:border-amber-500 focus:outline-none"></div>
+             
+             <div>
+                 <label id="label-product-price" class="text-xs sm:text-sm text-gray-600 font-semibold">Precio por Kg</label> 
+                 <input type="number" step="0.01" id="product-price" required class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 sm:px-4 sm:py-2 mt-1 text-sm sm:text-base focus:border-amber-500 focus:outline-none">
+             </div>
+             
+             <div class="grid grid-cols-2 gap-4">
+                 <div>
+                     <label class="text-xs sm:text-sm text-gray-600 font-semibold">Emoji (Opcional)</label> 
+                     <input type="text" id="product-emoji" maxlength="2" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 sm:px-4 sm:py-2 mt-1 focus:border-amber-500 focus:outline-none text-xl sm:text-2xl text-center" value="🫓">
+                 </div>
+                 <div>
+                     <div class="flex justify-between items-center">
+                         <label class="text-xs sm:text-sm text-gray-600 font-semibold">Imagen</label> 
+                         <button type="button" id="btn-remove-image" onclick="removeProductImage()" class="hidden text-[10px] sm:text-xs text-red-500 hover:text-red-700 font-bold transition-colors">🗑️ Quitar</button>
+                     </div>
+                     <input type="file" id="product-image-file" accept="image/*" class="hidden" onchange="previewImage(event)">
+                     <div onclick="document.getElementById('product-image-file').click()" class="w-full h-[46px] border-2 border-dashed border-gray-300 rounded-xl mt-1 flex items-center justify-center cursor-pointer hover:bg-gray-50 overflow-hidden transition-all relative">
+                         <span id="image-preview-text" class="text-xs text-gray-500 font-semibold">📷 Subir foto</span>
+                         <img id="image-preview-img" class="hidden w-full h-full object-cover absolute inset-0">
+                     </div>
+                     <input type="hidden" id="product-image-b64">
+                 </div>
+             </div>
+
+             <div><label class="text-xs sm:text-sm text-gray-600 font-semibold">Color de tarjeta</label> 
+              <select id="product-color" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 sm:px-4 sm:py-2 mt-1 text-sm sm:text-base focus:border-amber-500 focus:outline-none bg-white"> 
+               <option value="amber">Ámbar</option> <option value="yellow">Amarillo</option> <option value="orange">Naranja</option> <option value="blue">Azul</option> <option value="green">Verde</option> <option value="red">Rojo</option> <option value="purple">Morado</option> 
+              </select>
+             </div>
+             
+             <div class="flex gap-2 sm:gap-3 pt-4">
+              <button type="button" onclick="closeProductModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl text-sm sm:text-base font-bold transition-all"> Cancelar </button> 
+              <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white py-3 rounded-xl text-sm sm:text-base font-bold transition-all"> Guardar </button>
+             </div>
+            </form>
+        </div>
+    </div>
   </div>
 
   <div id="user-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
@@ -583,15 +617,69 @@
   
   <script>
 
-    // ============ GESTIÓN DE PRODUCTOS ============
-    function updatePriceLabel() {
+   // ============ GESTIÓN DE PRODUCTOS E IMÁGENES ============
+   function updatePriceLabel() {
         const type = document.getElementById('product-sale-type').value;
-        document.getElementById('label-product-price').textContent = type === 'pieza' ? 'Precio por Pieza' : 'Precio por Kg';
+        const labelEl = document.getElementById('label-product-price');
+        if(labelEl) labelEl.textContent = type === 'pieza' ? 'Precio por Pieza' : 'Precio por Kg';
+    }
+
+    function removeProductImage() {
+        const fileInput = document.getElementById('product-image-file');
+        const b64Input = document.getElementById('product-image-b64');
+        const imgPreview = document.getElementById('image-preview-img');
+        const textPreview = document.getElementById('image-preview-text');
+        const btnRemove = document.getElementById('btn-remove-image');
+
+        if(fileInput) fileInput.value = '';
+        if(b64Input) b64Input.value = '';
+        if(imgPreview) { imgPreview.src = ''; imgPreview.classList.add('hidden'); }
+        if(textPreview) textPreview.classList.remove('hidden');
+        if(btnRemove) btnRemove.classList.add('hidden');
+    }
+
+    function previewImage(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const MAX_SIZE = 150;
+                    let width = img.width; let height = img.height;
+                    
+                    if (width > height) { if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } } 
+                    else { if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; } }
+                    
+                    canvas.width = width; canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    
+                    const b64Input = document.getElementById('product-image-b64');
+                    const imgPreview = document.getElementById('image-preview-img');
+                    const textPreview = document.getElementById('image-preview-text');
+                    const btnRemove = document.getElementById('btn-remove-image');
+
+                    if(b64Input) b64Input.value = dataUrl;
+                    if(imgPreview) { imgPreview.src = dataUrl; imgPreview.classList.remove('hidden'); }
+                    if(textPreview) textPreview.classList.add('hidden');
+                    if(btnRemove) btnRemove.classList.remove('hidden');
+                }
+                img.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
     }
 
     function openProductModal(productId = null) {
-        document.getElementById('product-form').reset();
+        const form = document.getElementById('product-form');
+        if(form) form.reset();
+        
         updatePriceLabel();
+        removeProductImage();
 
         if (productId) {
             const product = state.products.find(p => p.id === productId);
@@ -603,6 +691,14 @@
                 document.getElementById('product-price').value = product.price;
                 document.getElementById('product-emoji').value = product.emoji;
                 document.getElementById('product-color').value = product.color;
+                
+                if (product.image) {
+                    document.getElementById('product-image-b64').value = product.image;
+                    document.getElementById('image-preview-img').src = product.image;
+                    document.getElementById('image-preview-img').classList.remove('hidden');
+                    document.getElementById('image-preview-text').classList.add('hidden');
+                    document.getElementById('btn-remove-image').classList.remove('hidden');
+                }
                 updatePriceLabel();
             }
         } else {
@@ -610,36 +706,40 @@
             document.getElementById('product-id').value = '';
         }
         
-        document.getElementById('product-modal').classList.remove('hidden');
-        document.getElementById('product-modal').classList.add('flex');
+        const modal = document.getElementById('product-modal');
+        if(modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
     }
 
     function closeProductModal() {
-        document.getElementById('product-modal').classList.add('hidden');
-        document.getElementById('product-modal').classList.remove('flex');
+        const modal = document.getElementById('product-modal');
+        if(modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
     }
 
     async function saveProduct(event) {
         event.preventDefault();
-        const id = document.getElementById('product-id').value;
+        
+        const idInput = document.getElementById('product-id');
+        const id = idInput ? idInput.value : '';
+        
+        const imageInput = document.getElementById('product-image-b64');
+        const imageData = imageInput ? imageInput.value : '';
         
         const productData = {
             saleType: document.getElementById('product-sale-type').value,
             name: document.getElementById('product-name').value.trim(),
             price: parseFloat(document.getElementById('product-price').value),
             emoji: document.getElementById('product-emoji').value.trim() || '📦',
-            color: document.getElementById('product-color').value
+            color: document.getElementById('product-color').value,
+            image: imageData
         };
 
         if (id) {
-            // Editar existente
             const index = state.products.findIndex(p => p.id === parseInt(id));
             if (index !== -1) {
                 state.products[index] = { ...state.products[index], ...productData };
                 showToast('Producto actualizado');
             }
         } else {
-            // Crear nuevo
             const newId = state.products.length > 0 ? Math.max(...state.products.map(p => p.id)) + 1 : 1;
             state.products.push({ id: newId, ...productData });
             showToast('Producto creado exitosamente');
@@ -650,6 +750,15 @@
         closeProductModal();
     }
 
+    async function deleteProduct(id) {
+        if (confirm('¿Estás seguro de eliminar este producto del sistema?')) {
+            state.products = state.products.filter(p => p.id !== id);
+            await saveState();
+            renderProducts();
+            showToast('Producto eliminado', 'error');
+        }
+    }
+    
     function editProduct(id) {
         openProductModal(id);
     }
@@ -1240,10 +1349,16 @@ ESTADO: ${estado}`;
       const isAdmin = currentUser && currentUser.role === 'admin';
       grid.innerHTML = state.products.map(product => {
         const unitLabel = product.saleType === 'pieza' ? 'Pz' : 'Kg';
+        
+        // Decidir si mostramos imagen o emoji
+        const visual = product.image 
+            ? `<img src="${product.image}" class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-full shadow-sm mb-1 sm:mb-2 border-2 border-${product.color}-300 bg-white">` 
+            : `<div class="text-3xl sm:text-4xl text-center mb-1 sm:mb-2">${product.emoji}</div>`;
+
         return `
         <div class="product-card bg-gradient-to-br from-${product.color}-100 to-${product.color}-50 rounded-xl p-3 sm:p-4 cursor-pointer transition-all border-2 border-${product.color}-200 hover:border-${product.color}-400 hover:shadow-lg relative group flex flex-col items-center justify-center" onclick="${isAdmin ? '' : `openQuantityModal(${product.id})`}">
-          ${isAdmin ? `<div class="absolute top-1 sm:top-2 right-1 sm:right-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity flex gap-1"><button onclick="event.stopPropagation(); editProduct(${product.id})" class="bg-white/80 hover:bg-white p-1 sm:p-2 rounded-lg text-xs shadow-sm">✏️</button><button onclick="event.stopPropagation(); deleteProduct(${product.id})" class="bg-white/80 hover:bg-red-100 p-1 sm:p-2 rounded-lg text-xs shadow-sm">🗑️</button></div>` : ''}
-          <div class="text-3xl sm:text-4xl text-center mb-1 sm:mb-2">${product.emoji}</div>
+          ${isAdmin ? `<div class="absolute top-1 sm:top-2 right-1 sm:right-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-10"><button onclick="event.stopPropagation(); editProduct(${product.id})" class="bg-white/80 hover:bg-white p-1 sm:p-2 rounded-lg text-xs shadow-sm">✏️</button><button onclick="event.stopPropagation(); deleteProduct(${product.id})" class="bg-white/80 hover:bg-red-100 p-1 sm:p-2 rounded-lg text-xs shadow-sm">🗑️</button></div>` : ''}
+          ${visual}
           <h3 class="font-bold text-gray-800 text-center text-xs sm:text-sm leading-tight">${product.name}</h3>
           <p class="text-${product.color}-600 font-bold text-center text-xs sm:text-sm mt-1">$${product.price.toFixed(2)}/${unitLabel}</p>
         </div>`
@@ -1397,7 +1512,9 @@ ESTADO: ${estado}`;
         subtotal += item.total;
         if (item.saleType === 'kg') tieneKilos = true; // Detectamos si hay productos por kilo
         const desc = item.saleType === 'pieza' ? `${item.qty} pz × $${item.price.toFixed(2)}/Pz` : `${item.qty}g × $${item.price.toFixed(2)}/Kg`;
-        return `<div class="flex items-center justify-between bg-gray-50 rounded-xl p-2 sm:p-3 animate-slide"><div class="flex items-center gap-2 sm:gap-3"><span class="text-xl sm:text-2xl">${item.emoji}</span><div><p class="font-semibold text-gray-800 text-xs sm:text-sm">${item.name}</p><p class="text-gray-500 text-[10px] sm:text-xs">${desc}</p></div></div><div class="flex items-center gap-1 sm:gap-2"><span class="font-bold text-gray-800 text-sm sm:text-base">$${item.total.toFixed(2)}</span><button onclick="removeFromCart(${idx})" class="text-red-400 hover:text-red-600 p-2 sm:p-1 text-lg leading-none">&times;</button></div></div>`;
+        const visual = item.image ? `<img src="${item.image}" class="w-8 h-8 sm:w-10 sm:h-10 object-cover rounded-full border border-gray-300">` : `<span class="text-xl sm:text-2xl">${item.emoji}</span>`;
+        
+        return `<div class="flex items-center justify-between bg-gray-50 rounded-xl p-2 sm:p-3 animate-slide"><div class="flex items-center gap-2 sm:gap-3">${visual}<div><p class="font-semibold text-gray-800 text-xs sm:text-sm">${item.name}</p><p class="text-gray-500 text-[10px] sm:text-xs">${desc}</p></div></div><div class="flex items-center gap-1 sm:gap-2"><span class="font-bold text-gray-800 text-sm sm:text-base">$${item.total.toFixed(2)}</span><button onclick="removeFromCart(${idx})" class="text-red-400 hover:text-red-600 p-2 sm:p-1 text-lg leading-none">&times;</button></div></div>`;
       }).join('');
       
       document.getElementById('cart-subtotal').textContent = `$${subtotal.toFixed(2)}`; 
@@ -2063,6 +2180,22 @@ Bultos disponibles: *${stockHarinaSeleccionada.toFixed(2)}*
         html2pdf().set(opt).from(finalHTML).save().then(() => {
             showToast('✅ Reporte Mensual descargado con éxito');
         });
+    }
+
+    // ============ MINIMIZAR CATÁLOGO DE PRODUCTOS ============
+    function toggleProductsMenu() {
+        const container = document.getElementById('products-grid-container');
+        const icon = document.getElementById('toggle-products-icon');
+        
+        if (container.classList.contains('hidden')) {
+            // Maximizar
+            container.classList.remove('hidden');
+            icon.style.transform = 'rotate(0deg)'; // Flecha hacia abajo
+        } else {
+            // Minimizar
+            container.classList.add('hidden');
+            icon.style.transform = 'rotate(-90deg)'; // Flecha apuntando a la derecha
+        }
     }
 
     // Utilidades (Esto ya lo tienes en tu código)
