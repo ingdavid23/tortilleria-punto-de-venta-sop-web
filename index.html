@@ -208,7 +208,7 @@
                 <option value="amarilla">Harimasa Amarilla</option>
                 <option value="fardo">Harimasa Fardo</option>
             </select>
-         </div>
+        </div>
          <div class="grid grid-cols-2 gap-2 sm:gap-3 mt-3 sm:mt-4">
          <div class="grid grid-cols-2 gap-2 sm:gap-3 mt-3 sm:mt-4">
             <button onclick="clearCart()" class="btn-action bg-red-100 hover:bg-red-200 text-red-600 py-2 sm:py-3 rounded-xl text-sm sm:text-base font-bold transition-all flex items-center justify-center gap-1"> 🗑️ <span class="hidden sm:inline">Limpiar</span> </button> 
@@ -638,16 +638,25 @@
         if(btnRemove) btnRemove.classList.add('hidden');
     }
 
+    // ULTRA COMPRESOR DE IMAGEN (WebP + 64px + 30% Calidad)
     function previewImage(event) {
         const file = event.target.files[0];
         if (file) {
+            // Validación de seguridad
+            if (!file.type.startsWith('image/')) {
+                showToast('❌ Por favor selecciona una imagen válida', 'error');
+                return;
+            }
+
             const reader = new FileReader();
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    const MAX_SIZE = 150;
+                    
+                    // ULTRA COMPRESIÓN 1: Tamaño máximo de 64 píxeles (tamaño de ícono)
+                    const MAX_SIZE = 64;
                     let width = img.width; let height = img.height;
                     
                     if (width > height) { if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } } 
@@ -656,7 +665,8 @@
                     canvas.width = width; canvas.height = height;
                     ctx.drawImage(img, 0, 0, width, height);
                     
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    // ULTRA COMPRESIÓN 2 y 3: Formato WEBP y Calidad al 30% (0.3)
+                    const dataUrl = canvas.toDataURL('image/webp', 0.3);
                     
                     const b64Input = document.getElementById('product-image-b64');
                     const imgPreview = document.getElementById('image-preview-img');
@@ -667,6 +677,10 @@
                     if(imgPreview) { imgPreview.src = dataUrl; imgPreview.classList.remove('hidden'); }
                     if(textPreview) textPreview.classList.add('hidden');
                     if(btnRemove) btnRemove.classList.remove('hidden');
+                    
+                    // Calculamos el peso real en KB (Base64 a Bytes)
+                    const pesoBytes = Math.round((dataUrl.length * 3) / 4);
+                    console.log("📏 Peso de la imagen ULTRA comprimida: " + (pesoBytes / 1024).toFixed(2) + " KB");
                 }
                 img.src = e.target.result;
             }
@@ -771,21 +785,24 @@
             showToast('Producto eliminado', 'error'); // Usamos 'error' solo para el color rojo del toast
         }
     }
-    // ============ CONFIGURACIÓN DE FIREBASE ============
-    const firebaseConfig = {
+   
+    
+   // ============ CONFIGURACIÓN DE FIREBASE (NUEVA CONEXIÓN) ============
+   const firebaseConfig = {
       apiKey: "AIzaSyBVqfp2cG4NF-c30EMciz-0dDn8nKlh6fA",
       authDomain: "tortillasv2.firebaseapp.com",
       projectId: "tortillasv2",
       storageBucket: "tortillasv2.firebasestorage.app",
       messagingSenderId: "1094757120968",
-      appId: "1:1094757120968:web:63df2c9ca6a6fa02b65efd",
-      measurementId: "G-WFK5H75DTS"
+      appId: "1:1094757120968:web:f7bd4655d69c6d8bb65efd",
+      measurementId: "G-V8W68SQZSW"
     };
 
+    // Inicializamos Firebase manteniendo la versión que usa tu sistema
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // ============ ESTADO GLOBAL ============
+
    // ============ ESTADO GLOBAL ============
    let state = {
       businessName: 'Tortillería El Maíz Dorado',
@@ -1501,17 +1518,16 @@ ESTADO: ${estado}`;
           cartDiv.innerHTML = '<p class="text-gray-400 text-sm sm:text-base text-center py-6 sm:py-8">Carrito vacío</p>'; 
           document.getElementById('cart-subtotal').textContent = '$0.00'; 
           document.getElementById('cart-total').textContent = '$0.00'; 
-          document.getElementById('flour-selector-container').classList.add('hidden'); // Ocultar selector
           return; 
       }
       
       let subtotal = 0;
-      let tieneKilos = false;
 
       cartDiv.innerHTML = state.cart.map((item, idx) => {
         subtotal += item.total;
-        if (item.saleType === 'kg') tieneKilos = true; // Detectamos si hay productos por kilo
         const desc = item.saleType === 'pieza' ? `${item.qty} pz × $${item.price.toFixed(2)}/Pz` : `${item.qty}g × $${item.price.toFixed(2)}/Kg`;
+        
+        // Imagen si existe, si no, emoji
         const visual = item.image ? `<img src="${item.image}" class="w-8 h-8 sm:w-10 sm:h-10 object-cover rounded-full border border-gray-300">` : `<span class="text-xl sm:text-2xl">${item.emoji}</span>`;
         
         return `<div class="flex items-center justify-between bg-gray-50 rounded-xl p-2 sm:p-3 animate-slide"><div class="flex items-center gap-2 sm:gap-3">${visual}<div><p class="font-semibold text-gray-800 text-xs sm:text-sm">${item.name}</p><p class="text-gray-500 text-[10px] sm:text-xs">${desc}</p></div></div><div class="flex items-center gap-1 sm:gap-2"><span class="font-bold text-gray-800 text-sm sm:text-base">$${item.total.toFixed(2)}</span><button onclick="removeFromCart(${idx})" class="text-red-400 hover:text-red-600 p-2 sm:p-1 text-lg leading-none">&times;</button></div></div>`;
@@ -1519,14 +1535,6 @@ ESTADO: ${estado}`;
       
       document.getElementById('cart-subtotal').textContent = `$${subtotal.toFixed(2)}`; 
       document.getElementById('cart-total').textContent = `$${subtotal.toFixed(2)}`;
-
-      // Mostramos u ocultamos el selector de harina
-      const flourContainer = document.getElementById('flour-selector-container');
-      if (tieneKilos) {
-          flourContainer.classList.remove('hidden');
-      } else {
-          flourContainer.classList.add('hidden');
-      }
     }
     
     function removeFromCart(index) { state.cart.splice(index, 1); renderCart(); }
@@ -1548,7 +1556,6 @@ ESTADO: ${estado}`;
       else { cd.classList.add('hidden'); }
     }
 
-
     async function completeSale() {
       if (state.cart.length === 0) return showToast('Carrito vacío', 'error');
       const total = state.cart.reduce((sum, item) => sum + item.total, 0);
@@ -1559,55 +1566,7 @@ ESTADO: ${estado}`;
           return sum; 
       }, 0);
 
-      // --- INICIO: VALIDACIÓN ESTRICTA POR TIPO DE HARINA ---
-      let selectedFlour = '';
-      if (kilosVendidos > 0) {
-          const selectElement = document.getElementById('sale-flour-type');
-          selectedFlour = selectElement.value;
-          
-          if (!selectedFlour) {
-              return showToast('❌ Selecciona la harina que estás usando', 'error');
-          }
-
-          // Obtenemos el nombre de la harina para los mensajes
-          const nombreHarina = selectElement.options[selectElement.selectedIndex].text;
-          const inv = state.inventory[currentUser.branch] || { maseca: 0, blanca: 0, amarilla: 0, fardo: 0, yieldRemainingKg: 0 };
-          
-          // Calculamos la fracción de bulto que requiere esta venta específica
-          const bultosNecesarios = kilosVendidos / 41;
-          const stockHarinaSeleccionada = inv[selectedFlour] || 0;
-
-          // Si los bultos en sistema son menores a los que se requieren para la venta
-          if (stockHarinaSeleccionada < bultosNecesarios) {
-              showToast(`❌ Venta denegada: No hay suficiente ${nombreHarina}`, 'error');
-              
-              const mensajeAlerta = `*ALERTA CRÍTICA DE INVENTARIO* 🚨
-Sucursal: ${currentUser.branch}
-Usuario: ${currentUser.username}
-Hora: ${new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
-
-Se intentó procesar una venta de *${kilosVendidos.toFixed(2)} Kg* seleccionando *${nombreHarina}*.
-
-Bultos necesarios: *${bultosNecesarios.toFixed(2)}*
-Bultos disponibles: *${stockHarinaSeleccionada.toFixed(2)}*
-
-⚠️ *VENTA BLOQUEADA.* Se requiere enviar ${nombreHarina} inmediatamente a la sucursal.`;
-
-              enviarWhatsAppOficial(mensajeAlerta);
-              return; // Bloquea la venta
-          }
-      }
-      // --- FIN VALIDACIÓN ---
-
-      const now = new Date();
-      
-      const newSale = {
-        time: now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
-        total: total, items: [...state.cart], timestamp: now.getTime(),
-        user: currentUser.username, branch: currentUser.branch
-      };
-
-      // --- DESCUENTO FÍSICO DEL BULTO SELECCIONADO ---
+      // --- INICIO: DESCUENTO AUTOMÁTICO E INTELIGENTE ---
       if (kilosVendidos > 0) {
           let inv = state.inventory[currentUser.branch];
           if (!inv) {
@@ -1615,17 +1574,58 @@ Bultos disponibles: *${stockHarinaSeleccionada.toFixed(2)}*
               state.inventory[currentUser.branch] = inv;
           }
 
-          // 1. Restamos el rendimiento general
-          inv.yieldRemainingKg -= kilosVendidos;
-          
-          // 2. Descontamos la fracción de bulto de la harina SELECCIONADA
-          let bultosADescontar = kilosVendidos / 41;
-          if (inv[selectedFlour] !== undefined) {
-              inv[selectedFlour] -= bultosADescontar;
-              // Ajuste de seguridad por si hay micro-decimales
-              if (inv[selectedFlour] < 0) inv[selectedFlour] = 0; 
+          let bultosNecesarios = kilosVendidos / 41;
+          const totalBultosDisponibles = (inv.maseca || 0) + (inv.blanca || 0) + (inv.amarilla || 0) + (inv.fardo || 0);
+
+          // Validación global: ¿Hay suficiente harina sumando todas las marcas?
+          if (totalBultosDisponibles < bultosNecesarios) {
+              showToast(`❌ Venta denegada: Inventario global insuficiente`, 'error');
+              
+              const mensajeAlerta = `*ALERTA CRÍTICA DE INVENTARIO* 🚨
+Sucursal: ${currentUser.branch}
+Usuario: ${currentUser.username}
+Hora: ${new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
+
+Se intentó vender *${kilosVendidos.toFixed(2)} Kg* pero el inventario global no alcanza.
+Bultos necesarios: *${bultosNecesarios.toFixed(2)}*
+Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
+
+⚠️ *VENTA BLOQUEADA.* Envía harina urgentemente.`;
+
+              enviarWhatsAppOficial(mensajeAlerta);
+              return; // Bloquea la venta
           }
+
+          // Algoritmo: Restar siempre de la marca que tenga MÁS bultos
+          let remainingToDeduct = bultosNecesarios;
+          const flourTypes = ['maseca', 'blanca', 'amarilla', 'fardo'];
+
+          while (remainingToDeduct > 0.0001) { // 0.0001 evita bugs de decimales infinitos
+              // Ordenar de mayor a menor stock
+              flourTypes.sort((a, b) => (inv[b] || 0) - (inv[a] || 0));
+              let highestFlour = flourTypes[0];
+
+              if (inv[highestFlour] >= remainingToDeduct) {
+                  inv[highestFlour] -= remainingToDeduct;
+                  remainingToDeduct = 0; // Termina el bucle
+              } else {
+                  // Si no alcanza, vacía esta marca y pasa a la siguiente
+                  remainingToDeduct -= inv[highestFlour];
+                  inv[highestFlour] = 0;
+              }
+          }
+
+          // Restamos el rendimiento general
+          inv.yieldRemainingKg -= kilosVendidos;
       }
+      // --- FIN DESCUENTO AUTOMÁTICO ---
+
+      const now = new Date();
+      const newSale = {
+        time: now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+        total: total, items: [...state.cart], timestamp: now.getTime(),
+        user: currentUser.username, branch: currentUser.branch
+      };
 
       // Guardamos la venta en Firebase
       try {
@@ -1644,7 +1644,6 @@ Bultos disponibles: *${stockHarinaSeleccionada.toFixed(2)}*
         }
         
         clearCart(); 
-        document.getElementById('sale-flour-type').value = ''; // Reiniciamos el selector
         renderSalesHistory(); 
         renderAlmacen(); 
         showToast(`Venta procesada: $${total.toFixed(2)}`);
@@ -1653,7 +1652,6 @@ Bultos disponibles: *${stockHarinaSeleccionada.toFixed(2)}*
           showToast("Error al procesar venta en la red", "error"); 
       }
     }
-
     
 
     // ============ HISTORIAL Y ESTADÍSTICAS ============
@@ -1684,16 +1682,95 @@ Bultos disponibles: *${stockHarinaSeleccionada.toFixed(2)}*
 
     async function deleteIndividualSale(timestamp) {
         if (currentUser.role !== 'admin') return showToast('No tienes permisos', 'error');
-        if (confirm('¿Estás seguro de eliminar este ticket? Esto restará el dinero y no se puede deshacer.')) {
+        
+        if (confirm('¿Estás seguro de eliminar este ticket? El dinero se restará de las ganancias y el inventario regresará al almacén.')) {
+            
+            // 1. Encontrar la venta exacta antes de borrarla
+            const saleToDelete = state.salesHistory.find(s => s.timestamp === timestamp);
+            
+            if (saleToDelete) {
+                // 2. Calcular cuántos kilos se vendieron en ese ticket
+                const kilosRestaurar = saleToDelete.items.reduce((sum, item) => {
+                    if (item.saleType === 'kg') return sum + (item.qty / 1000);
+                    return sum;
+                }, 0);
+
+                // 3. Restaurar el inventario si había productos por kilo
+                if (kilosRestaurar > 0) {
+                    let inv = state.inventory[saleToDelete.branch];
+                    if (inv) {
+                        const bultosRestaurar = kilosRestaurar / 41;
+                        
+                        // Regresar los kilos al rendimiento disponible
+                        inv.yieldRemainingKg += kilosRestaurar;
+
+                        // Regresar la fracción de bultos a la harina con mayor stock activo
+                        const flourTypes = ['maseca', 'blanca', 'amarilla', 'fardo'];
+                        flourTypes.sort((a, b) => (inv[b] || 0) - (inv[a] || 0));
+                        const targetFlour = flourTypes[0]; // La harina más abundante
+                        
+                        inv[targetFlour] = (inv[targetFlour] || 0) + bultosRestaurar;
+                    }
+                }
+            }
+
+            // 4. Borrar la venta del historial
             state.salesHistory = state.salesHistory.filter(s => s.timestamp !== timestamp);
-            await saveState(); renderSalesHistory(); updateStatistics(); showToast('Venta eliminada');
+            
+            // 5. Guardar en la nube y actualizar todas las pantallas
+            await saveState(); 
+            renderSalesHistory(); 
+            updateStatistics(); 
+            renderAlmacen(); // Actualiza la vista de bultos en pantalla
+            
+            showToast('Venta eliminada e inventario restaurado');
         }
     }
 
     async function clearDailySales() {
-        if(currentUser.role !== 'admin') return showToast('No tienes permisos', 'error');
-        if(confirm('¿Seguro que deseas limpiar TODAS las ventas de TODAS las sucursales del día de hoy?')) {
-            state.salesHistory = []; await saveState(); renderSalesHistory(); updateStatistics(); showToast('Historial limpiado');
+        if (currentUser.role !== 'admin') return showToast('No tienes permisos', 'error');
+        
+        if (confirm('¿Seguro que deseas limpiar TODAS las ventas del día de hoy? El dinero se restará y el inventario de todas las sucursales regresará a su estado anterior.')) {
+            
+            // 1. Recorrer todas las ventas del día antes de borrarlas
+            state.salesHistory.forEach(sale => {
+                
+                // Calcular kilos vendidos en este ticket específico
+                const kilosRestaurar = sale.items.reduce((sum, item) => {
+                    if (item.saleType === 'kg') return sum + (item.qty / 1000);
+                    return sum;
+                }, 0);
+
+                // 2. Restaurar el inventario a la sucursal que hizo la venta
+                if (kilosRestaurar > 0) {
+                    let inv = state.inventory[sale.branch];
+                    
+                    if (inv) {
+                        const bultosRestaurar = kilosRestaurar / 41;
+                        
+                        // Regresar los kilos al rendimiento general
+                        inv.yieldRemainingKg += kilosRestaurar;
+
+                        // Regresar la fracción de bultos a la harina con más stock
+                        const flourTypes = ['maseca', 'blanca', 'amarilla', 'fardo'];
+                        flourTypes.sort((a, b) => (inv[b] || 0) - (inv[a] || 0));
+                        const targetFlour = flourTypes[0]; 
+                        
+                        inv[targetFlour] = (inv[targetFlour] || 0) + bultosRestaurar;
+                    }
+                }
+            });
+
+            // 3. Ahora sí, vaciamos el historial del día
+            state.salesHistory = []; 
+            
+            // 4. Guardar en la base de datos y actualizar todas las pantallas
+            await saveState(); 
+            renderSalesHistory(); 
+            updateStatistics(); 
+            renderAlmacen(); // Importante para que los números cambien en pantalla
+            
+            showToast('Historial limpiado e inventario restaurado globalmente');
         }
     }
 
