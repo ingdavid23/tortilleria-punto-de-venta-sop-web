@@ -1621,10 +1621,28 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
       // --- FIN DESCUENTO AUTOMÁTICO ---
 
       const now = new Date();
+      
+      // 🧹 OPERACIÓN LIMPIEZA: Quitamos las imágenes antes de guardar el ticket
+      const itemsLimpios = state.cart.map(item => {
+          return {
+              productId: item.productId,
+              name: item.name,
+              emoji: item.emoji,
+              saleType: item.saleType,
+              qty: item.qty,
+              price: item.price,
+              total: item.total
+              // ❌ Ignoramos "item.image" a propósito para no saturar la base de datos
+          };
+      });
+      
       const newSale = {
         time: now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
-        total: total, items: [...state.cart], timestamp: now.getTime(),
-        user: currentUser.username, branch: currentUser.branch
+        total: total, 
+        items: itemsLimpios, // Guardamos la versión ligera
+        timestamp: now.getTime(),
+        user: currentUser.username, 
+        branch: currentUser.branch
       };
 
       // Guardamos la venta en Firebase
