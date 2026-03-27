@@ -998,10 +998,39 @@
         if(isAdmin) renderUsersTable();
     }
 
-    function startApp() {
-        document.getElementById('login-screen').classList.add('hidden'); document.getElementById('login-screen').classList.remove('flex');
-        document.getElementById('loading-screen').classList.add('hidden'); document.getElementById('app').classList.remove('hidden');
-        applyRolePermissions(); renderCart(); renderSalesHistory(); renderAlmacen();
+    async function startApp() {
+        // Quitamos la pantalla de login y ponemos la de carga
+        document.getElementById('login-screen').classList.add('hidden'); 
+        document.getElementById('login-screen').classList.remove('flex');
+        
+        const loadingScreen = document.getElementById('loading-screen');
+        loadingScreen.classList.remove('hidden');
+        loadingScreen.querySelector('h2').textContent = "Descargando ventas del día...";
+        
+        applyRolePermissions(); 
+        
+        // MAGIA: Descargar SÓLO las ventas de hoy (Ultra rápido y sin saturar memoria)
+        try {
+            const todayStr = new Date().toDateString();
+            const snapshot = await db.collection('ventas').where('dateString', '==', todayStr).get();
+            state.salesHistory = snapshot.docs.map(doc => doc.data());
+            
+            // Ordenar los tickets por hora para que no salgan revueltos
+            state.salesHistory.sort((a, b) => a.timestamp - b.timestamp);
+            
+        } catch (error) {
+            console.error("Error cargando ventas:", error);
+            state.salesHistory = [];
+        }
+
+        // Quitamos la pantalla de carga y mostramos el sistema
+        loadingScreen.classList.add('hidden');
+        document.getElementById('app').classList.remove('hidden');
+        
+        renderCart(); 
+        renderSalesHistory(); 
+        renderAlmacen();
+        updateStatistics();
     }
 
     // ============ GESTIÓN DE ALMACÉN E INVENTARIO ============
@@ -1636,6 +1665,8 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
           };
       });
       
+      // ... (código anterior donde calcula el descuento físico de la harina) ...
+
       const newSale = {
         time: now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
         total: total, 
@@ -1645,32 +1676,35 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
         branch: currentUser.branch
       };
 
-      // Guardamos la venta en Firebase
+      // Guardamos la venta en Firebase usando COLECCIONES INDEPENDIENTES
       try {
-        const docRef = db.collection('datos_sistema').doc('punto_de_venta');
-        const docSnap = await docRef.get();
-        if (docSnap.exists) {
-            const cloudData = docSnap.data();
-            cloudData.salesHistory = cloudData.salesHistory || [];
-            cloudData.salesHistory.push(newSale);
-            state.salesHistory = cloudData.salesHistory; 
-            cloudData.inventory = state.inventory; 
-            await docRef.set(cloudData);
-        } else {
-            state.salesHistory.push(newSale); 
-            await saveState();
-        }
+        // Le agregamos la fecha como texto para poder filtrar los días súper rápido
+        newSale.dateString = new Date().toDateString();
         
+        // 1. Guardar el ticket en su PROPIA carpeta (colección 'ventas')
+        await db.collection('ventas').doc(newSale.timestamp.toString()).set(newSale);
+
+        // 2. Actualizar solo el inventario en el documento principal para no saturarlo
+        await db.collection('datos_sistema').doc('punto_de_venta').set({
+            inventory: state.inventory
+        }, { merge: true });
+
+        // 3. Reflejar los cambios en la pantalla al instante
+        state.salesHistory.push(newSale); 
         clearCart(); 
+        const flourSelect = document.getElementById('sale-flour-type');
+        if (flourSelect) flourSelect.value = ''; 
+        
         renderSalesHistory(); 
         renderAlmacen(); 
+        updateStatistics(); // Actualiza las gráficas
         showToast(`Venta procesada: $${total.toFixed(2)}`);
         
       } catch (error) { 
+          console.error(error);
           showToast("Error al procesar venta en la red", "error"); 
       }
-    }
-    
+    } // <-- Esta es la llave que cierra la función completeSale()
 
     // ============ HISTORIAL Y ESTADÍSTICAS ============
     function renderSalesHistory() {
@@ -1701,47 +1735,50 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
     async function deleteIndividualSale(timestamp) {
         if (currentUser.role !== 'admin') return showToast('No tienes permisos', 'error');
         
-        if (confirm('¿Estás seguro de eliminar este ticket? El dinero se restará de las ganancias y el inventario regresará al almacén.')) {
+        if (confirm('¿Estás seguro de eliminar este ticket? El dinero se restará y el inventario regresará al almacén.')) {
             
-            // 1. Encontrar la venta exacta antes de borrarla
             const saleToDelete = state.salesHistory.find(s => s.timestamp === timestamp);
             
+            // 1. Restaurar la harina al almacén local
             if (saleToDelete) {
-                // 2. Calcular cuántos kilos se vendieron en ese ticket
                 const kilosRestaurar = saleToDelete.items.reduce((sum, item) => {
                     if (item.saleType === 'kg') return sum + (item.qty / 1000);
                     return sum;
                 }, 0);
 
-                // 3. Restaurar el inventario si había productos por kilo
                 if (kilosRestaurar > 0) {
                     let inv = state.inventory[saleToDelete.branch];
                     if (inv) {
                         const bultosRestaurar = kilosRestaurar / 41;
-                        
-                        // Regresar los kilos al rendimiento disponible
                         inv.yieldRemainingKg += kilosRestaurar;
-
-                        // Regresar la fracción de bultos a la harina con mayor stock activo
                         const flourTypes = ['maseca', 'blanca', 'amarilla', 'fardo'];
                         flourTypes.sort((a, b) => (inv[b] || 0) - (inv[a] || 0));
-                        const targetFlour = flourTypes[0]; // La harina más abundante
-                        
+                        const targetFlour = flourTypes[0]; 
                         inv[targetFlour] = (inv[targetFlour] || 0) + bultosRestaurar;
                     }
                 }
             }
 
-            // 4. Borrar la venta del historial
+            // 2. Borrar de la pantalla
             state.salesHistory = state.salesHistory.filter(s => s.timestamp !== timestamp);
             
-            // 5. Guardar en la nube y actualizar todas las pantallas
-            await saveState(); 
-            renderSalesHistory(); 
-            updateStatistics(); 
-            renderAlmacen(); // Actualiza la vista de bultos en pantalla
-            
-            showToast('Venta eliminada e inventario restaurado');
+            try {
+                // 3. BORRAR EL DOCUMENTO INDEPENDIENTE EN FIREBASE
+                await db.collection('ventas').doc(timestamp.toString()).delete();
+                
+                // 4. Actualizar el almacén restaurado en la nube
+                await db.collection('datos_sistema').doc('punto_de_venta').set({
+                    inventory: state.inventory
+                }, { merge: true });
+
+                renderSalesHistory(); 
+                updateStatistics(); 
+                renderAlmacen(); 
+                showToast('Venta eliminada e inventario restaurado');
+            } catch(e) {
+                console.error(e);
+                showToast('Error al borrar de la nube', 'error');
+            }
         }
     }
 
