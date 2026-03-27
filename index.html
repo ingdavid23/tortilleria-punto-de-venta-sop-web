@@ -905,6 +905,38 @@
       } catch (error) { showToast("Error de conexión", "error"); }
     }
 
+    // ============ ACTUALIZACIÓN EN TIEMPO REAL ============
+    function setupRealtimeUpdates() {
+        // onSnapshot mantiene una conexión viva con la base de datos
+        db.collection('datos_sistema').doc('punto_de_venta').onSnapshot((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                
+                // 1. Sincronizar Inventario de harina instantáneamente
+                if (data.inventory) state.inventory = data.inventory;
+                
+                // 2. Sincronizar Usuarios nuevos o contraseñas cambiadas
+                if (data.users) state.users = data.users;
+                
+                // 3. Sincronizar Productos, precios e imágenes al instante
+                if (data.products) {
+                    state.products = data.products.map(p => ({
+                        ...p,
+                        price: p.price !== undefined ? p.price : p.pricePerKg,
+                        saleType: p.saleType || 'kg'
+                    }));
+                }
+
+                // 4. Si el cajero ya inició sesión, redibujar la pantalla sin que él haga nada
+                if (currentUser) {
+                    renderProducts();
+                    renderAlmacen();
+                    if (currentUser.role === 'admin') renderUsersTable();
+                }
+            }
+        });
+    }
+
     async function refreshAdminData() {
         showToast('Obteniendo información...');
         const doc = await db.collection('datos_sistema').doc('punto_de_venta').get();
@@ -2341,7 +2373,13 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
     function updateClock() { document.getElementById('current-date').textContent = new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }); document.getElementById('current-time').textContent = new Date().toLocaleTimeString('es-MX'); }
 
     // INICIO
-    async function init() { await loadState(); setInterval(updateClock, 1000); updateClock(); checkAuth(); }
+    async function init() { 
+        await loadState(); 
+        setupRealtimeUpdates(); // <-- Activamos la magia en tiempo real
+        setInterval(updateClock, 1000); 
+        updateClock(); 
+        checkAuth(); 
+    }
     document.addEventListener('DOMContentLoaded', init);
   </script>
  </body>
