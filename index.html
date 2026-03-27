@@ -1425,16 +1425,32 @@ ESTADO: ${estado}`;
       if (state.products.length === 0) { grid.innerHTML = '<p class="col-span-full text-gray-400 text-center py-8">No hay productos.</p>'; return; }
       
       const isAdmin = currentUser && currentUser.role === 'admin';
+      
       grid.innerHTML = state.products.map(product => {
-        const unitLabel = product.saleType === 'pieza' ? 'Pz' : 'Kg';
+        // Detectamos la etiqueta correcta
+        let unitLabel = 'Kg';
+        if (product.saleType === 'pieza') unitLabel = 'Pz';
+        if (product.saleType === 'litro') unitLabel = 'L';
         
         // Decidir si mostramos imagen o emoji
         const visual = product.image 
             ? `<img src="${product.image}" class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-full shadow-sm mb-1 sm:mb-2 border-2 border-${product.color}-300 bg-white">` 
             : `<div class="text-3xl sm:text-4xl text-center mb-1 sm:mb-2">${product.emoji}</div>`;
 
+        // 🎯 LÓGICA MÁGICA: Decide qué hace el botón al tocarlo
+        let clickAction = '';
+        if (!isAdmin) {
+            if (product.saleType === 'pieza') {
+                // Si es pieza, va directo al carrito
+                clickAction = `addOnePieceToCart(${product.id})`;
+            } else {
+                // Si es kilo o litro, abre la ventana para preguntar cantidad
+                clickAction = `openQuantityModal(${product.id})`;
+            }
+        }
+
         return `
-        <div class="product-card bg-gradient-to-br from-${product.color}-100 to-${product.color}-50 rounded-xl p-3 sm:p-4 cursor-pointer transition-all border-2 border-${product.color}-200 hover:border-${product.color}-400 hover:shadow-lg relative group flex flex-col items-center justify-center" onclick="${isAdmin ? '' : `openQuantityModal(${product.id})`}">
+        <div class="product-card bg-gradient-to-br from-${product.color}-100 to-${product.color}-50 rounded-xl p-3 sm:p-4 cursor-pointer transition-all border-2 border-${product.color}-200 hover:border-${product.color}-400 hover:shadow-lg relative group flex flex-col items-center justify-center" onclick="${clickAction}">
           ${isAdmin ? `<div class="absolute top-1 sm:top-2 right-1 sm:right-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-10"><button onclick="event.stopPropagation(); editProduct(${product.id})" class="bg-white/80 hover:bg-white p-1 sm:p-2 rounded-lg text-xs shadow-sm">✏️</button><button onclick="event.stopPropagation(); deleteProduct(${product.id})" class="bg-white/80 hover:bg-red-100 p-1 sm:p-2 rounded-lg text-xs shadow-sm">🗑️</button></div>` : ''}
           ${visual}
           <h3 class="font-bold text-gray-800 text-center text-xs sm:text-sm leading-tight">${product.name}</h3>
@@ -1517,6 +1533,33 @@ ESTADO: ${estado}`;
       const amount = parseFloat(document.getElementById('custom-money').value);
       if (!amount || amount <= 0) return showToast('Monto inválido', 'error');
       quickSaleByMoney(amount); document.getElementById('custom-money').value = '';
+    }
+
+    // ============ AGREGAR PIEZA DIRECTO AL CARRITO ============
+    function addOnePieceToCart(productId) {
+        if(!currentUser || currentUser.role === 'admin') return;
+        
+        const p = state.products.find(prod => prod.id === productId);
+        if (!p) return;
+
+        // Lo mandamos directo al carrito con cantidad = 1
+        state.cart.push({ 
+            productId: p.id, 
+            name: p.name, 
+            emoji: p.emoji, 
+            saleType: p.saleType, 
+            qty: 1, // Automáticamente 1 pieza
+            price: p.price, 
+            total: p.price // El total es el precio de 1 pieza
+        });
+        
+        renderCart(); 
+        showToast(`+1 ${p.name} agregado`);
+        
+        // Si están en celular, baja automáticamente para que vean el carrito
+        if(window.innerWidth < 1024) { 
+            setTimeout(() => { document.getElementById('pos-right-panel').scrollIntoView({ behavior: 'smooth' }); }, 100); 
+        }
     }
 
     function openQuantityModal(productId) {
