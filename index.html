@@ -821,17 +821,10 @@
     const getVisibleSales = () => {
       if (!currentUser) return [];
       
-      // Checa si estamos viendo "Hoy" o una fecha del pasado
-      const dateToFilter = selectedFilterDate ? new Date(selectedFilterDate).toDateString() : new Date().toDateString();
-      let targetSales = [];
-      
-      if (dateToFilter === new Date().toDateString()) {
-          targetSales = state.salesHistory || [];
-      } else {
-          // Si es el pasado, busca en el historial
-          const hist = state.weeklyHistory.find(w => w.date === dateToFilter);
-          targetSales = hist ? (hist.sales || []) : [];
-      }
+      // MAGIA ARQUITECTÓNICA: Como ahora descargamos los tickets en tiempo real 
+      // desde la colección 'ventas' (sea de hoy o del pasado), 
+      // 'state.salesHistory' SIEMPRE tiene la verdad absoluta. Ya no buscamos en el pasado local.
+      const targetSales = state.salesHistory || [];
 
       if (currentUser.role === 'admin') return targetSales;
       return targetSales.filter(s => s.branch === currentUser.branch);
@@ -938,13 +931,48 @@
     }
 
     async function refreshAdminData() {
-        showToast('Obteniendo información...');
-        const doc = await db.collection('datos_sistema').doc('punto_de_venta').get();
-        if(doc.exists) {
-            const parsed = doc.data();
-            state = { ...state, ...parsed };
-            if(!state.inventory) state.inventory = {};
-            updateStatistics(); renderSalesHistory(); renderAlmacen(); showToast('Actualizado');
+        showToast('Obteniendo información en tiempo real...');
+        
+        try {
+            // 1. Actualizar configuración base (Inventario, Productos, Usuarios) sin tocar las ventas
+            const doc = await db.collection('datos_sistema').doc('punto_de_venta').get();
+            if(doc.exists) {
+                const parsed = doc.data();
+                if (parsed.inventory) state.inventory = parsed.inventory;
+                if (parsed.users) state.users = parsed.users;
+                if (parsed.products) {
+                    state.products = parsed.products.map(p => ({
+                        ...p,
+                        price: p.price !== undefined ? p.price : p.pricePerKg,
+                        saleType: p.saleType || 'kg'
+                    }));
+                }
+            }
+            
+            // 2. MAGIA: Ir a la carpeta independiente y descargar sólo el día que estamos viendo
+            // Si el calendario tiene un día seleccionado, busca ese día. Si no, busca HOY por defecto.
+            const dateToFetch = selectedFilterDate ? new Date(selectedFilterDate).toDateString() : new Date().toDateString();
+            
+            const snapshot = await db.collection('ventas').where('dateString', '==', dateToFetch).get();
+            state.salesHistory = snapshot.docs.map(d => d.data());
+            
+            // Ordenar los tickets por hora
+            state.salesHistory.sort((a, b) => a.timestamp - b.timestamp);
+            
+            // 3. Redibujar toda la pantalla con la verdad absoluta
+            updateStatistics(); 
+            renderSalesHistory(); 
+            renderAlmacen(); 
+            
+            if(document.getElementById('tab-reporte-diario').classList.contains('active')) {
+                generateDailyReport();
+            }
+            
+            showToast('Datos actualizados correctamente');
+            
+        } catch(e) {
+            console.error("Error en refreshAdminData:", e);
+            showToast('Error al sincronizar datos', 'error');
         }
     }
 
@@ -1400,23 +1428,50 @@ ESTADO: ${estado}`;
         renderHistorialCalendar();
     }
 
-    function selectHistorialDate(dateStr) {
+    async function selectHistorialDate(dateStr) {
         selectedFilterDate = dateStr;
-        renderHistorialCalendar();
-        // Al seleccionar fecha, recargamos TODA la app con los datos pasados
-        renderSalesHistory(); 
-        updateStatistics();
-        if(document.getElementById('tab-reporte-diario').classList.contains('active')) generateDailyReport();
-        showToast(`Viajando al: ${new Date(dateStr).toLocaleDateString('es-MX')}`);
+        showToast(`Viajando al: ${new Date(dateStr).toLocaleDateString('es-MX')}...`);
+        
+        try {
+            // MAGIA: Ir a la carpeta independiente y traer SÓLO los tickets de ese día
+            const snapshot = await db.collection('ventas').where('dateString', '==', dateStr).get();
+            state.salesHistory = snapshot.docs.map(doc => doc.data());
+            
+            // Ordenarlos por hora
+            state.salesHistory.sort((a, b) => a.timestamp - b.timestamp);
+            
+            // Actualizar toda la interfaz
+            renderHistorialCalendar();
+            renderSalesHistory(); 
+            updateStatistics();
+            if(document.getElementById('tab-reporte-diario').classList.contains('active')) generateDailyReport();
+            
+            showToast('Datos históricos cargados');
+        } catch (e) {
+            console.error("Error al buscar historial", e);
+            showToast('Error al buscar historial', 'error');
+        }
     }
     
-    function clearDateFilter() {
+    async function clearDateFilter() {
         selectedFilterDate = null;
-        renderHistorialCalendar();
-        renderSalesHistory(); 
-        updateStatistics();
-        if(document.getElementById('tab-reporte-diario').classList.contains('active')) generateDailyReport();
-        showToast('Viendo datos de Hoy');
+        showToast('Volviendo al día de Hoy...');
+        
+        try {
+            // Volver a descargar las ventas de hoy
+            const todayStr = new Date().toDateString();
+            const snapshot = await db.collection('ventas').where('dateString', '==', todayStr).get();
+            state.salesHistory = snapshot.docs.map(doc => doc.data());
+            state.salesHistory.sort((a, b) => a.timestamp - b.timestamp);
+            
+            renderHistorialCalendar();
+            renderSalesHistory(); 
+            updateStatistics();
+            if(document.getElementById('tab-reporte-diario').classList.contains('active')) generateDailyReport();
+            
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     // ============ RENDERIZADO (PRODUCTOS, VENTAS RÁPIDAS Y CARRITO) ============
@@ -1860,51 +1915,58 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
     async function clearDailySales() {
         if (currentUser.role !== 'admin') return showToast('No tienes permisos', 'error');
         
-        if (confirm('¿Seguro que deseas limpiar TODAS las ventas del día de hoy? El dinero se restará y el inventario de todas las sucursales regresará a su estado anterior.')) {
+        // Detectar si estamos viendo "Hoy" o una fecha del pasado en el calendario
+        const fechaTexto = selectedFilterDate ? new Date(selectedFilterDate).toLocaleDateString('es-MX') : 'HOY';
+
+        if (confirm(`¿Seguro que deseas limpiar TODAS las ventas globales del día: ${fechaTexto}? Los tickets se borrarán de la nube permanentemente y el inventario regresará al almacén.`)) {
             
-            // 1. Recorrer todas las ventas del día antes de borrarlas
-            state.salesHistory.forEach(sale => {
+            showToast('Eliminando tickets en la nube, espera...', 'success');
+
+            // 1. Recorrer los tickets que estamos viendo en pantalla
+            for (let sale of state.salesHistory) {
                 
-                // Calcular kilos vendidos en este ticket específico
+                // Restaurar el inventario de la sucursal que vendió
                 const kilosRestaurar = sale.items.reduce((sum, item) => {
                     if (item.saleType === 'kg') return sum + (item.qty / 1000);
                     return sum;
                 }, 0);
 
-                // 2. Restaurar el inventario a la sucursal que hizo la venta
                 if (kilosRestaurar > 0) {
                     let inv = state.inventory[sale.branch];
-                    
                     if (inv) {
                         const bultosRestaurar = kilosRestaurar / 41;
-                        
-                        // Regresar los kilos al rendimiento general
                         inv.yieldRemainingKg += kilosRestaurar;
-
-                        // Regresar la fracción de bultos a la harina con más stock
                         const flourTypes = ['maseca', 'blanca', 'amarilla', 'fardo'];
                         flourTypes.sort((a, b) => (inv[b] || 0) - (inv[a] || 0));
                         const targetFlour = flourTypes[0]; 
-                        
                         inv[targetFlour] = (inv[targetFlour] || 0) + bultosRestaurar;
                     }
                 }
-            });
 
-            // 3. Ahora sí, vaciamos el historial del día
+                // BORRAR el ticket de la nueva colección independiente
+                try {
+                    await db.collection('ventas').doc(sale.timestamp.toString()).delete();
+                } catch(e) { console.error("Error borrando:", e); }
+            }
+
+            // 2. Actualizar el inventario general en la nube
+            await db.collection('datos_sistema').doc('punto_de_venta').set({
+                inventory: state.inventory
+            }, { merge: true });
+
+            // 3. Vaciar la lista de la pantalla
             state.salesHistory = []; 
             
-            // 4. Guardar en la base de datos y actualizar todas las pantallas
-            await saveState(); 
+            // 4. Actualizar todo visualmente
             renderSalesHistory(); 
             updateStatistics(); 
-            renderAlmacen(); // Importante para que los números cambien en pantalla
+            renderAlmacen(); 
             
-            showToast('Historial limpiado e inventario restaurado globalmente');
+            showToast(`Se eliminaron todas las ventas del día ${fechaTexto}`);
         }
     }
-
-    function updateStatistics() {
+    async function updateStatistics() {
+        // --- 1. ESTADÍSTICAS DEL DÍA (Usando los datos ya cargados en pantalla) ---
         const visibleSales = getVisibleSales();
         const dailyTotal = visibleSales.reduce((sum, s) => sum + s.total, 0);
 
@@ -1932,7 +1994,7 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
             if (uniqueBranches.length === 0) branchesGrid.innerHTML = '<p class="text-gray-400 text-sm">No hay sucursales registradas aún.</p>';
             else {
                 branchesGrid.innerHTML = uniqueBranches.map(bName => {
-                    const bSales = state.salesHistory.filter(s => s.branch === bName);
+                    const bSales = visibleSales.filter(s => s.branch === bName); 
                     const bTotal = bSales.reduce((sum, s) => sum + s.total, 0);
                     let bBest = 'N/A';
                     const bProductCount = {};
@@ -1940,13 +2002,11 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
                     const bMax = Object.entries(bProductCount).sort((a, b) => b[1] - a[1])[0];
                     if (bMax) bBest = bMax[0];
 
-                    // --- INICIO NUEVO: Buscar usuarios de la sucursal ---
                     const usuariosSucursal = state.users
                         .filter(u => u.branch === bName && u.role !== 'admin')
                         .map(u => u.username)
                         .join(', ');
                     const encargadoTexto = usuariosSucursal ? usuariosSucursal : 'Sin asignar';
-                    // --- FIN NUEVO ---
 
                     return `
                     <div class="bg-white rounded-2xl shadow border-2 border-gray-100 p-4 sm:p-5 relative overflow-hidden transition-all hover:shadow-lg hover:border-blue-200 group">
@@ -1968,35 +2028,64 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
             }
         } else { adminPanel.classList.add('hidden'); }
 
-        const allDaysData = state.weeklyHistory.map(day => {
-            const daySalesFiltered = currentUser.role === 'admin' ? day.sales : day.sales.filter(s => s.branch === currentUser.branch);
-            return { date: day.date, total: daySalesFiltered.reduce((sum, s) => sum + s.total, 0), transactions: daySalesFiltered.length };
-        });
-        allDaysData.push({ date: new Date().toDateString(), total: dailyTotal, transactions: visibleSales.length });
-        
-        const last7Days = allDaysData.slice(-7);
-        const totalWeekly = last7Days.reduce((sum, d) => sum + d.total, 0);
-        const transWeekly = last7Days.reduce((sum, d) => sum + d.transactions, 0);
-        
-        document.getElementById('stat-weekly-total').textContent = `$${totalWeekly.toFixed(2)}`;
-        document.getElementById('stat-weekly-transactions').textContent = transWeekly;
-        document.getElementById('stat-weekly-daily-avg').textContent = `$${last7Days.length > 0 ? (totalWeekly / last7Days.length).toFixed(2) : '0.00'}`;
-        document.getElementById('stat-weekly-avg').textContent = `$${transWeekly > 0 ? (totalWeekly / transWeekly).toFixed(2) : '0.00'}`;
+        // --- 2. ESTADÍSTICAS DE LA SEMANA (Magia de la nueva base de datos) ---
+        try {
+            // Calculamos la fecha de hace 7 días a la medianoche
+            const hace7Dias = new Date();
+            hace7Dias.setDate(hace7Dias.getDate() - 6);
+            hace7Dias.setHours(0, 0, 0, 0);
+            const startMs = hace7Dias.getTime();
 
-        const chartDiv = document.getElementById('weekly-chart');
-        const maxDailyTotal = Math.max(...last7Days.map(d => d.total), 1); 
+            // Descargamos TODAS las ventas de los últimos 7 días desde Firebase
+            const snapshot = await db.collection('ventas').where('timestamp', '>=', startMs).get();
+            const ventasSemana = snapshot.docs.map(doc => doc.data());
 
-        if (totalWeekly === 0) { chartDiv.innerHTML = '<p class="text-gray-400 text-xs sm:text-sm text-center py-8 w-full">No hay ventas registradas.</p>'; } 
-        else {
-            chartDiv.innerHTML = last7Days.map(day => {
-                const height = Math.max(10, (day.total / maxDailyTotal) * (window.innerWidth < 640 ? 120 : 150));
-                const dayDate = new Date(day.date);
-                let dayName = dayDate.toLocaleDateString('es-MX', { weekday: 'short' });
-                if (day.date === new Date().toDateString()) dayName = 'Hoy';
-                const kValue = day.total >= 1000 ? `$${(day.total / 1000).toFixed(1)}k` : `$${day.total.toFixed(0)}`;
+            // Creamos un "esqueleto" vacío con los 7 días para que la gráfica siempre se dibuje bien
+            const ventasPorDia = {};
+            for(let i = 0; i < 7; i++) {
+                const dia = new Date(hace7Dias);
+                dia.setDate(dia.getDate() + i);
+                ventasPorDia[dia.toDateString()] = { date: dia.toDateString(), total: 0, transactions: 0 };
+            }
 
-                return `<div class="flex flex-col items-center gap-1 sm:gap-2"><div class="bg-gradient-to-t from-blue-500 to-blue-400 rounded-t-sm sm:rounded-t-lg transition-all hover:from-blue-600 hover:to-blue-500 w-6 sm:w-8 md:w-12 shadow-sm" style="height: ${height}px; cursor: pointer;" title="$${day.total.toFixed(2)}"></div><span class="text-[10px] sm:text-xs font-semibold text-gray-600 capitalize">${dayName}</span><span class="text-[9px] sm:text-[10px] md:text-xs text-gray-500">${kValue}</span></div>`;
-            }).join('');
+            // Rellenamos el esqueleto con las ventas reales filtrando por sucursal
+            ventasSemana.forEach(sale => {
+                if (currentUser.role === 'admin' || sale.branch === currentUser.branch) {
+                    if (ventasPorDia[sale.dateString]) {
+                        ventasPorDia[sale.dateString].total += sale.total;
+                        ventasPorDia[sale.dateString].transactions++;
+                    }
+                }
+            });
+
+            // Convertimos a lista para hacer las matemáticas finales
+            const last7Days = Object.values(ventasPorDia);
+
+            const totalWeekly = last7Days.reduce((sum, d) => sum + d.total, 0);
+            const transWeekly = last7Days.reduce((sum, d) => sum + d.transactions, 0);
+            
+            document.getElementById('stat-weekly-total').textContent = `$${totalWeekly.toFixed(2)}`;
+            document.getElementById('stat-weekly-transactions').textContent = transWeekly;
+            document.getElementById('stat-weekly-daily-avg').textContent = `$${last7Days.length > 0 ? (totalWeekly / last7Days.length).toFixed(2) : '0.00'}`;
+            document.getElementById('stat-weekly-avg').textContent = `$${transWeekly > 0 ? (totalWeekly / transWeekly).toFixed(2) : '0.00'}`;
+
+            const chartDiv = document.getElementById('weekly-chart');
+            const maxDailyTotal = Math.max(...last7Days.map(d => d.total), 1); 
+
+            if (totalWeekly === 0) { chartDiv.innerHTML = '<p class="text-gray-400 text-xs sm:text-sm text-center py-8 w-full">No hay ventas registradas en los últimos 7 días.</p>'; } 
+            else {
+                chartDiv.innerHTML = last7Days.map(day => {
+                    const height = Math.max(10, (day.total / maxDailyTotal) * (window.innerWidth < 640 ? 120 : 150));
+                    const dayDate = new Date(day.date);
+                    let dayName = dayDate.toLocaleDateString('es-MX', { weekday: 'short' });
+                    if (day.date === new Date().toDateString()) dayName = 'Hoy';
+                    const kValue = day.total >= 1000 ? `$${(day.total / 1000).toFixed(1)}k` : `$${day.total.toFixed(0)}`;
+
+                    return `<div class="flex flex-col items-center gap-1 sm:gap-2"><div class="bg-gradient-to-t from-purple-500 to-pink-500 rounded-t-sm sm:rounded-t-lg transition-all hover:from-purple-600 hover:to-pink-600 w-6 sm:w-8 md:w-12 shadow-sm" style="height: ${height}px; cursor: pointer;" title="$${day.total.toFixed(2)}"></div><span class="text-[10px] sm:text-xs font-semibold text-gray-600 capitalize">${dayName}</span><span class="text-[9px] sm:text-[10px] md:text-xs text-gray-500">${kValue}</span></div>`;
+                }).join('');
+            }
+        } catch (error) {
+            console.error("Error al cargar la semana:", error);
         }
     }
     // ============ FORMATO DE TICKET PROFESIONAL ============
@@ -2122,51 +2211,68 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
         document.getElementById('daily-report-container').textContent = report;
     }
 
-    function generateWeeklyReport() {
+    async function generateWeeklyReport() {
         const isAdmin = currentUser.role === 'admin';
         const reportBranch = isAdmin ? 'GLOBAL (Todas las Sucursales)' : currentUser.branch;
         
-        const allDaysData = [...state.weeklyHistory];
-        const visibleTodaySales = isAdmin ? state.salesHistory : state.salesHistory.filter(s => s.branch === currentUser.branch);
-        
-        if (visibleTodaySales.length > 0) { allDaysData.push({ date: new Date().toDateString(), sales: visibleTodaySales }); }
-        
-        const last7Days = allDaysData.slice(-7);
-
-        if (last7Days.length === 0) { document.getElementById('weekly-report-container').textContent = "No hay datos registrados."; return; }
-
         let totalSemanal = 0; let transaccionesTotales = 0;
         let mejorDia = { nombre: '', total: -1 }; let peorDia = { nombre: '', total: Infinity };
         const productSummary = {}; const branchSummary = {};
+        const ventasPorDia = {};
 
-        const reportDetails = last7Days.map(day => {
-            const daySales = isAdmin ? day.sales : day.sales.filter(s => s.branch === currentUser.branch);
-            const dayTotal = daySales.reduce((sum, s) => sum + s.total, 0);
-            const dayTrans = daySales.length;
+        try {
+            const hace7Dias = new Date();
+            hace7Dias.setDate(hace7Dias.getDate() - 6);
+            hace7Dias.setHours(0, 0, 0, 0);
+            const startMs = hace7Dias.getTime();
 
-            if (dayTrans === 0) return null; 
+            // Descargar de Firebase directamente
+            const snapshot = await db.collection('ventas').where('timestamp', '>=', startMs).get();
+            const ventasSemana = snapshot.docs.map(doc => doc.data());
 
-            totalSemanal += dayTotal; transaccionesTotales += dayTrans;
-            const dayDate = new Date(day.date);
-            const dayName = dayDate.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
+            if (ventasSemana.length === 0) { document.getElementById('weekly-report-container').textContent = "No hay ventas registradas en la red."; return; }
 
-            if (dayTotal > mejorDia.total) mejorDia = { nombre: dayName, total: dayTotal };
-            if (dayTotal < peorDia.total) peorDia = { nombre: dayName, total: dayTotal };
+            ventasSemana.forEach(sale => {
+                if (isAdmin || sale.branch === currentUser.branch) {
+                    
+                    if (!ventasPorDia[sale.dateString]) {
+                        const d = new Date(sale.timestamp);
+                        ventasPorDia[sale.dateString] = { 
+                            name: d.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' }), 
+                            total: 0, trans: 0 
+                        };
+                    }
+                    
+                    ventasPorDia[sale.dateString].total += sale.total;
+                    ventasPorDia[sale.dateString].trans++;
+                    totalSemanal += sale.total; 
+                    transaccionesTotales++;
 
-            daySales.forEach(sale => {
-                if (isAdmin) {
-                    if (!branchSummary[sale.branch]) branchSummary[sale.branch] = { total: 0, count: 0 };
-                    branchSummary[sale.branch].total += sale.total; branchSummary[sale.branch].count++;
+                    if (isAdmin) {
+                        if (!branchSummary[sale.branch]) branchSummary[sale.branch] = { total: 0, count: 0 };
+                        branchSummary[sale.branch].total += sale.total; branchSummary[sale.branch].count++;
+                    }
+                    
+                    sale.items.forEach(item => {
+                        if (!productSummary[item.name]) productSummary[item.name] = { qty: 0, total: 0, emoji: item.emoji, type: item.saleType };
+                        productSummary[item.name].qty += item.qty; productSummary[item.name].total += item.total;
+                    });
                 }
-                sale.items.forEach(item => {
-                    if (!productSummary[item.name]) productSummary[item.name] = { qty: 0, total: 0, emoji: item.emoji, type: item.saleType };
-                    productSummary[item.name].qty += item.qty; productSummary[item.name].total += item.total;
-                });
             });
 
-            return { name: dayName, total: dayTotal, trans: dayTrans };
-        }).filter(Boolean); 
+            // Buscar mejor y peor día
+            Object.values(ventasPorDia).forEach(day => {
+                if (day.total > mejorDia.total) mejorDia = { nombre: day.name, total: day.total };
+                if (day.total < peorDia.total) peorDia = { nombre: day.name, total: day.total };
+            });
 
+        } catch(error) {
+            console.error(error);
+            document.getElementById('weekly-report-container').textContent = "Error de red al cargar el reporte."; 
+            return;
+        }
+
+        const reportDetails = Object.values(ventasPorDia);
         if (reportDetails.length === 0) { document.getElementById('weekly-report-container').textContent = "No hay ventas registradas."; return; }
 
         const promTicket = transaccionesTotales > 0 ? (totalSemanal / transaccionesTotales) : 0;
@@ -2196,16 +2302,10 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
             report += `══════════════════════════════════════════════════════════════\n`;
             Object.entries(branchSummary).sort((a, b) => b[1].total - a[1].total).forEach(([branch, data]) => {
                     const percentage = ((data.total / totalSemanal) * 100).toFixed(1);
-                    
-                    // --- BUSCAMOS AL USUARIO DE LA SUCURSAL ---
-                    const usuariosSucursal = state.users
-                        .filter(u => u.branch === branch && u.role !== 'admin')
-                        .map(u => u.username)
-                        .join(', ');
-                    const encargadoTexto = usuariosSucursal ? usuariosSucursal : 'Sin asignar';
+                    const usuariosSucursal = state.users.filter(u => u.branch === branch && u.role !== 'admin').map(u => u.username).join(', ') || 'Sin asignar';
 
                     report += `  • ${branch.padEnd(16)} $${data.total.toFixed(2).padStart(8)} (${percentage}% del global) | ${data.count} ventas\n`;
-                    report += `    👤 Atendida por: ${encargadoTexto}\n\n`;
+                    report += `    👤 Atendida por: ${usuariosSucursal}\n\n`;
                 });
         }
 
@@ -2214,12 +2314,7 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
         report += `══════════════════════════════════════════════════════════════\n`;
         const topProducts = Object.entries(productSummary).sort((a, b) => b[1].total - a[1].total); 
         topProducts.forEach(([name, data], index) => {
-            let amountTxt = "";
-            if(data.type === 'pieza') {
-                amountTxt = `${data.qty} Pz`;
-            } else {
-                amountTxt = `${(data.qty / 1000).toFixed(2)} Kg`;
-            }
+            let amountTxt = data.type === 'pieza' ? `${data.qty} Pz` : `${(data.qty / 1000).toFixed(2)} Kg`;
             report += `  ${String(index + 1).padStart(2, '0')}. ${data.emoji} ${name.padEnd(22)} ${amountTxt.padStart(9)}  ->  $${data.total.toFixed(2)}\n`;
         });
         report += `\n`;
@@ -2242,8 +2337,7 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
     function copyDailyReport() { navigator.clipboard.writeText(document.getElementById('daily-report-container').textContent); showToast('Copiado'); }
     function copyWeeklyReport() { navigator.clipboard.writeText(document.getElementById('weekly-report-container').textContent); showToast('Copiado'); }
 
-    // ============ REPORTE EJECUTIVO PDF MENSUAL ============
-    function generateMonthlyPDF() {
+    async function generateMonthlyPDF() {
         showToast('Generando reporte PDF profesional...');
 
         if (typeof html2pdf === 'undefined') {
@@ -2253,42 +2347,48 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
         const isAdmin = currentUser.role === 'admin';
         if (!isAdmin) return showToast('No tienes permisos', 'error');
 
-        const allDaysData = [...state.weeklyHistory];
-        if (state.salesHistory.length > 0) {
-            allDaysData.push({ date: new Date().toDateString(), sales: state.salesHistory });
-        }
-
-        const last30Days = allDaysData.slice(-30);
-        if (last30Days.length === 0) return showToast('No hay datos suficientes', 'error');
-
         let totalMensual = 0; let transaccionesTotales = 0; 
         let productSummary = {};
-        let branchSummary = {}; // Para desglosar por sucursal
+        let branchSummary = {}; 
 
-        // 1. Recopilar datos de los últimos 30 días
-        last30Days.forEach(day => {
-            day.sales.forEach(sale => {
+        try {
+            // 1. Calculamos la fecha de hace 30 días exactos
+            const hace30Dias = new Date();
+            hace30Dias.setDate(hace30Dias.getDate() - 30);
+            hace30Dias.setHours(0, 0, 0, 0);
+            const startMs = hace30Dias.getTime();
+
+            // Debe verse así (asegúrate de que diga 'ventas'):
+const snapshot = await db.collection('ventas').where('timestamp', '>=', startMs).get();
+            const ventasMes = snapshot.docs.map(doc => doc.data());
+
+            if (ventasMes.length === 0) return showToast('No hay datos suficientes este mes', 'error');
+
+            // 3. Sumar todo con datos 100% reales
+            ventasMes.forEach(sale => {
                 totalMensual += sale.total; 
                 transaccionesTotales++;
                 
-                // Agrupar por sucursal
                 if (!branchSummary[sale.branch]) branchSummary[sale.branch] = { total: 0, count: 0 };
                 branchSummary[sale.branch].total += sale.total; 
                 branchSummary[sale.branch].count++;
 
-                // Agrupar por producto
                 sale.items.forEach(item => {
                     if (!productSummary[item.name]) productSummary[item.name] = { qty: 0, total: 0, type: item.saleType };
                     productSummary[item.name].qty += item.qty; 
                     productSummary[item.name].total += item.total;
                 });
             });
-        });
+
+        } catch (error) {
+            console.error("Error obteniendo datos mensuales:", error);
+            return showToast('Error de conexión', 'error');
+        }
 
         const promTicket = transaccionesTotales > 0 ? (totalMensual / transaccionesTotales) : 0;
-        const promDiario = totalMensual / last30Days.length;
+        const promDiario = totalMensual / 30;
 
-        // 2. Construir Tablas HTML
+        // --- CONSTRUCCIÓN DEL HTML DEL PDF ---
         let sucursalesHTML = '';
         Object.entries(branchSummary).sort((a, b) => b[1].total - a[1].total).forEach(([branch, data]) => {
             const usuariosSucursal = state.users.filter(u => u.branch === branch && u.role !== 'admin').map(u => u.username).join(', ') || 'Sin asignar';
@@ -2314,7 +2414,6 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
                 </tr>`;
         });
 
-        // 3. Estructura Corporativa del PDF
         const pdfHTML = `
         <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; background: white; color: #333;">
             <div style="text-align: center; border-bottom: 4px solid #f59e0b; padding-bottom: 20px; margin-bottom: 30px;">
@@ -2388,7 +2487,6 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
             showToast('✅ Reporte Mensual descargado con éxito');
         });
     }
-
     // ============ MINIMIZAR CATÁLOGO DE PRODUCTOS ============
     function toggleProductsMenu() {
         const container = document.getElementById('products-grid-container');
