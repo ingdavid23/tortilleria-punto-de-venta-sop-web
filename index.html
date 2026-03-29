@@ -1360,8 +1360,7 @@ ESTADO: ${estado}`;
       else if (tabName === 'calendario') renderHistorialCalendar();
     }
 
-    // ============ CALENDARIO HISTÓRICO ============
-    function renderHistorialCalendar() {
+    async function renderHistorialCalendar() {
         const year = calendarCurrentDate.getFullYear();
         const month = calendarCurrentDate.getMonth();
         const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
@@ -1377,23 +1376,44 @@ ESTADO: ${estado}`;
         
         const grid = document.getElementById('historial-calendar-days');
         if(!grid) return;
-        grid.innerHTML = '';
-        
-        for (let i = 0; i < firstDay; i++) { grid.innerHTML += `<div class="p-2"></div>`; }
-        
-        // Encontrar los días pintados de naranja (Días con ventas)
+
+        // Ponemos un mensajito visual rápido mientras busca en la nube
+        grid.innerHTML = '<div class="col-span-7 text-center text-xs text-amber-600 py-4 font-bold animate-pulse">Buscando ventas del mes...</div>';
+
         const daysWithSales = new Set();
-        if (state.salesHistory && state.salesHistory.length > 0) daysWithSales.add(new Date().toDateString());
-        if (state.weeklyHistory) {
-            state.weeklyHistory.forEach(w => { if (w.sales && w.sales.length > 0) daysWithSales.add(w.date); });
+        const todayStr = new Date().toDateString();
+
+        try {
+            // MAGIA: Buscar en Firebase directamente qué días de ESTE mes tienen ventas reales
+            const startOfMonth = new Date(year, month, 1).getTime();
+            const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59).getTime();
+
+            const snapshot = await db.collection('ventas')
+                .where('timestamp', '>=', startOfMonth)
+                .where('timestamp', '<=', endOfMonth)
+                .get();
+
+            snapshot.docs.forEach(doc => {
+                const sale = doc.data();
+                // Verificamos si la venta le pertenece a este cajero (o si es el admin)
+                if (currentUser.role === 'admin' || sale.branch === currentUser.branch) {
+                    daysWithSales.add(sale.dateString);
+                }
+            });
+        } catch (error) {
+            console.error("Error cargando calendario:", error);
         }
+        
+        grid.innerHTML = '';
+        for (let i = 0; i < firstDay; i++) { grid.innerHTML += `<div class="p-2"></div>`; }
 
         for (let day = 1; day <= daysInMonth; day++) {
             const dateObj = new Date(year, month, day);
             const dateStr = dateObj.toDateString();
+            
             const hasSales = daysWithSales.has(dateStr);
             const isSelected = selectedFilterDate && new Date(selectedFilterDate).toDateString() === dateStr;
-            const isToday = new Date().toDateString() === dateStr;
+            const isToday = todayStr === dateStr;
             
             let btnClass = "relative h-12 sm:h-16 rounded-xl flex flex-col items-center justify-center text-sm font-medium transition-all border-2 ";
             
@@ -1402,12 +1422,14 @@ ESTADO: ${estado}`;
             } else if (hasSales) {
                 btnClass += "bg-orange-50 text-orange-800 border-orange-300 hover:bg-orange-100 cursor-pointer shadow-sm";
             } else {
-                btnClass += "bg-gray-50 text-gray-400 border-transparent cursor-default";
+                // AHORA CUALQUIER DÍA SE PUEDE CLICKEAR (para que no te quedes atascado)
+                btnClass += "bg-gray-50 text-gray-400 border-transparent hover:bg-gray-100 cursor-pointer";
             }
 
             if (isToday && !isSelected) btnClass += " ring-2 ring-amber-400 ring-offset-2";
 
-            grid.innerHTML += `<button onclick="${hasSales ? `selectHistorialDate('${dateStr}')` : ''}" class="${btnClass}">
+            // El botón ahora siempre tiene la función 'selectHistorialDate' activada
+            grid.innerHTML += `<button onclick="selectHistorialDate('${dateStr}')" class="${btnClass}">
                 <span class="${isToday ? 'font-black' : ''}">${day}</span>
                 ${hasSales ? '<span class="w-2 h-2 rounded-full bg-orange-500 mt-1 shadow-sm"></span>' : ''}
             </button>`;
@@ -1422,7 +1444,6 @@ ESTADO: ${estado}`;
             summaryBox.classList.remove('hidden');
         } else if(summaryBox) { summaryBox.classList.add('hidden'); }
     }
-
     function changeHistorialMonth(offset) {
         calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + offset);
         renderHistorialCalendar();
