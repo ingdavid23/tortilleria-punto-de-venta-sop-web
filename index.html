@@ -24,58 +24,49 @@
     .ticket-print { font-family: 'Courier New', monospace; }
     
     /* ====================================================
-       EL FIX DEFINITIVO Y LIMPIO PARA IMPRESORAS TÉRMICAS
+       CONFIGURACIÓN PREDETERMINADA PARA TICKET 80MM
        ==================================================== */
        @media print {
-      @page { margin: 0; }
-      
-      /* 1. Matamos el fondo amarillo/naranja y ponemos blanco puro */
-      html, body {
-        background: white !important;
-        margin: 0 !important;
-        padding: 0 !important;
+      @page {
+        margin: 0;
+        size: 80mm auto; /* Le dice a la impresora que el rollo es de 80mm */
       }
       
-      /* 2. APAGAMOS todo el sistema manualmente (para no usar visibility: hidden) */
-      #app, #loading-screen, #login-screen, #product-modal, #user-modal, #quantity-modal, #corte-modal, #toast, .no-print {
+      /* 1. Fondo blanco puro para la hoja */
+      body { 
+        background: white !important; 
+      }
+      
+      /* 2. Ocultamos TODO el sistema de un solo golpe */
+      body > :not(#ticket-modal):not(#historic-sale-modal) {
         display: none !important;
       }
       
-      /* 3. Preparamos la ventana del ticket para que sea la dueña de la pantalla */
+      /* 3. Mostramos únicamente la ventana del ticket */
       #ticket-modal, #historic-sale-modal {
         display: block !important;
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
+        position: static !important;
         width: 100% !important;
-        height: auto !important;
-        background: white !important; /* Quita la sombra negra transparente */
+        background: white !important;
       }
       
-      /* 4. Le quitamos los bordes redondos y el límite de tamaño a la cajita blanca */
-      #ticket-modal > div, #historic-sale-modal > div {
-        box-shadow: none !important;
-        border-radius: 0 !important;
+      /* 4. Medida de seguridad: 76mm para que no se corte en los bordes del papel de 80mm */
+      .ticket-print {
+        width: 76mm !important; 
         max-width: 100% !important;
-        width: 100% !important;
-        margin: 0 !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
       }
 
-      /* 5. Estiramos el ticket térmico al 100% del papel de 80mm */
-      .ticket-print {
-        max-width: 100% !important;
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 3mm !important;
-        border: none !important;
-      }
-      
-      /* 6. Aseguramos que la tabla no se encoja */
+      /* 5. Aseguramos que la tabla ocupe su espacio y ocultamos botones */
       .ticket-print table { width: 100% !important; }
+      .no-print { display: none !important; }
       
-      /* 7. Letras color negro puro y tamaño perfecto para 80mm */
-      .ticket-print h2 { font-size: 20px !important; color: black !important; }
-      .ticket-print * { font-size: 14px !important; color: black !important; }
+      /* 6. Tamaños de letra estándar para 80mm */
+      .ticket-print h2 { font-size: 18px !important; color: black !important; }
+      .ticket-print * { font-size: 13px !important; color: black !important; }
       .ticket-print .text-\[9px\], .ticket-print .text-\[10px\] { font-size: 11px !important; }
     }
    
