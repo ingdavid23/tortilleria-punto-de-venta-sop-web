@@ -23,27 +23,56 @@
     
     .ticket-print { font-family: 'Courier New', monospace; }
     
-   /* BLOQUE CORREGIDO PARA IMPRESIÓN TÉRMICA (RAWBT) */
-   /* BLOQUE DEFINITIVO PARA IMPRESIÓN TÉRMICA */
-   @media print {
-      @page {
-        margin: 0;
-        size: portrait !important; /* ¡ESTO FUERZA A QUE SIEMPRE SEA VERTICAL! */
-      }
-      html, body { 
-        margin: 0 !important; 
-        padding: 0 !important;
-      }
-      body * { visibility: hidden; }
-      .ticket-print, .ticket-print * { visibility: visible; }
-      .ticket-print { 
-        position: absolute !important; 
-        left: 0 !important; 
-        top: 0 !important; 
+   /* ====================================================
+       EL FIX DEFINITIVO PARA IMPRESORAS TÉRMICAS (RAWBT) 
+       ==================================================== */
+       @media print {
+      @page { margin: 0; } /* Le quita los márgenes blancos que pone Chrome */
+      
+      body { 
+        background-color: white !important; 
         margin: 0 !important; 
         padding: 0 !important; 
       }
-      .no-print { display: none !important; }
+      
+      /* 1. Escondemos todo el sistema (botones, menús, etc) */
+      #app, #loading-screen, #login-screen, .no-print { 
+        display: none !important; 
+      }
+      
+      /* 2. Mostramos solo el modal del ticket, quitándole el fondo negro y lo flotante */
+      #ticket-modal, #historic-sale-modal {
+        display: block !important;
+        position: static !important;
+        background: white !important;
+        padding: 0 !important;
+      }
+      
+      #ticket-content, #historic-sale-content {
+        display: block !important;
+        width: 100% !important;
+      }
+      
+      /* 3. MAGIA: Forzamos al ticket a usar TODO el ancho del papel */
+      .ticket-print {
+        position: static !important;
+        width: 100% !important;
+        max-width: 100% !important; /* Rompe el límite de los 300px o 210px */
+        margin: 0 !important;       /* Destruye el centrado automático */
+        padding: 2mm !important;    /* Un pequeño margen para que la letra no pegue al borde físico */
+        box-shadow: none !important;
+        border: none !important;
+      }
+      
+      /* 4. Aseguramos que la tabla de productos se expanda bien */
+      .ticket-print table {
+        width: 100% !important;
+      }
+      
+      /* 5. Agrandamos un poco la letra solo para el papel */
+    .ticket-print h2 { font-size: 18px !important; }
+    .ticket-print * { font-size: 13px !important; }
+    .ticket-print .text-\[9px\], .ticket-print .text-\[10px\] { font-size: 11px !important; }
     }
     
     ::-webkit-scrollbar { width: 6px; height: 6px; }
