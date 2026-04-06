@@ -23,58 +23,62 @@
     
     .ticket-print { font-family: 'Courier New', monospace; }
     
-   /* ====================================================
-       EL FIX DEFINITIVO PARA IMPRESORAS TÉRMICAS (RAWBT) 
+    /* ====================================================
+       EL FIX DEFINITIVO Y LIMPIO PARA IMPRESORAS TÉRMICAS
        ==================================================== */
        @media print {
-      @page { margin: 0; } /* Le quita los márgenes blancos que pone Chrome */
+      @page { margin: 0; }
       
-      body { 
-        background-color: white !important; 
-        margin: 0 !important; 
-        padding: 0 !important; 
-      }
-      
-      /* 1. Escondemos todo el sistema (botones, menús, etc) */
-      #app, #loading-screen, #login-screen, .no-print { 
-        display: none !important; 
-      }
-      
-      /* 2. Mostramos solo el modal del ticket, quitándole el fondo negro y lo flotante */
-      #ticket-modal, #historic-sale-modal {
-        display: block !important;
-        position: static !important;
+      /* 1. Matamos el fondo amarillo/naranja y ponemos blanco puro */
+      html, body {
         background: white !important;
+        margin: 0 !important;
         padding: 0 !important;
       }
       
-      #ticket-content, #historic-sale-content {
-        display: block !important;
-        width: 100% !important;
+      /* 2. APAGAMOS todo el sistema manualmente (para no usar visibility: hidden) */
+      #app, #loading-screen, #login-screen, #product-modal, #user-modal, #quantity-modal, #corte-modal, #toast, .no-print {
+        display: none !important;
       }
       
-      /* 3. MAGIA: Forzamos al ticket a usar TODO el ancho del papel */
-      .ticket-print {
-        position: static !important;
+      /* 3. Preparamos la ventana del ticket para que sea la dueña de la pantalla */
+      #ticket-modal, #historic-sale-modal {
+        display: block !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
         width: 100% !important;
-        max-width: 100% !important; /* Rompe el límite de los 300px o 210px */
-        margin: 0 !important;       /* Destruye el centrado automático */
-        padding: 2mm !important;    /* Un pequeño margen para que la letra no pegue al borde físico */
+        height: auto !important;
+        background: white !important; /* Quita la sombra negra transparente */
+      }
+      
+      /* 4. Le quitamos los bordes redondos y el límite de tamaño a la cajita blanca */
+      #ticket-modal > div, #historic-sale-modal > div {
         box-shadow: none !important;
+        border-radius: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+      }
+
+      /* 5. Estiramos el ticket térmico al 100% del papel de 80mm */
+      .ticket-print {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 3mm !important;
         border: none !important;
       }
       
-      /* 4. Aseguramos que la tabla de productos se expanda bien */
-      .ticket-print table {
-        width: 100% !important;
-      }
+      /* 6. Aseguramos que la tabla no se encoja */
+      .ticket-print table { width: 100% !important; }
       
-      /* 5. Agrandamos un poco la letra solo para el papel */
-    .ticket-print h2 { font-size: 18px !important; }
-    .ticket-print * { font-size: 13px !important; }
-    .ticket-print .text-\[9px\], .ticket-print .text-\[10px\] { font-size: 11px !important; }
+      /* 7. Letras color negro puro y tamaño perfecto para 80mm */
+      .ticket-print h2 { font-size: 20px !important; color: black !important; }
+      .ticket-print * { font-size: 14px !important; color: black !important; }
+      .ticket-print .text-\[9px\], .ticket-print .text-\[10px\] { font-size: 11px !important; }
     }
-    
+   
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #f1f1f1; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
