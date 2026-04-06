@@ -2109,16 +2109,36 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
             console.error("Error al cargar la semana:", error);
         }
     }
-    // ============ FORMATO DE TICKET PROFESIONAL ============
+    // ============ FORMATO DE TICKET PROFESIONAL (ADAPTABLE 58mm / 80mm) ============
     function generateHTMLTicket(businessName, branch, cajero, fecha, hora, items, total, pagoCliente = 0, timestamp = null) {
         // Se genera un número de folio de 6 dígitos
         const folio = timestamp ? Math.floor(timestamp / 1000).toString().slice(-6) : Math.floor(Date.now() / 1000).toString().slice(-6);
         
+        // MEMORIA INTELIGENTE: Recuerda el tamaño de papel que la sucursal usa
+        const paperSize = localStorage.getItem('ticket_size') || '80';
+        const is58 = paperSize === '58';
+        
+        // 210px es el ancho perfecto para papel de 58mm | 300px para papel de 80mm
+        const maxWidth = is58 ? '210px' : '300px'; 
+        const fontSize = is58 ? '10px' : '12px';
+
+        // SELECTOR VISUAL (Se oculta al imprimir gracias a "no-print")
+        const configSection = `
+        <div class="no-print text-center mb-3 pb-3 border-b border-gray-200 flex justify-center items-center gap-2 bg-gray-50 rounded-lg p-2">
+            <span class="text-xs font-bold text-gray-600">⚙️ Tamaño papel:</span>
+            <select onchange="localStorage.setItem('ticket_size', this.value); const t = this.closest('.ticket-print'); t.style.maxWidth = this.value === '58' ? '210px' : '300px'; t.style.fontSize = this.value === '58' ? '10px' : '12px';" class="border border-gray-300 rounded px-2 py-1 text-xs font-bold text-gray-700 outline-none cursor-pointer bg-white shadow-sm">
+                <option value="80" ${!is58 ? 'selected' : ''}>80 mm (Grande)</option>
+                <option value="58" ${is58 ? 'selected' : ''}>58 mm (Chico)</option>
+            </select>
+        </div>`;
+
         let html = `
-        <div class="ticket-print bg-white p-4 shadow-sm mx-auto text-black border border-gray-300 print:border-none print:shadow-none" style="max-width: 320px; font-size: 12px; line-height: 1.4;">
-            <div class="text-center mb-4">
-                <h2 class="text-lg font-bold uppercase leading-tight mb-1">${businessName}</h2>
-                <p class="text-xs font-semibold text-gray-700">${branch}</p>
+        <div class="ticket-print bg-white p-3 sm:p-4 shadow-sm mx-auto text-black border border-gray-300 print:border-none print:shadow-none print:p-0 transition-all duration-300" style="width: 100%; max-width: ${maxWidth}; font-size: ${fontSize}; line-height: 1.4;">
+            ${configSection}
+            
+            <div class="text-center mb-3">
+                <h2 class="text-base sm:text-lg font-bold uppercase leading-tight mb-1">${businessName}</h2>
+                <p class="font-semibold text-gray-700 text-xs sm:text-sm">${branch}</p>
             </div>
             
             <div class="border-t border-b border-dashed border-gray-400 py-2 mb-3 space-y-1">
@@ -2144,7 +2164,7 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
                         <td class="py-1.5 align-top font-bold">${qtyLabel}</td>
                         <td class="py-1.5 align-top pr-1 uppercase">
                             ${i.name}
-                            <div class="text-[10px] text-gray-500 lowercase mt-0.5">$${i.price.toFixed(2)}/${priceLabel}</div>
+                            <div class="text-[9px] sm:text-[10px] text-gray-500 lowercase mt-0.5">$${i.price.toFixed(2)}/${priceLabel}</div>
                         </td>
                         <td class="py-1.5 align-top text-right font-bold">$${i.total.toFixed(2)}</td>
                     </tr>`;
@@ -2157,7 +2177,7 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
             <div class="border-t border-dashed border-gray-400 pt-2 mb-4">
                 <div class="flex justify-between items-center font-bold text-sm mb-1">
                     <span>TOTAL:</span>
-                    <span class="text-base">$${total.toFixed(2)}</span>
+                    <span class="text-base sm:text-lg">$${total.toFixed(2)}</span>
                 </div>`;
 
         if (pagoCliente > 0) {
@@ -2171,7 +2191,7 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
         html += `
             </div>
             <div class="text-center mt-2 text-gray-700">
-                <p class="font-bold text-sm text-black">¡GRACIAS POR SU COMPRA!</p>
+                <p class="font-bold text-xs text-black">¡GRACIAS POR SU COMPRA!</p>
                 <p class="mt-1 text-[10px]">Vuelva pronto</p>
             </div>
         </div>`;
