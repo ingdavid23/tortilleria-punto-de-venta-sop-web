@@ -23,7 +23,7 @@
     
     .ticket-print { font-family: 'Courier New', monospace; }
     
-   /* BLOQUE CORREGIDO PARA IMPRESIÓN (MÁS GRANDE Y SIN CORTES) */
+   /* BLOQUE CORREGIDO PARA MÁRGENES DE IMPRESIÓN (SIN ESPACIO ARRIBA) */
    @media print {
       @page {
         margin: 0;
@@ -34,6 +34,8 @@
         height: auto !important; 
         overflow: visible !important; 
         background: white !important; 
+        margin: 0 !important; /* Destruye los márgenes ocultos de Android */
+        padding: 0 !important;
       }
       
       body * { visibility: hidden; }
@@ -47,8 +49,8 @@
         width: 100% !important; 
         max-width: 100% !important; 
         margin: 0 !important; 
-        /* 👇 MARGEN DE SEGURIDAD: 5mm a los lados para que no se corte */
-        padding: 2mm 5mm !important; 
+        /* 👇 0 padding arriba, 5mm a los lados para que no se corte */
+        padding: 0 5mm !important; 
         box-sizing: border-box !important;
         border: none !important;
       }
@@ -2194,16 +2196,20 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
             }
         }
 
-        html += `
+       // ... (código anterior del ticket) ...
+
+       html += `
             </div>
             <div style="text-align: center; margin-top: 10px;">
                 <p style="font-weight: 900; font-size: 16px; margin: 0;">¡GRACIAS POR SU COMPRA!</p>
                 <p style="font-size: 13px; font-weight: bold; margin-top: 4px;">Vuelva pronto</p>
             </div>
             
-            <div style="height: 40px;"></div>
-
-        </div>`;
+            <div style="text-align: center; margin-top: 20px; font-size: 12px; font-weight: bold; color: #000;">
+                - - - - - - - ✂️ - - - - - - -
+            </div>
+            <div style="height: 80px;"></div>
+            </div>`;
         
         return html;
     }
