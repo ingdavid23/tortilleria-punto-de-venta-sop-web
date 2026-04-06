@@ -24,18 +24,15 @@
     .ticket-print { font-family: 'Courier New', monospace; }
     
    /* BLOQUE CORREGIDO PARA IMPRESIÓN TÉRMICA (RAWBT) */
+   /* BLOQUE DEFINITIVO PARA IMPRESIÓN TÉRMICA */
    @media print {
       @page {
         margin: 0;
-        size: 80mm 200mm; /* Le dice a Android que el papel es térmico, no tamaño carta */
+        size: portrait !important; /* ¡ESTO FUERZA A QUE SIEMPRE SEA VERTICAL! */
       }
       html, body { 
-        height: auto !important; 
-        width: 100% !important;
-        overflow: visible !important; 
         margin: 0 !important; 
         padding: 0 !important;
-        background-color: white !important;
       }
       body * { visibility: hidden; }
       .ticket-print, .ticket-print * { visibility: visible; }
@@ -43,7 +40,6 @@
         position: absolute !important; 
         left: 0 !important; 
         top: 0 !important; 
-        width: 100% !important; 
         margin: 0 !important; 
         padding: 0 !important; 
       }
