@@ -503,6 +503,29 @@
     </div>
 </div>
 
+<div id="editar-stock-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-[150] p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm animate-slide flex flex-col">
+        <div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-3 sm:p-4 rounded-t-2xl flex justify-between items-center">
+            <h3 class="text-lg font-bold">✏️ Corregir Stock</h3>
+            <button type="button" onclick="closeEditarStockModal()" class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
+        </div>
+        <form class="p-4 sm:p-6 space-y-4" onsubmit="saveEditarStock(event)">
+            <input type="hidden" id="editar-stock-product-id">
+            <div class="text-center mb-2">
+                <h4 id="editar-stock-product-name" class="text-lg font-bold text-gray-800">Producto</h4>
+            </div>
+            <div>
+                <label class="text-sm font-semibold text-gray-600">Stock Real (Cantidad exacta):</label>
+                <input type="number" id="editar-stock-qty" required min="0" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 mt-1 text-2xl font-bold text-center focus:border-blue-500 focus:outline-none" placeholder="Ej: 20">
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeEditarStockModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl font-bold transition-all"> Cancelar </button> 
+                <button type="submit" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-xl font-bold transition-all flex justify-center items-center gap-2"> 💾 Guardar </button>
+            </div>
+        </form>
+    </div>
+</div>
+
    <div id="product-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-[100] p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-slide flex flex-col max-h-[90vh]">
         <div class="bg-gradient-to-r from-amber-500 to-orange-500 text-white p-3 sm:p-4 rounded-t-2xl flex justify-between items-center shrink-0">
@@ -1351,10 +1374,15 @@
                 </td>
                 <td class="p-3 text-center font-semibold text-gray-600">$${p.price.toFixed(2)}</td>
                 <td class="p-3 text-center text-lg"><span class="${stockClass}">${stock} pz</span></td>
-                <td class="p-3 text-right">
-                    <button onclick="openEntradaModal(${p.id})" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-4 py-2 rounded-xl text-sm font-bold transition-colors shadow-sm">
-                        ➕ Entrada
-                    </button>
+               <td class="p-3">
+                    <div class="flex justify-end gap-2">
+                        <button onclick="openEditarStockModal(${p.id})" class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-xl text-sm font-bold transition-colors shadow-sm" title="Corregir error de stock">
+                            ✏️ Editar
+                        </button>
+                        <button onclick="openEntradaModal(${p.id})" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-3 py-2 rounded-xl text-sm font-bold transition-colors shadow-sm">
+                            ➕ Entrada
+                        </button>
+                    </div>
                 </td>
             </tr>`;
         }).join('');
@@ -1393,6 +1421,50 @@
             renderInventarioProductos();
             closeEntradaModal();
             showToast(`✅ +${qty} piezas registradas correctamente`);
+        }
+    }
+
+    // 👇 NUEVAS FUNCIONES PARA EDITAR STOCK 👇
+    function openEditarStockModal(productId) {
+        const p = state.products.find(prod => prod.id === productId);
+        if(!p) return;
+        
+        document.getElementById('editar-stock-product-id').value = p.id;
+        document.getElementById('editar-stock-product-name').textContent = p.emoji + " " + p.name;
+        // Colocamos el stock actual en el cuadro para que sea fácil corregirlo
+        document.getElementById('editar-stock-qty').value = p.stock || 0; 
+        
+        document.getElementById('editar-stock-modal').classList.replace('hidden', 'flex');
+        
+        setTimeout(() => {
+            const input = document.getElementById('editar-stock-qty');
+            input.focus();
+            input.select(); // Selecciona el texto para que al escribir se borre lo anterior rápido
+        }, 100);
+    }
+
+    function closeEditarStockModal() { 
+        document.getElementById('editar-stock-modal').classList.replace('flex', 'hidden'); 
+    }
+
+    async function saveEditarStock(e) {
+        e.preventDefault();
+        const productId = parseInt(document.getElementById('editar-stock-product-id').value);
+        const qty = parseInt(document.getElementById('editar-stock-qty').value);
+        
+        if(isNaN(qty) || qty < 0) return showToast('Cantidad inválida', 'error');
+
+        const pIndex = state.products.findIndex(prod => prod.id === productId);
+        if (pIndex !== -1) {
+            // A diferencia de la entrada, aquí REEMPLAZAMOS el valor con el nuevo
+            state.products[pIndex].stock = qty; 
+            
+            showToast('Actualizando stock en la nube...', 'success');
+            await saveState(); 
+            
+            renderInventarioProductos();
+            closeEditarStockModal();
+            showToast(`✅ Stock corregido a ${qty} piezas`);
         }
     }
 
