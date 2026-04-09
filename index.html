@@ -281,13 +281,19 @@
     </div>
 
     <div id="tab-inventario-productos" class="tab-content hidden">
-      <section class="bg-white rounded-2xl shadow-xl p-4 sm:p-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
-          <h2 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2"><span class="text-2xl sm:text-3xl">📦</span> Control de Inventario (Por Pieza)</h2>
-          <p class="text-sm text-gray-500">Solo muestra productos marcados como "Por Pieza"</p>
-        </div>
-        <div class="overflow-x-auto no-scrollbar rounded-xl border border-gray-200">
-          <table class="w-full text-left border-collapse min-w-[600px]">
+        <section class="bg-white rounded-2xl shadow-xl p-4 sm:p-6">
+          
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
+            <div>
+              <h2 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2"><span class="text-2xl sm:text-3xl">📦</span> Control de Inventario (Por Pieza)</h2>
+              <p class="text-sm text-gray-500">Solo muestra productos marcados como "Por Pieza"</p>
+            </div>
+            <button onclick="generateStockReportPDF()" class="btn-action bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 sm:py-2 rounded-xl text-sm sm:text-base font-semibold transition-all flex items-center justify-center gap-2 shadow-md shrink-0">
+                📄 Descargar Reporte
+            </button>
+          </div>
+          <div class="overflow-x-auto no-scrollbar rounded-xl border border-gray-200">
+            <table class="w-full text-left border-collapse min-w-[600px]">
             <thead>
               <tr class="bg-gray-100 text-gray-600 border-b-2 border-gray-200 text-sm">
                 <th class="p-3 font-bold rounded-tl-xl">Producto</th>
@@ -1442,6 +1448,23 @@
             p.stocks[currentStockBranch] = current + qty;
 
             showToast('Actualizando inventario...', 'success');
+            
+            // 👇 NUEVO: Crear bitácora en Firebase 👇
+            try {
+                const now = new Date();
+                await db.collection('entradas_stock').add({
+                    timestamp: now.getTime(),
+                    fecha: now.toLocaleDateString('es-MX'),
+                    hora: now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+                    producto: p.name,
+                    sucursal: currentStockBranch,
+                    cantidad: qty,
+                    tipo: 'Entrada',
+                    usuario: currentUser.username
+                });
+            } catch(e) { console.error("Error registrando bitácora:", e); }
+            // 👆 --------------------------------- 👆
+
             if(typeof db !== 'undefined') {
                 await db.collection('datos_sistema').doc('punto_de_venta').set({ products: state.products }, { merge: true });
             } else if (typeof saveState === 'function') {
@@ -1452,29 +1475,6 @@
             showToast(`✅ +${qty} piezas en ${currentStockBranch}`);
         }
     }
-
-    function openEditarStockModal(productId, branchName) {
-        const p = state.products.find(prod => prod.id === productId);
-        if(!p) return;
-
-        currentStockBranch = branchName;
-
-        let currentStock = 0;
-        if (p.stocks && p.stocks[branchName] !== undefined) {
-            currentStock = p.stocks[branchName];
-        } else if (p.stock !== undefined) {
-            currentStock = p.stock;
-        }
-
-        document.getElementById('editar-stock-product-id').value = p.id;
-        document.getElementById('editar-stock-product-name').textContent = p.emoji + " " + p.name + ` (${branchName})`;
-        document.getElementById('editar-stock-qty').value = currentStock;
-
-        document.getElementById('editar-stock-modal').classList.replace('hidden', 'flex');
-        setTimeout(() => { const input = document.getElementById('editar-stock-qty'); input.focus(); input.select(); }, 100);
-    }
-
-    function closeEditarStockModal() { document.getElementById('editar-stock-modal').classList.replace('flex', 'hidden'); }
 
     async function saveEditarStock(e) {
         e.preventDefault();
@@ -1495,9 +1495,27 @@
                 delete p.stock;
             }
 
+            const prevStock = p.stocks[currentStockBranch] || 0;
             p.stocks[currentStockBranch] = qty;
 
             showToast('Actualizando inventario...', 'success');
+            
+            // 👇 NUEVO: Crear bitácora en Firebase 👇
+            try {
+                const now = new Date();
+                await db.collection('entradas_stock').add({
+                    timestamp: now.getTime(),
+                    fecha: now.toLocaleDateString('es-MX'),
+                    hora: now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+                    producto: p.name,
+                    sucursal: currentStockBranch,
+                    cantidad: qty,
+                    tipo: `Ajuste manual (Antes: ${prevStock})`,
+                    usuario: currentUser.username
+                });
+            } catch(e) { console.error("Error registrando bitácora:", e); }
+            // 👆 --------------------------------- 👆
+
             if(typeof db !== 'undefined') {
                 await db.collection('datos_sistema').doc('punto_de_venta').set({ products: state.products }, { merge: true });
             } else if (typeof saveState === 'function') {
@@ -2845,6 +2863,113 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
         html2pdf().set(opt).from(finalHTML).save().then(() => {
             showToast('✅ Reporte Mensual descargado con éxito');
         });
+    }
+
+    // ============ REPORTE DE INVENTARIO (PDF) ============
+    async function generateStockReportPDF() {
+        if (!currentUser || currentUser.role !== 'admin') return showToast('Solo el administrador puede generar esto', 'error');
+        if (typeof html2pdf === 'undefined') return showToast('Error: Librería PDF no cargada', 'error');
+        
+        showToast('Analizando bitácora de los últimos 30 días, espera...', 'success');
+
+        try {
+            // 1. Obtener todos los movimientos de los últimos 30 días
+            const hace30Dias = new Date();
+            hace30Dias.setDate(hace30Dias.getDate() - 30);
+            hace30Dias.setHours(0, 0, 0, 0);
+            
+            const snapshot = await db.collection('entradas_stock').where('timestamp', '>=', hace30Dias.getTime()).get();
+            const movimientos = snapshot.docs.map(doc => doc.data());
+            
+            // Ordenar cronológicamente (del más reciente al más antiguo)
+            movimientos.sort((a, b) => b.timestamp - a.timestamp);
+
+            // 2. Sumar el total de ENTRADAS puras por sucursal y producto
+            const resumen = {};
+            movimientos.forEach(mov => {
+                if (mov.tipo === 'Entrada') {
+                    if (!resumen[mov.sucursal]) resumen[mov.sucursal] = {};
+                    if (!resumen[mov.sucursal][mov.producto]) resumen[mov.sucursal][mov.producto] = 0;
+                    resumen[mov.sucursal][mov.producto] += mov.cantidad;
+                }
+            });
+
+            // 3. Construir el HTML del PDF
+            let resumenHTML = '';
+            Object.keys(resumen).sort().forEach(sucursal => {
+                resumenHTML += `<h4 style="color: #1f2937; margin-top: 15px; border-bottom: 2px solid #d1d5db; padding-bottom: 5px;">🏢 ${sucursal}</h4>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px;">
+                    <thead><tr style="background-color: #f3f4f6;"><th style="padding: 8px; text-align: left; border-bottom: 1px solid #d1d5db;">Producto</th><th style="padding: 8px; text-align: right; border-bottom: 1px solid #d1d5db;">Total Piezas Ingresadas</th></tr></thead>
+                    <tbody>`;
+                
+                Object.entries(resumen[sucursal]).sort((a,b) => b[1] - a[1]).forEach(([producto, total]) => {
+                    resumenHTML += `<tr style="border-bottom: 1px dashed #e5e7eb;"><td style="padding: 8px; color: #4b5563; font-weight: bold;">${producto}</td><td style="padding: 8px; text-align: right; font-weight: bold; color: #059669;">+${total} pz</td></tr>`;
+                });
+                resumenHTML += `</tbody></table>`;
+            });
+
+            if (Object.keys(resumen).length === 0) {
+                resumenHTML = '<p style="color: #6b7280; font-style: italic;">No se registraron entradas formales en los últimos 30 días.</p>';
+            }
+
+            // Construir la bitácora detallada (Top 100 últimos movimientos para no hacer PDFs gigantes)
+            let logHTML = '';
+            movimientos.slice(0, 100).forEach(mov => { 
+                const isEntrada = mov.tipo === 'Entrada';
+                const color = isEntrada ? '#059669' : '#d97706';
+                logHTML += `<tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 6px; font-size: 11px; color: #6b7280;">${mov.fecha} ${mov.hora}</td>
+                    <td style="padding: 6px; font-size: 11px; font-weight: bold;">${mov.sucursal}</td>
+                    <td style="padding: 6px; font-size: 11px;">${mov.producto}</td>
+                    <td style="padding: 6px; font-size: 11px; color: ${color};"><b>${isEntrada ? '+'+mov.cantidad : mov.cantidad}</b><br><span style="font-size: 9px; color: #9ca3af;">${mov.tipo}</span></td>
+                    <td style="padding: 6px; font-size: 11px;">${mov.usuario}</td>
+                </tr>`;
+            });
+
+            const pdfHTML = `
+            <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 30px; background: white; color: #333;">
+                <div style="text-align: center; border-bottom: 4px solid #3b82f6; padding-bottom: 15px; margin-bottom: 20px;">
+                    <h1 style="color: #1d4ed8; margin: 0; font-size: 26px; font-weight: 900; text-transform: uppercase;">Xavi Comercializadora</h1>
+                    <h2 style="color: #4b5563; margin: 5px 0; font-size: 16px;">Reporte Mensual de Inventario (Piezas)</h2>
+                    <p style="color: #6b7280; margin: 0; font-size: 11px;">Generado: ${new Date().toLocaleDateString('es-MX')} a las ${new Date().toLocaleTimeString('es-MX')} por ${currentUser.username}</p>
+                </div>
+
+                <h3 style="color: #1e3a8a; font-size: 16px; margin-bottom: 10px;">📊 Resumen Global de Entradas (Últimos 30 días)</h3>
+                <p style="font-size: 11px; color: #6b7280; margin-top: -5px; margin-bottom: 15px;">Suma total de piezas abastecidas a cada sucursal.</p>
+                ${resumenHTML}
+
+                <h3 style="color: #1e3a8a; font-size: 16px; margin-top: 30px; margin-bottom: 10px;">🕒 Bitácora de Movimientos (Últimos 100 registros)</h3>
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                    <thead>
+                        <tr style="background-color: #e5e7eb; color: #374151;">
+                            <th style="padding: 8px; text-align: left;">Fecha/Hora</th>
+                            <th style="padding: 8px; text-align: left;">Sucursal</th>
+                            <th style="padding: 8px; text-align: left;">Producto</th>
+                            <th style="padding: 8px; text-align: left;">Movimiento</th>
+                            <th style="padding: 8px; text-align: left;">Autor</th>
+                        </tr>
+                    </thead>
+                    <tbody>${logHTML || '<tr><td colspan="5" style="text-align: center; padding: 10px;">Sin movimientos recientes</td></tr>'}</tbody>
+                </table>
+            </div>`;
+
+            let finalHTML = `<div style="width: 700px;">${pdfHTML}</div>`;
+            const opt = {
+                margin: 15,
+                filename: `Reporte_Inventario_${new Date().toISOString().split('T')[0]}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(finalHTML).save().then(() => {
+                showToast('✅ Reporte PDF descargado con éxito');
+            });
+
+        } catch (e) {
+            console.error(e);
+            showToast('Error obteniendo historial de entradas', 'error');
+        }
     }
 
     // ============ MINIMIZAR CATÁLOGO DE PRODUCTOS ============
