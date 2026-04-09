@@ -34,7 +34,7 @@
         height: auto !important; 
         overflow: visible !important; 
         background: white !important; 
-        margin: 0 !important; /* Destruye los márgenes ocultos de Android */
+        margin: 0 !important; 
         padding: 0 !important;
       }
       
@@ -49,7 +49,6 @@
         width: 100% !important; 
         max-width: 100% !important; 
         margin: 0 !important; 
-        /* 👇 0 padding arriba, 5mm a los lados para que no se corte */
         padding: 0 5mm !important; 
         box-sizing: border-box !important;
         border: none !important;
@@ -77,12 +76,7 @@
   <div id="login-screen" class="fixed inset-0 bg-gradient-to-br from-amber-500 to-orange-600 z-[100] hidden items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 sm:p-8 animate-slide">
       <div class="text-center mb-6 sm:mb-8">
-        
-        <img 
-          src="xavi.png" 
-          alt="Logo Xavi Comercializadora" 
-          class="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover mx-auto mb-3 sm:mb-4 shadow-md border-2 border-amber-100"
-        >
+        <img src="xavi.png" alt="Logo Xavi Comercializadora" class="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover mx-auto mb-3 sm:mb-4 shadow-md border-2 border-amber-100">
         <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Xavi</h2>
         <p class="text-sm sm:text-base text-gray-500">Sistema Multi-Sucursal Comercializadora</p>
       </div>
@@ -112,18 +106,12 @@
     <div class="max-w-7xl mx-auto px-4 py-3 sm:py-4">
      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
       <div class="flex items-center gap-3 w-full sm:w-auto justify-center sm:justify-start">
-       
-        <img 
-          src="xavi.png" 
-          alt="Logo Xavi Comercializadora" 
-          class="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover shrink-0 bg-white border-2 border-white/50 shadow-sm"
-        >
+        <img src="xavi.png" alt="Logo Xavi Comercializadora" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover shrink-0 bg-white border-2 border-white/50 shadow-sm">
         <div class="text-center sm:text-left">
          <h1 id="business-title" class="text-lg sm:text-2xl font-bold leading-tight">Sistema-Xavi-Comercializadora</h1>
          <p id="branch-title" class="text-amber-100 text-xs sm:text-sm font-semibold tracking-wide">Cargando sucursal...</p>
         </div>
        </div>
-      
       <div class="flex flex-row items-center justify-between w-full sm:w-auto gap-4 bg-black/10 sm:bg-transparent px-4 py-2 sm:p-0 rounded-xl sm:rounded-none">
        <div class="text-left sm:text-right">
         <p id="current-date" class="text-amber-100 text-[10px] sm:text-sm capitalize"></p>
@@ -135,7 +123,6 @@
         <button onclick="logout()" class="text-[10px] sm:text-xs text-amber-100 hover:text-white underline">Cerrar sesión</button>
       </div>
       </div>
-
      </div>
     </div>
    </header>
@@ -152,19 +139,16 @@
         <button id="tab-btn-usuarios" onclick="switchTab('usuarios')" class="tab-btn px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-transparent text-gray-600 text-sm sm:text-base hover:bg-gray-50 transition-all hidden"> 👥 Usuarios </button>
         <button id="tab-btn-calendario" onclick="switchTab('calendario')" class="tab-btn px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-transparent text-gray-600 text-sm sm:text-base hover:bg-gray-50 transition-all hidden"> 📅 Calendario </button>
         <button id="tab-btn-mensual" onclick="switchTab('mensual')" class="tab-btn px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-transparent text-gray-600 text-sm sm:text-base hover:bg-gray-50 transition-all hidden"> 📑 Cierre Mensual </button>
-        
-       
-        
      </div>
     </div>
    </div>
    
    <main class="flex-1 overflow-x-hidden overflow-y-auto max-w-7xl mx-auto w-full px-3 sm:px-4 py-4 sm:py-6 no-print">
+    
     <div id="tab-punto-venta" class="tab-content active">
      <div class="flex flex-col lg:grid lg:grid-cols-3 gap-4 sm:gap-6">
       
       <div id="pos-left-panel" class="lg:col-span-2 flex flex-col gap-4 sm:gap-6 order-2 lg:order-1">
-       
         <section class="bg-white rounded-2xl shadow-xl p-4 sm:p-6 transition-all duration-300">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
              <div class="flex items-center gap-2 cursor-pointer select-none group" onclick="toggleProductsMenu()" title="Minimizar/Maximizar catálogo">
@@ -183,13 +167,10 @@
        
        <section id="quick-sale-section" class="bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl shadow-xl p-4 sm:p-6 text-white">
         <h2 class="text-lg sm:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2"><span class="text-xl sm:text-2xl">💵</span> Venta Rápida</h2>
-        
         <div class="mb-4">
             <label class="text-xs sm:text-sm font-semibold opacity-90 mb-1 block">Producto:</label>
-            <select id="quick-sale-product" onchange="updateQuickSaleButtons()" class="w-full bg-white/20 backdrop-blur text-white border-2 border-white/30 rounded-xl px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base focus:border-white focus:outline-none cursor-pointer">
-                </select>
+            <select id="quick-sale-product" onchange="updateQuickSaleButtons()" class="w-full bg-white/20 backdrop-blur text-white border-2 border-white/30 rounded-xl px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base focus:border-white focus:outline-none cursor-pointer"></select>
         </div>
-
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
             <button onclick="quickSaleByMoney(5)" class="btn-action bg-white/20 hover:bg-white/30 backdrop-blur rounded-xl p-3 sm:p-4 text-center transition-all"> <p class="text-xl sm:text-2xl font-bold">$5</p><p id="quick-5" class="text-xs sm:text-sm opacity-80">-</p></button> 
             <button onclick="quickSaleByMoney(10)" class="btn-action bg-white/20 hover:bg-white/30 backdrop-blur rounded-xl p-3 sm:p-4 text-center transition-all"> <p class="text-xl sm:text-2xl font-bold">$10</p><p id="quick-10" class="text-xs sm:text-sm opacity-80">-</p></button> 
@@ -244,7 +225,6 @@
             </select>
         </div>
          <div class="grid grid-cols-2 gap-2 sm:gap-3 mt-3 sm:mt-4">
-         <div class="grid grid-cols-2 gap-2 sm:gap-3 mt-3 sm:mt-4">
             <button onclick="clearCart()" class="btn-action bg-red-100 hover:bg-red-200 text-red-600 py-2 sm:py-3 rounded-xl text-sm sm:text-base font-bold transition-all flex items-center justify-center gap-1"> 🗑️ <span class="hidden sm:inline">Limpiar</span> </button> 
             <button onclick="generateTicket()" class="btn-action bg-purple-500 hover:bg-purple-600 text-white py-2 sm:py-3 rounded-xl text-sm sm:text-base font-bold transition-all flex items-center justify-center gap-1"> 🎫 <span class="hidden sm:inline">Ticket</span> </button>
          </div>
@@ -252,7 +232,6 @@
         </div>
        </section>
       </div>
-      
      </div>
     </div>
 
@@ -265,8 +244,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
                     <div class="lg:col-span-1">
                         <label class="text-xs sm:text-sm font-semibold text-gray-600 block mb-1">Destino</label>
-                        <select id="inv-branch" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-amber-500 focus:outline-none bg-white">
-                        </select>
+                        <select id="inv-branch" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-amber-500 focus:outline-none bg-white"></select>
                     </div>
                     <div class="lg:col-span-1">
                         <label class="text-xs sm:text-sm font-semibold text-gray-600 block mb-1">Maseca Premium</label>
@@ -284,11 +262,8 @@
                         <label class="text-xs sm:text-sm font-semibold text-gray-600 block mb-1">Harimasa Fardo</label>
                         <input type="number" id="inv-fardo" min="0" placeholder="Bultos" class="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-amber-500 focus:outline-none">
                     </div>
-
                     <div class="lg:col-span-1 flex items-end">
-                        <button onclick="enviarHarina()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 rounded-xl transition-all shadow-md h-[42px]">
-                            Enviar Bultos
-                        </button>
+                        <button onclick="enviarHarina()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 rounded-xl transition-all shadow-md h-[42px]">Enviar Bultos</button>
                     </div>
                 </div>
             </section>
@@ -300,10 +275,30 @@
                     </h2>
                     <p class="text-sm text-gray-500">* Cada bulto rinde 41 Kg de tortilla. Los productos "Por Pieza" no restan inventario.</p>
                 </div>
-                <div id="almacen-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                </div>
+                <div id="almacen-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"></div>
             </section>
         </div>
+    </div>
+
+    <div id="tab-inventario-productos" class="tab-content hidden">
+      <section class="bg-white rounded-2xl shadow-xl p-4 sm:p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
+          <h2 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2"><span class="text-2xl sm:text-3xl">📦</span> Control de Inventario (Por Pieza)</h2>
+          <p class="text-sm text-gray-500">Solo muestra productos marcados como "Por Pieza"</p>
+        </div>
+        <div class="overflow-x-auto no-scrollbar rounded-xl border border-gray-200">
+          <table class="w-full text-left border-collapse min-w-[600px]">
+            <thead>
+              <tr class="bg-gray-100 text-gray-600 border-b-2 border-gray-200 text-sm">
+                <th class="p-3 font-bold rounded-tl-xl">Producto</th>
+                <th class="p-3 font-bold text-center">Precio Venta</th>
+                <th class="p-3 font-bold text-center" colspan="2">Stock Actual y Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="inventario-productos-body"></tbody>
+          </table>
+        </div>
+      </section>
     </div>
 
     <div id="tab-reporte-diario" class="tab-content hidden">
@@ -413,8 +408,7 @@
              <div class="grid grid-cols-7 gap-1 sm:gap-2 mb-2 text-center text-xs font-bold text-gray-500 uppercase tracking-wide">
                  <div>Lu</div><div>Ma</div><div>Mi</div><div>Ju</div><div>Vi</div><div>Sa</div><div>Do</div>
              </div>
-             <div id="historial-calendar-days" class="grid grid-cols-7 gap-1 sm:gap-2">
-                 </div>
+             <div id="historial-calendar-days" class="grid grid-cols-7 gap-1 sm:gap-2"></div>
          </div>
          
          <div class="mt-6 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 hidden shadow-sm" id="historial-summary">
@@ -430,7 +424,7 @@
              <p class="text-xs sm:text-sm text-amber-700 bg-amber-100 p-2 rounded-lg font-semibold text-center">💡 Navega a las pestañas "Diario" o "Estadísticas" para ver el detalle de esta fecha.</p>
             </div>
         </section>
-       </div>
+    </div>
 
     <div id="tab-mensual" class="tab-content hidden">
       <section class="bg-white rounded-2xl shadow-xl p-4 sm:p-6 max-w-4xl mx-auto text-center">
@@ -455,31 +449,9 @@
       </section>
     </div>
 
-    <div id="tab-inventario-productos" class="tab-content hidden">
-        <section class="bg-white rounded-2xl shadow-xl p-4 sm:p-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
-            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2"><span class="text-2xl sm:text-3xl">📦</span> Control de Inventario (Por Pieza)</h2>
-            <p class="text-sm text-gray-500">Solo muestra productos marcados como "Por Pieza"</p>
-          </div>
-          <div class="overflow-x-auto no-scrollbar rounded-xl border border-gray-200">
-            <table class="w-full text-left border-collapse min-w-[600px]">
-              <thead>
-                <tr class="bg-gray-100 text-gray-600 border-b-2 border-gray-200 text-sm">
-                  <th class="p-3 font-bold rounded-tl-xl">Producto</th>
-                  <th class="p-3 font-bold text-center">Precio Venta</th>
-                  <th class="p-3 font-bold text-center">Stock Actual</th>
-                  <th class="p-3 font-bold rounded-tr-xl text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody id="inventario-productos-body"></tbody>
-            </table>
-          </div>
-        </section>
-      </div>
-
    </main>
 
-   <div id="entrada-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-[150] p-4">
+  <div id="entrada-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-[150] p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm animate-slide flex flex-col">
         <div class="bg-gradient-to-r from-emerald-500 to-green-600 text-white p-3 sm:p-4 rounded-t-2xl flex justify-between items-center">
             <h3 class="text-lg font-bold">🚚 Registrar Entrada</h3>
@@ -501,9 +473,9 @@
             </div>
         </form>
     </div>
-</div>
+  </div>
 
-<div id="editar-stock-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-[150] p-4">
+  <div id="editar-stock-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-[150] p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm animate-slide flex flex-col">
         <div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-3 sm:p-4 rounded-t-2xl flex justify-between items-center">
             <h3 class="text-lg font-bold">✏️ Corregir Stock</h3>
@@ -524,7 +496,7 @@
             </div>
         </form>
     </div>
-</div>
+  </div>
 
    <div id="product-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-[100] p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-slide flex flex-col max-h-[90vh]">
@@ -569,6 +541,12 @@
                          <img id="image-preview-img" class="hidden w-full h-full object-cover absolute inset-0">
                      </div>
                      <input type="hidden" id="product-image-b64">
+                 </div>
+             </div>
+
+             <div class="bg-gray-50 p-3 rounded-xl border border-gray-200">
+                 <label class="text-xs sm:text-sm text-gray-600 font-bold mb-2 block">📍 Mostrar en sucursales:</label>
+                 <div id="product-branches-checklist" class="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto pr-2">
                  </div>
              </div>
 
@@ -689,33 +667,31 @@
     </div>
   </div>
 
-  <div id="historic-sale-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-</div>
+  <div id="corte-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm animate-slide flex flex-col">
+    <div class="bg-gradient-to-r from-red-500 to-pink-600 text-white p-4 rounded-t-2xl flex justify-between items-center">
+        <h3 class="text-xl font-bold">💰 Corte de Caja</h3>
+        <button onclick="cerrarModalCorte()" class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
+    </div>
+    <div class="p-6">
+        <p class="text-gray-600 text-sm mb-4">Ingresa el total de dinero físico que hay en caja. El sistema lo comparará con las ventas registradas y enviará el reporte al administrador.</p>
+        
+        <label class="text-sm font-bold text-gray-700 mb-2 block">Efectivo Físico Entregado:</label>
+        <div class="relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-xl">$</span>
+            <input type="number" id="efectivo-entregado" class="w-full border-2 border-gray-200 rounded-xl pl-8 pr-4 py-3 text-xl font-bold focus:border-red-500 focus:outline-none" placeholder="0.00">
+        </div>
+        
+        <button onclick="ejecutarCorte()" class="w-full mt-6 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold text-lg transition-all shadow-md">
+            Confirmar y Enviar Reporte
+        </button>
+    </div>
+  </div>
+  </div>
 
-<div id="corte-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-<div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm animate-slide flex flex-col">
-  <div class="bg-gradient-to-r from-red-500 to-pink-600 text-white p-4 rounded-t-2xl flex justify-between items-center">
-      <h3 class="text-xl font-bold">💰 Corte de Caja</h3>
-      <button onclick="cerrarModalCorte()" class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
+  <div id="toast" class="fixed bottom-6 left-4 right-4 sm:left-auto sm:right-6 sm:w-auto bg-green-500 text-white px-5 sm:px-6 py-3 rounded-xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-[300] text-center sm:text-left text-sm sm:text-base font-semibold">
+    <p id="toast-message">Mensaje</p>
   </div>
-  <div class="p-6">
-      <p class="text-gray-600 text-sm mb-4">Ingresa el total de dinero físico que hay en caja. El sistema lo comparará con las ventas registradas y enviará el reporte al administrador.</p>
-      
-      <label class="text-sm font-bold text-gray-700 mb-2 block">Efectivo Físico Entregado:</label>
-      <div class="relative">
-          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-xl">$</span>
-          <input type="number" id="efectivo-entregado" class="w-full border-2 border-gray-200 rounded-xl pl-8 pr-4 py-3 text-xl font-bold focus:border-red-500 focus:outline-none" placeholder="0.00">
-      </div>
-      
-      <button onclick="ejecutarCorte()" class="w-full mt-6 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold text-lg transition-all shadow-md">
-          Confirmar y Enviar Reporte
-      </button>
-  </div>
-</div>
-</div>
-<div id="toast" class="fixed bottom-6 left-4 right-4 sm:left-auto sm:right-6 sm:w-auto bg-green-500 text-white px-5 sm:px-6 py-3 rounded-xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-[300] text-center sm:text-left text-sm sm:text-base font-semibold">
-<p id="toast-message">Mensaje</p>
-</div>
 
   
   <script>
@@ -791,32 +767,44 @@
         }
     }
 
+    // Actualizar openProductModal para generar el checklist
     function openProductModal(productId = null) {
         const form = document.getElementById('product-form');
         if(form) form.reset();
         
+        // Generar Checklist de Sucursales dinámicamente
+        const checklistDiv = document.getElementById('product-branches-checklist');
+        const uniqueBranches = [...new Set(state.users.map(u => u.branch))].filter(b => b && b !== 'Todas');
+        
+        // Buscamos el producto si es edición
+        const product = productId ? state.products.find(p => p.id === productId) : null;
+
+        checklistDiv.innerHTML = uniqueBranches.map(branch => `
+            <label class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-amber-50 transition-colors text-sm">
+                <input type="checkbox" name="branch-target" value="${branch}" 
+                    ${product && product.branches && product.branches.includes(branch) ? 'checked' : (!product ? 'checked' : '')} 
+                    class="w-4 h-4 accent-amber-600">
+                <span class="font-semibold text-gray-700">${branch}</span>
+            </label>
+        `).join('');
+
         updatePriceLabel();
         removeProductImage();
 
-        if (productId) {
-            const product = state.products.find(p => p.id === productId);
-            if (product) {
-                document.getElementById('modal-title').textContent = 'Editar Producto';
-                document.getElementById('product-id').value = product.id;
-                document.getElementById('product-sale-type').value = product.saleType || 'kg';
-                document.getElementById('product-name').value = product.name;
-                document.getElementById('product-price').value = product.price;
-                document.getElementById('product-emoji').value = product.emoji;
-                document.getElementById('product-color').value = product.color;
-                
-                if (product.image) {
-                    document.getElementById('product-image-b64').value = product.image;
-                    document.getElementById('image-preview-img').src = product.image;
-                    document.getElementById('image-preview-img').classList.remove('hidden');
-                    document.getElementById('image-preview-text').classList.add('hidden');
-                    document.getElementById('btn-remove-image').classList.remove('hidden');
-                }
-                updatePriceLabel();
+        if (product) {
+            document.getElementById('modal-title').textContent = 'Editar Producto';
+            document.getElementById('product-id').value = product.id;
+            document.getElementById('product-sale-type').value = product.saleType || 'kg';
+            document.getElementById('product-name').value = product.name;
+            document.getElementById('product-price').value = product.price;
+            document.getElementById('product-emoji').value = product.emoji;
+            document.getElementById('product-color').value = product.color;
+            if (product.image) {
+                document.getElementById('product-image-b64').value = product.image;
+                document.getElementById('image-preview-img').src = product.image;
+                document.getElementById('image-preview-img').classList.remove('hidden');
+                document.getElementById('image-preview-text').classList.add('hidden');
+                document.getElementById('btn-remove-image').classList.remove('hidden');
             }
         } else {
             document.getElementById('modal-title').textContent = 'Nuevo Producto';
@@ -826,56 +814,49 @@
         const modal = document.getElementById('product-modal');
         if(modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
     }
-
+    
     function closeProductModal() {
         const modal = document.getElementById('product-modal');
         if(modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
     }
 
+    // Actualizar saveProduct para recoger las sucursales
     async function saveProduct(event) {
         event.preventDefault();
         
-        const idInput = document.getElementById('product-id');
-        const id = idInput ? idInput.value : '';
-        
-        const imageInput = document.getElementById('product-image-b64');
-        const imageData = imageInput ? imageInput.value : '';
-        
+        const selectedBranches = Array.from(document.querySelectorAll('input[name="branch-target"]:checked')).map(cb => cb.value);
+        if(selectedBranches.length === 0) return showToast('Selecciona al menos una sucursal', 'error');
+
         const productData = {
             saleType: document.getElementById('product-sale-type').value,
             name: document.getElementById('product-name').value.trim(),
             price: parseFloat(document.getElementById('product-price').value),
             emoji: document.getElementById('product-emoji').value.trim() || '📦',
             color: document.getElementById('product-color').value,
-            image: imageData
+            image: document.getElementById('product-image-b64').value,
+            branches: selectedBranches, // Guardamos la lista de sucursales
+            stocks: (state.products.find(p => p.id === parseInt(document.getElementById('product-id').value))?.stocks) || {} 
         };
+        
+        // Inicializar stock en 0 para sucursales nuevas si no existe
+        selectedBranches.forEach(b => { if(productData.stocks[b] === undefined) productData.stocks[b] = 0; });
 
+        const id = document.getElementById('product-id').value;
         if (id) {
             const index = state.products.findIndex(p => p.id === parseInt(id));
-            if (index !== -1) {
-                state.products[index] = { ...state.products[index], ...productData };
-                showToast('Producto actualizado');
-            }
+            state.products[index] = { ...state.products[index], ...productData };
         } else {
-            const newId = state.products.length > 0 ? Math.max(...state.products.map(p => p.id)) + 1 : 1;
+            const newId = Date.now();
             state.products.push({ id: newId, ...productData });
-            showToast('Producto creado exitosamente');
         }
 
         await saveState();
         renderProducts();
+        if(document.getElementById('tab-inventario-productos').classList.contains('active')) renderInventarioProductos();
         closeProductModal();
+        showToast('Producto guardado correctamente');
     }
 
-    async function deleteProduct(id) {
-        if (confirm('¿Estás seguro de eliminar este producto del sistema?')) {
-            state.products = state.products.filter(p => p.id !== id);
-            await saveState();
-            renderProducts();
-            showToast('Producto eliminado', 'error');
-        }
-    }
-    
     function editProduct(id) {
         openProductModal(id);
     }
@@ -885,7 +866,8 @@
             state.products = state.products.filter(p => p.id !== id);
             await saveState();
             renderProducts();
-            showToast('Producto eliminado', 'error'); // Usamos 'error' solo para el color rojo del toast
+            if(document.getElementById('tab-inventario-productos').classList.contains('active')) renderInventarioProductos();
+            showToast('Producto eliminado', 'error'); 
         }
     }
    
@@ -1027,6 +1009,7 @@
                 if (currentUser) {
                     renderProducts();
                     renderAlmacen();
+                    if (document.getElementById('tab-inventario-productos').classList.contains('active')) renderInventarioProductos();
                     if (currentUser.role === 'admin') renderUsersTable();
                 }
             }
@@ -1037,7 +1020,7 @@
         showToast('Obteniendo información en tiempo real...');
         
         try {
-            // 1. Actualizar configuración base (Inventario, Productos, Usuarios) sin tocar las ventas
+            // 1. Actualizar configuración base sin tocar las ventas
             const doc = await db.collection('datos_sistema').doc('punto_de_venta').get();
             if(doc.exists) {
                 const parsed = doc.data();
@@ -1053,9 +1036,7 @@
             }
             
             // 2. MAGIA: Ir a la carpeta independiente y descargar sólo el día que estamos viendo
-            // Si el calendario tiene un día seleccionado, busca ese día. Si no, busca HOY por defecto.
             const dateToFetch = selectedFilterDate ? new Date(selectedFilterDate).toDateString() : new Date().toDateString();
-            
             const snapshot = await db.collection('ventas').where('dateString', '==', dateToFetch).get();
             state.salesHistory = snapshot.docs.map(d => d.data());
             
@@ -1124,19 +1105,15 @@
         document.getElementById('btn-new-product').style.display = isAdmin ? 'flex' : 'none';
         document.getElementById('btn-clear-history').style.display = isAdmin ? 'block' : 'none';
         
-        // Aquí agregas lo del calendario
         const btnCalendario = document.getElementById('tab-btn-calendario');
         if (btnCalendario) btnCalendario.style.display = isAdmin ? 'block' : 'none';
 
         const btnMensual = document.getElementById('tab-btn-mensual');
         if (btnMensual) btnMensual.style.display = isAdmin ? 'block' : 'none';
         
-        // 👇 AQUÍ PEGAS TU NUEVO CÓDIGO 👇
         const btnInvProductos = document.getElementById('tab-btn-inventario-productos');
         if (btnInvProductos) btnInvProductos.style.display = isAdmin ? 'block' : 'none';
-        // 👆 HASTA AQUÍ 👆
 
-        // AQUÍ OCULTAMOS EL BOTÓN DE CORTE DE CAJA SI ES ADMIN
         const btnCorte = document.getElementById('btn-corte-caja');
         if (btnCorte) {
             btnCorte.style.display = isAdmin ? 'none' : 'block';
@@ -1344,59 +1321,98 @@
         }
     }
 
-    // ============ CONTROL DE STOCK (PIEZAS) ============
-    function renderInventarioProductos() {
+   // ============ CONTROL DE STOCK (PIEZAS) ============
+   let currentStockBranch = ''; // Variable global obligatoria para saber la sucursal
+
+   function renderInventarioProductos() {
         const tbody = document.getElementById('inventario-productos-body');
         if(!tbody) return;
 
-        // Filtramos para mostrar SOLO los productos que se venden por pieza
         const productosPieza = state.products.filter(p => p.saleType === 'pieza');
-        
+        const uniqueBranches = [...new Set(state.users.map(u => u.branch))].filter(b => b && b !== 'Todas');
+
         if (productosPieza.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-gray-500 py-6">No hay productos registrados por pieza en el catálogo.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-gray-500 py-6">No hay productos registrados por pieza.</td></tr>';
             return;
         }
 
         tbody.innerHTML = productosPieza.map(p => {
-            const stock = p.stock || 0;
-            // Colores dinámicos: Rojo si hay menos de 5, Amarillo si hay menos de 15
-            let stockClass = "text-gray-800";
-            if (stock <= 5) stockClass = "text-red-600 font-black animate-pulse bg-red-50 py-1 px-3 rounded-lg";
-            else if (stock <= 15) stockClass = "text-amber-600 font-bold bg-amber-50 py-1 px-3 rounded-lg";
-
             const visual = p.image ? `<img src="${p.image}" class="w-full h-full object-cover">` : p.emoji;
+            const productBranches = p.branches || uniqueBranches;
+            const assignedBranches = uniqueBranches.filter(b => productBranches.includes(b));
+
+            let totalStockGlobal = 0;
+            let usaStockViejo = (!p.stocks || Object.keys(p.stocks).length === 0) && p.stock !== undefined;
+            if (usaStockViejo) { totalStockGlobal = p.stock; }
+
+            const branchesHTML = assignedBranches.map(b => {
+                let stock = 0;
+                if (p.stocks && p.stocks[b] !== undefined) {
+                    stock = p.stocks[b];
+                } else if (p.stock !== undefined) {
+                    stock = p.stock;
+                }
+
+                if (!usaStockViejo) { totalStockGlobal += stock; }
+
+                let stockClass = stock <= 5 ? "text-red-600 font-black" : "text-gray-700 font-bold";
+
+                return `
+                <div class="flex items-center justify-between bg-white p-2 rounded border border-gray-100 mb-1 hover:bg-gray-50">
+                    <span class="text-[10px] sm:text-xs uppercase font-bold text-gray-500">${b}</span>
+                    <div class="flex items-center gap-2">
+                        <span class="${stockClass}">${stock} pz</span>
+                        <div class="flex gap-1">
+                            <button onclick="openEditarStockModal(${p.id}, '${b}')" class="bg-blue-500 hover:bg-blue-600 text-white w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-xs shadow-sm">✏️</button>
+                            <button onclick="openEntradaModal(${p.id}, '${b}')" class="bg-emerald-500 hover:bg-emerald-600 text-white w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-xs shadow-sm">➕</button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            const collapsibleHTML = `
+            <details class="group bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
+                <summary class="flex justify-between items-center font-medium cursor-pointer list-none p-3 text-sm text-gray-700 hover:text-amber-600 transition-colors">
+                    <span class="font-bold">📦 Stock Total: ${totalStockGlobal} pz</span>
+                    <span class="transition group-open:rotate-180 text-xs">▼</span>
+                </summary>
+                <div class="p-2 pt-0 max-h-48 overflow-y-auto no-scrollbar border-t border-gray-200 mt-2">
+                    ${branchesHTML || '<p class="text-xs text-gray-400 italic text-center py-2">No asignado</p>'}
+                </div>
+            </details>`;
 
             return `
             <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                <td class="p-3 flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-2xl bg-white overflow-hidden shrink-0">${visual}</div>
-                    <span class="font-bold text-gray-800">${p.name}</span>
-                </td>
-                <td class="p-3 text-center font-semibold text-gray-600">$${p.price.toFixed(2)}</td>
-                <td class="p-3 text-center text-lg"><span class="${stockClass}">${stock} pz</span></td>
-               <td class="p-3">
-                    <div class="flex justify-end gap-2">
-                        <button onclick="openEditarStockModal(${p.id})" class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-xl text-sm font-bold transition-colors shadow-sm" title="Corregir error de stock">
-                            ✏️ Editar
-                        </button>
-                        <button onclick="openEntradaModal(${p.id})" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-3 py-2 rounded-xl text-sm font-bold transition-colors shadow-sm">
-                            ➕ Entrada
-                        </button>
+                <td class="p-3 align-top w-1/3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-2xl bg-white overflow-hidden shrink-0">${visual}</div>
+                        <span class="font-bold text-gray-800">${p.name}</span>
                     </div>
                 </td>
+                <td class="p-3 text-center font-semibold text-gray-600 align-top pt-6">$${p.price.toFixed(2)}</td>
+                <td colspan="2" class="p-3 align-top">${collapsibleHTML}</td>
             </tr>`;
         }).join('');
     }
 
-    function openEntradaModal(productId) {
+    function openEntradaModal(productId, branchName) {
         const p = state.products.find(prod => prod.id === productId);
         if(!p) return;
-        
+
+        currentStockBranch = branchName;
+
+        let currentStock = 0;
+        if (p.stocks && p.stocks[branchName] !== undefined) {
+            currentStock = p.stocks[branchName];
+        } else if (p.stock !== undefined) {
+            currentStock = p.stock;
+        }
+
         document.getElementById('entrada-product-id').value = p.id;
-        document.getElementById('entrada-product-name').textContent = p.emoji + " " + p.name;
-        document.getElementById('entrada-current-stock').textContent = p.stock || 0;
+        document.getElementById('entrada-product-name').textContent = p.emoji + " " + p.name + ` (${branchName})`;
+        document.getElementById('entrada-current-stock').textContent = currentStock;
         document.getElementById('entrada-qty').value = '';
-        
+
         document.getElementById('entrada-modal').classList.replace('hidden', 'flex');
         setTimeout(() => document.getElementById('entrada-qty').focus(), 100);
     }
@@ -1407,64 +1423,89 @@
         e.preventDefault();
         const productId = parseInt(document.getElementById('entrada-product-id').value);
         const qty = parseInt(document.getElementById('entrada-qty').value);
-        
+
         if(isNaN(qty) || qty <= 0) return showToast('Cantidad inválida', 'error');
 
         const pIndex = state.products.findIndex(prod => prod.id === productId);
         if (pIndex !== -1) {
-            // Sumamos el nuevo stock al stock existente
-            state.products[pIndex].stock = (state.products[pIndex].stock || 0) + qty;
-            
-            showToast('Guardando entrada en la nube...', 'success');
-            await saveState(); // Guardamos el cambio de los productos en Firebase
-            
+            let p = state.products[pIndex];
+            if (!p.stocks) p.stocks = {};
+
+            if (p.stock !== undefined) {
+                const uniqueBranches = [...new Set(state.users.map(u => u.branch))].filter(b => b && b !== 'Todas');
+                const myBranches = p.branches || uniqueBranches;
+                myBranches.forEach(b => { if (p.stocks[b] === undefined) p.stocks[b] = p.stock; });
+                delete p.stock;
+            }
+
+            const current = p.stocks[currentStockBranch] || 0;
+            p.stocks[currentStockBranch] = current + qty;
+
+            showToast('Actualizando inventario...', 'success');
+            if(typeof db !== 'undefined') {
+                await db.collection('datos_sistema').doc('punto_de_venta').set({ products: state.products }, { merge: true });
+            } else if (typeof saveState === 'function') {
+                await saveState();
+            }
             renderInventarioProductos();
             closeEntradaModal();
-            showToast(`✅ +${qty} piezas registradas correctamente`);
+            showToast(`✅ +${qty} piezas en ${currentStockBranch}`);
         }
     }
 
-    // 👇 NUEVAS FUNCIONES PARA EDITAR STOCK 👇
-    function openEditarStockModal(productId) {
+    function openEditarStockModal(productId, branchName) {
         const p = state.products.find(prod => prod.id === productId);
         if(!p) return;
-        
+
+        currentStockBranch = branchName;
+
+        let currentStock = 0;
+        if (p.stocks && p.stocks[branchName] !== undefined) {
+            currentStock = p.stocks[branchName];
+        } else if (p.stock !== undefined) {
+            currentStock = p.stock;
+        }
+
         document.getElementById('editar-stock-product-id').value = p.id;
-        document.getElementById('editar-stock-product-name').textContent = p.emoji + " " + p.name;
-        // Colocamos el stock actual en el cuadro para que sea fácil corregirlo
-        document.getElementById('editar-stock-qty').value = p.stock || 0; 
-        
+        document.getElementById('editar-stock-product-name').textContent = p.emoji + " " + p.name + ` (${branchName})`;
+        document.getElementById('editar-stock-qty').value = currentStock;
+
         document.getElementById('editar-stock-modal').classList.replace('hidden', 'flex');
-        
-        setTimeout(() => {
-            const input = document.getElementById('editar-stock-qty');
-            input.focus();
-            input.select(); // Selecciona el texto para que al escribir se borre lo anterior rápido
-        }, 100);
+        setTimeout(() => { const input = document.getElementById('editar-stock-qty'); input.focus(); input.select(); }, 100);
     }
 
-    function closeEditarStockModal() { 
-        document.getElementById('editar-stock-modal').classList.replace('flex', 'hidden'); 
-    }
+    function closeEditarStockModal() { document.getElementById('editar-stock-modal').classList.replace('flex', 'hidden'); }
 
     async function saveEditarStock(e) {
         e.preventDefault();
         const productId = parseInt(document.getElementById('editar-stock-product-id').value);
         const qty = parseInt(document.getElementById('editar-stock-qty').value);
-        
+
         if(isNaN(qty) || qty < 0) return showToast('Cantidad inválida', 'error');
 
         const pIndex = state.products.findIndex(prod => prod.id === productId);
         if (pIndex !== -1) {
-            // A diferencia de la entrada, aquí REEMPLAZAMOS el valor con el nuevo
-            state.products[pIndex].stock = qty; 
-            
-            showToast('Actualizando stock en la nube...', 'success');
-            await saveState(); 
-            
+            let p = state.products[pIndex];
+            if (!p.stocks) p.stocks = {};
+
+            if (p.stock !== undefined) {
+                const uniqueBranches = [...new Set(state.users.map(u => u.branch))].filter(b => b && b !== 'Todas');
+                const myBranches = p.branches || uniqueBranches;
+                myBranches.forEach(b => { if (p.stocks[b] === undefined) p.stocks[b] = p.stock; });
+                delete p.stock;
+            }
+
+            p.stocks[currentStockBranch] = qty;
+
+            showToast('Actualizando inventario...', 'success');
+            if(typeof db !== 'undefined') {
+                await db.collection('datos_sistema').doc('punto_de_venta').set({ products: state.products }, { merge: true });
+            } else if (typeof saveState === 'function') {
+                await saveState();
+            }
             renderInventarioProductos();
             closeEditarStockModal();
-            showToast(`✅ Stock corregido a ${qty} piezas`);
+            showToast(`✅ Stock de ${currentStockBranch} corregido`);
         }
     }
 
@@ -1515,7 +1556,7 @@
     function editUser(id) { openUserModal(id); }
     async function deleteUser(id) { if(confirm('¿Eliminar usuario?')) { state.users = state.users.filter(u => u.id !== id); await saveState(); renderUsersTable(); showToast('Eliminado'); } }
 
-    // ============ CORTE DE CAJA Y WHATSAPP (SIN API KEY) ============
+    // ============ CORTE DE CAJA Y WHATSAPP ============
     function abrirModalCorte() {
         document.getElementById('efectivo-entregado').value = '';
         document.getElementById('corte-modal').classList.remove('hidden');
@@ -1588,6 +1629,7 @@ ESTADO: ${estado}`;
         window.open(url, '_blank');
     }
 
+    // ============ NAVEGACIÓN Y TABS ============
     function switchTab(tabName) {
       document.querySelectorAll('.tab-content').forEach(tab => { tab.classList.add('hidden'); tab.classList.remove('active'); });
       document.querySelectorAll('.tab-btn').forEach(btn => { btn.classList.remove('border-amber-500', 'text-amber-600'); btn.classList.add('border-transparent', 'text-gray-600'); });
@@ -1603,9 +1645,10 @@ ESTADO: ${estado}`;
       else if (tabName === 'estadisticas') { if(currentUser && currentUser.role === 'admin') refreshAdminData(); else updateStatistics(); }
       else if (tabName === 'almacen') renderAlmacen();
       else if (tabName === 'calendario') renderHistorialCalendar();
-      else if (tabName === 'inventario-productos') renderInventarioProductos(); // <-- NUEVO
+      else if (tabName === 'inventario-productos') renderInventarioProductos();
     }
 
+    // ============ CALENDARIO Y FECHAS ============
     async function renderHistorialCalendar() {
         const year = calendarCurrentDate.getFullYear();
         const month = calendarCurrentDate.getMonth();
@@ -1623,14 +1666,12 @@ ESTADO: ${estado}`;
         const grid = document.getElementById('historial-calendar-days');
         if(!grid) return;
 
-        // Ponemos un mensajito visual rápido mientras busca en la nube
         grid.innerHTML = '<div class="col-span-7 text-center text-xs text-amber-600 py-4 font-bold animate-pulse">Buscando ventas del mes...</div>';
 
         const daysWithSales = new Set();
         const todayStr = new Date().toDateString();
 
         try {
-            // MAGIA: Buscar en Firebase directamente qué días de ESTE mes tienen ventas reales
             const startOfMonth = new Date(year, month, 1).getTime();
             const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59).getTime();
 
@@ -1641,7 +1682,6 @@ ESTADO: ${estado}`;
 
             snapshot.docs.forEach(doc => {
                 const sale = doc.data();
-                // Verificamos si la venta le pertenece a este cajero (o si es el admin)
                 if (currentUser.role === 'admin' || sale.branch === currentUser.branch) {
                     daysWithSales.add(sale.dateString);
                 }
@@ -1668,13 +1708,11 @@ ESTADO: ${estado}`;
             } else if (hasSales) {
                 btnClass += "bg-orange-50 text-orange-800 border-orange-300 hover:bg-orange-100 cursor-pointer shadow-sm";
             } else {
-                // AHORA CUALQUIER DÍA SE PUEDE CLICKEAR (para que no te quedes atascado)
                 btnClass += "bg-gray-50 text-gray-400 border-transparent hover:bg-gray-100 cursor-pointer";
             }
 
             if (isToday && !isSelected) btnClass += " ring-2 ring-amber-400 ring-offset-2";
 
-            // El botón ahora siempre tiene la función 'selectHistorialDate' activada
             grid.innerHTML += `<button onclick="selectHistorialDate('${dateStr}')" class="${btnClass}">
                 <span class="${isToday ? 'font-black' : ''}">${day}</span>
                 ${hasSales ? '<span class="w-2 h-2 rounded-full bg-orange-500 mt-1 shadow-sm"></span>' : ''}
@@ -1690,6 +1728,7 @@ ESTADO: ${estado}`;
             summaryBox.classList.remove('hidden');
         } else if(summaryBox) { summaryBox.classList.add('hidden'); }
     }
+    
     function changeHistorialMonth(offset) {
         calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + offset);
         renderHistorialCalendar();
@@ -1700,14 +1739,10 @@ ESTADO: ${estado}`;
         showToast(`Viajando al: ${new Date(dateStr).toLocaleDateString('es-MX')}...`);
         
         try {
-            // MAGIA: Ir a la carpeta independiente y traer SÓLO los tickets de ese día
             const snapshot = await db.collection('ventas').where('dateString', '==', dateStr).get();
             state.salesHistory = snapshot.docs.map(doc => doc.data());
-            
-            // Ordenarlos por hora
             state.salesHistory.sort((a, b) => a.timestamp - b.timestamp);
             
-            // Actualizar toda la interfaz
             renderHistorialCalendar();
             renderSalesHistory(); 
             updateStatistics();
@@ -1725,7 +1760,6 @@ ESTADO: ${estado}`;
         showToast('Volviendo al día de Hoy...');
         
         try {
-            // Volver a descargar las ventas de hoy
             const todayStr = new Date().toDateString();
             const snapshot = await db.collection('ventas').where('dateString', '==', todayStr).get();
             state.salesHistory = snapshot.docs.map(doc => doc.data());
@@ -1740,15 +1774,25 @@ ESTADO: ${estado}`;
             console.error(e);
         }
     }
-
-    // ============ RENDERIZADO (PRODUCTOS, VENTAS RÁPIDAS Y CARRITO) ============
-    function renderProducts() {
+// ============ RENDERIZADO DE PRODUCTOS Y CARRITO ============
+function renderProducts() {
       const grid = document.getElementById('products-grid');
-      if (state.products.length === 0) { grid.innerHTML = '<p class="col-span-full text-gray-400 text-center py-8">No hay productos.</p>'; return; }
+
+      // FILTRO DE VISIBILIDAD
+      let filteredProducts = state.products;
+      if (currentUser && currentUser.role !== 'admin') {
+          filteredProducts = state.products.filter(p => p.branches && p.branches.includes(currentUser.branch));
+      }
+
+      if (filteredProducts.length === 0) { 
+          grid.innerHTML = '<p class="col-span-full text-gray-400 text-center py-8">No hay productos.</p>'; 
+          return; 
+      }
       
       const isAdmin = currentUser && currentUser.role === 'admin';
+      const currentBranch = currentUser ? currentUser.branch : '';
       
-      grid.innerHTML = state.products.map(product => {
+      grid.innerHTML = filteredProducts.map(product => {
         let unitLabel = 'Kg';
         if (product.saleType === 'pieza') unitLabel = 'Pz';
         if (product.saleType === 'litro') unitLabel = 'L';
@@ -1757,15 +1801,27 @@ ESTADO: ${estado}`;
             ? `<img src="${product.image}" class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-full shadow-sm mb-1 sm:mb-2 border-2 border-${product.color}-300 bg-white">` 
             : `<div class="text-3xl sm:text-4xl text-center mb-1 sm:mb-2">${product.emoji}</div>`;
 
-        // 👇 LÓGICA DE AGOTADO 👇
+        // 👇 SOLUCIÓN: LÓGICA DE AGOTADO ESPECÍFICA POR SUCURSAL Y ROL 👇
         const isPieza = product.saleType === 'pieza';
-        const isOutOfStock = isPieza && (product.stock === undefined || product.stock <= 0);
+        let currentStock = 0;
+        
+        // Solo calculamos el stock si NO es admin (el admin no debe ver bloqueos)
+        if (!isAdmin) {
+            if (product.stocks && product.stocks[currentBranch] !== undefined) {
+                currentStock = product.stocks[currentBranch];
+            } else if (product.stock !== undefined) {
+                currentStock = product.stock;
+            }
+        }
+
+        // Si es Admin, nunca está agotado. Si es cajero, se bloquea al llegar a 0
+        const isOutOfStock = !isAdmin && isPieza && currentStock <= 0;
+        // 👆 FIN DE LA SOLUCIÓN 👆
 
         let clickAction = '';
         if (!isAdmin) {
             if (isOutOfStock) {
-                // Si no hay stock, el clic solo muestra un error
-                clickAction = `showToast('❌ Producto agotado', 'error')`;
+                clickAction = `showToast('❌ Producto agotado en tu sucursal', 'error')`;
             } else if (isPieza) {
                 clickAction = `addOnePieceToCart(${product.id})`;
             } else {
@@ -1793,16 +1849,21 @@ ESTADO: ${estado}`;
         const select = document.getElementById('quick-sale-product');
         if (!select) return;
         
+        let filteredProducts = state.products;
+        if (currentUser && currentUser.role !== 'admin') {
+            filteredProducts = state.products.filter(p => p.branches && p.branches.includes(currentUser.branch));
+        }
+
         const currentSelection = select.value;
-        select.innerHTML = state.products.map(p => {
+        select.innerHTML = filteredProducts.map(p => {
             const label = p.saleType === 'pieza' ? 'Pz' : 'Kg';
             return `<option value="${p.id}" class="text-gray-800 bg-white">${p.emoji} ${p.name} ($${p.price}/${label})</option>`;
         }).join('');
 
-        if (currentSelection && state.products.find(p => p.id === parseInt(currentSelection))) {
+        if (currentSelection && filteredProducts.find(p => p.id === parseInt(currentSelection))) {
             select.value = currentSelection;
         } else {
-            const defaultProduct = state.products.find(p => p.name.toLowerCase().includes('maíz')) || state.products[0];
+            const defaultProduct = filteredProducts.find(p => p.name.toLowerCase().includes('maíz')) || filteredProducts[0];
             if (defaultProduct) select.value = defaultProduct.id;
         }
         updateQuickSaleButtons();
@@ -1825,14 +1886,19 @@ ESTADO: ${estado}`;
           qty = Math.floor(amount / product.price);
           if (qty < 1) return showToast(`$${amount} no alcanza para 1 pieza de ${product.name}`, 'error');
           
-          // 👇 VALIDACIÓN DE STOCK EN VENTA RÁPIDA 👇
+          // VALIDACIÓN DE STOCK
           const qtyInCart = state.cart.filter(item => item.productId === product.id).reduce((sum, item) => sum + item.qty, 0);
-          const currentStock = product.stock || 0;
+          
+          let currentStock = 0;
+          if (product.stocks && product.stocks[currentUser.branch] !== undefined) {
+              currentStock = product.stocks[currentUser.branch];
+          } else if (product.stock !== undefined) {
+              currentStock = product.stock;
+          }
           
           if (qtyInCart + qty > currentStock) {
               return showToast(`❌ No hay stock suficiente (Disponibles: ${currentStock})`, 'error');
           }
-          // 👆 FIN VALIDACIÓN 👆
 
           totalCobrar = qty * product.price;
       } else {
@@ -1873,24 +1939,25 @@ ESTADO: ${estado}`;
       quickSaleByMoney(amount); document.getElementById('custom-money').value = '';
     }
 
-   // ============ AGREGAR PIEZA DIRECTO AL CARRITO (CON BLOQUEO DE STOCK) ============
    function addOnePieceToCart(productId) {
         if(!currentUser || currentUser.role === 'admin') return;
         
         const p = state.products.find(prod => prod.id === productId);
         if (!p) return;
 
-        // 👇 VALIDACIÓN ESTRICTA DE STOCK 👇
-        // Contamos cuántas piezas de ESTE producto ya hay en el carrito actualmente
         const qtyInCart = state.cart.filter(item => item.productId === productId).reduce((sum, item) => sum + item.qty, 0);
-        const currentStock = p.stock || 0;
+        
+        let currentStock = 0;
+        if (p.stocks && p.stocks[currentUser.branch] !== undefined) {
+            currentStock = p.stocks[currentUser.branch];
+        } else if (p.stock !== undefined) {
+            currentStock = p.stock;
+        }
 
         if (qtyInCart + 1 > currentStock) {
             return showToast(`❌ Stock agotado: Solo tienes ${currentStock} de ${p.name}`, 'error');
         }
-        // 👆 FIN VALIDACIÓN 👆
 
-        // Lo mandamos directo al carrito con cantidad = 1
         state.cart.push({ 
             productId: p.id, 
             name: p.name, 
@@ -1932,7 +1999,6 @@ ESTADO: ${estado}`;
     }
     
     function closeQuantityModal() { document.getElementById('quantity-modal').classList.replace('flex', 'hidden'); }
-    
     function setQty(val) { document.getElementById('quantity-input').value = val; updateQuantityPreview(); }
     
     function updateQuantityPreview() {
@@ -1959,6 +2025,7 @@ ESTADO: ${estado}`;
       
       if(window.innerWidth < 1024) { setTimeout(() => { document.getElementById('pos-right-panel').scrollIntoView({ behavior: 'smooth' }); }, 100); }
     }
+
     function renderCart() {
       const cartDiv = document.getElementById('cart-items');
       if(!cartDiv) return;
@@ -1977,8 +2044,6 @@ ESTADO: ${estado}`;
       cartDiv.innerHTML = state.cart.map((item, idx) => {
         subtotal += item.total;
         const desc = item.saleType === 'pieza' ? `${item.qty} pz × $${item.price.toFixed(2)}/Pz` : `${item.qty}g × $${item.price.toFixed(2)}/Kg`;
-        
-        // Imagen si existe, si no, emoji
         const visual = item.image ? `<img src="${item.image}" class="w-8 h-8 sm:w-10 sm:h-10 object-cover rounded-full border border-gray-300">` : `<span class="text-xl sm:text-2xl">${item.emoji}</span>`;
         
         return `<div class="flex items-center justify-between bg-gray-50 rounded-xl p-2 sm:p-3 animate-slide"><div class="flex items-center gap-2 sm:gap-3">${visual}<div><p class="font-semibold text-gray-800 text-xs sm:text-sm">${item.name}</p><p class="text-gray-500 text-[10px] sm:text-xs">${desc}</p></div></div><div class="flex items-center gap-1 sm:gap-2"><span class="font-bold text-gray-800 text-sm sm:text-base">$${item.total.toFixed(2)}</span><button onclick="removeFromCart(${idx})" class="text-red-400 hover:text-red-600 p-2 sm:p-1 text-lg leading-none">&times;</button></div></div>`;
@@ -2011,13 +2076,12 @@ ESTADO: ${estado}`;
       if (state.cart.length === 0) return showToast('Carrito vacío', 'error');
       const total = state.cart.reduce((sum, item) => sum + item.total, 0);
       
-      // Calculamos cuántos kilos en total se están vendiendo
       const kilosVendidos = state.cart.reduce((sum, item) => {
           if (item.saleType === 'kg') return sum + (item.qty / 1000);
           return sum; 
       }, 0);
 
-      // --- INICIO: DESCUENTO AUTOMÁTICO E INTELIGENTE ---
+      // DESCUENTO AUTOMÁTICO E INTELIGENTE DE HARINA
       if (kilosVendidos > 0) {
           let inv = state.inventory[currentUser.branch];
           if (!inv) {
@@ -2028,7 +2092,6 @@ ESTADO: ${estado}`;
           let bultosNecesarios = kilosVendidos / 41;
           const totalBultosDisponibles = (inv.maseca || 0) + (inv.blanca || 0) + (inv.amarilla || 0) + (inv.fardo || 0);
 
-          // Validación global: ¿Hay suficiente harina sumando todas las marcas?
           if (totalBultosDisponibles < bultosNecesarios) {
               showToast(`❌ Venta denegada: Inventario global insuficiente`, 'error');
               
@@ -2044,36 +2107,29 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
 ⚠️ *VENTA BLOQUEADA.* Envía harina urgentemente.`;
 
               enviarWhatsAppOficial(mensajeAlerta);
-              return; // Bloquea la venta
+              return;
           }
 
-          // Algoritmo: Restar siempre de la marca que tenga MÁS bultos
           let remainingToDeduct = bultosNecesarios;
           const flourTypes = ['maseca', 'blanca', 'amarilla', 'fardo'];
 
-          while (remainingToDeduct > 0.0001) { // 0.0001 evita bugs de decimales infinitos
-              // Ordenar de mayor a menor stock
+          while (remainingToDeduct > 0.0001) {
               flourTypes.sort((a, b) => (inv[b] || 0) - (inv[a] || 0));
               let highestFlour = flourTypes[0];
 
               if (inv[highestFlour] >= remainingToDeduct) {
                   inv[highestFlour] -= remainingToDeduct;
-                  remainingToDeduct = 0; // Termina el bucle
+                  remainingToDeduct = 0; 
               } else {
-                  // Si no alcanza, vacía esta marca y pasa a la siguiente
                   remainingToDeduct -= inv[highestFlour];
                   inv[highestFlour] = 0;
               }
           }
-
-          // Restamos el rendimiento general
           inv.yieldRemainingKg -= kilosVendidos;
       }
-      // --- FIN DESCUENTO AUTOMÁTICO ---
 
       const now = new Date();
       
-      // 🧹 OPERACIÓN LIMPIEZA: Quitamos las imágenes antes de guardar el ticket
       const itemsLimpios = state.cart.map(item => {
           return {
               productId: item.productId,
@@ -2083,46 +2139,42 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
               qty: item.qty,
               price: item.price,
               total: item.total
-              // ❌ Ignoramos "item.image" a propósito para no saturar la base de datos
           };
       });
       
-      // ... (código anterior donde calcula el descuento físico de la harina) ...
-
       const newSale = {
         time: now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
         total: total, 
-        items: itemsLimpios, // Guardamos la versión ligera
+        items: itemsLimpios, 
         timestamp: now.getTime(),
         user: currentUser.username, 
-        branch: currentUser.branch
+        branch: currentUser.branch,
+        dateString: now.toDateString()
       };
 
-      // Guardamos la venta en Firebase usando COLECCIONES INDEPENDIENTES
       try {
-        // Le agregamos la fecha como texto para poder filtrar los días súper rápido
-        newSale.dateString = new Date().toDateString();
-        
-        // 1. Guardar el ticket en su PROPIA carpeta (colección 'ventas')
         await db.collection('ventas').doc(newSale.timestamp.toString()).set(newSale);
 
-        // DESCUENTO AUTOMÁTICO DE PIEZAS VENDIDAS
+        // DESCUENTO AUTOMÁTICO DE PIEZAS VENDIDAS DE ESA SUCURSAL
         state.cart.forEach(item => {
             if (item.saleType === 'pieza') {
                 const pIndex = state.products.findIndex(p => p.id === item.productId);
                 if (pIndex !== -1) {
-                    state.products[pIndex].stock = (state.products[pIndex].stock || 0) - item.qty;
+                    let p = state.products[pIndex];
+                    if(!p.stocks) p.stocks = {};
+                    let stockActual = p.stocks[currentUser.branch];
+                    if (stockActual === undefined) stockActual = p.stock || 0;
+                    
+                    p.stocks[currentUser.branch] = stockActual - item.qty;
                 }
             }
         });
 
-        // 2. Actualizar inventario de harina y stock de productos en la nube
         await db.collection('datos_sistema').doc('punto_de_venta').set({
             inventory: state.inventory,
-            products: state.products // <-- Agregamos esto para que se guarde el descuento de piezas
+            products: state.products 
         }, { merge: true });
 
-        // 3. Reflejar los cambios en la pantalla al instante
         state.salesHistory.push(newSale); 
         clearCart(); 
         const flourSelect = document.getElementById('sale-flour-type');
@@ -2130,14 +2182,14 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
         
         renderSalesHistory(); 
         renderAlmacen(); 
-        updateStatistics(); // Actualiza las gráficas
+        updateStatistics();
         showToast(`Venta procesada: $${total.toFixed(2)}`);
         
       } catch (error) { 
           console.error(error);
           showToast("Error al procesar venta en la red", "error"); 
       }
-    } // <-- Esta es la llave que cierra la función completeSale()
+    }
 
     // ============ HISTORIAL Y ESTADÍSTICAS ============
     function renderSalesHistory() {
@@ -2172,8 +2224,8 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
             
             const saleToDelete = state.salesHistory.find(s => s.timestamp === timestamp);
             
-            // 1. Restaurar la harina al almacén local
             if (saleToDelete) {
+                // Restaurar kilos de harina
                 const kilosRestaurar = saleToDelete.items.reduce((sum, item) => {
                     if (item.saleType === 'kg') return sum + (item.qty / 1000);
                     return sum;
@@ -2190,18 +2242,28 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
                         inv[targetFlour] = (inv[targetFlour] || 0) + bultosRestaurar;
                     }
                 }
+
+                // Restaurar piezas de stock
+                saleToDelete.items.forEach(item => {
+                    if (item.saleType === 'pieza') {
+                        const pIndex = state.products.findIndex(p => p.id === item.productId);
+                        if (pIndex !== -1) {
+                            let p = state.products[pIndex];
+                            if(!p.stocks) p.stocks = {};
+                            let stockActual = p.stocks[saleToDelete.branch] || p.stock || 0;
+                            p.stocks[saleToDelete.branch] = stockActual + item.qty;
+                        }
+                    }
+                });
             }
 
-            // 2. Borrar de la pantalla
             state.salesHistory = state.salesHistory.filter(s => s.timestamp !== timestamp);
             
             try {
-                // 3. BORRAR EL DOCUMENTO INDEPENDIENTE EN FIREBASE
                 await db.collection('ventas').doc(timestamp.toString()).delete();
-                
-                // 4. Actualizar el almacén restaurado en la nube
                 await db.collection('datos_sistema').doc('punto_de_venta').set({
-                    inventory: state.inventory
+                    inventory: state.inventory,
+                    products: state.products
                 }, { merge: true });
 
                 renderSalesHistory(); 
@@ -2218,17 +2280,13 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
     async function clearDailySales() {
         if (currentUser.role !== 'admin') return showToast('No tienes permisos', 'error');
         
-        // Detectar si estamos viendo "Hoy" o una fecha del pasado en el calendario
         const fechaTexto = selectedFilterDate ? new Date(selectedFilterDate).toLocaleDateString('es-MX') : 'HOY';
 
         if (confirm(`¿Seguro que deseas limpiar TODAS las ventas globales del día: ${fechaTexto}? Los tickets se borrarán de la nube permanentemente y el inventario regresará al almacén.`)) {
             
             showToast('Eliminando tickets en la nube, espera...', 'success');
 
-            // 1. Recorrer los tickets que estamos viendo en pantalla
             for (let sale of state.salesHistory) {
-                
-                // Restaurar el inventario de la sucursal que vendió
                 const kilosRestaurar = sale.items.reduce((sum, item) => {
                     if (item.saleType === 'kg') return sum + (item.qty / 1000);
                     return sum;
@@ -2246,21 +2304,29 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
                     }
                 }
 
-                // BORRAR el ticket de la nueva colección independiente
+                sale.items.forEach(item => {
+                    if (item.saleType === 'pieza') {
+                        const pIndex = state.products.findIndex(p => p.id === item.productId);
+                        if (pIndex !== -1) {
+                            let p = state.products[pIndex];
+                            if(!p.stocks) p.stocks = {};
+                            let stockActual = p.stocks[sale.branch] || p.stock || 0;
+                            p.stocks[sale.branch] = stockActual + item.qty;
+                        }
+                    }
+                });
+
                 try {
                     await db.collection('ventas').doc(sale.timestamp.toString()).delete();
                 } catch(e) { console.error("Error borrando:", e); }
             }
 
-            // 2. Actualizar el inventario general en la nube
             await db.collection('datos_sistema').doc('punto_de_venta').set({
-                inventory: state.inventory
+                inventory: state.inventory,
+                products: state.products
             }, { merge: true });
 
-            // 3. Vaciar la lista de la pantalla
             state.salesHistory = []; 
-            
-            // 4. Actualizar todo visualmente
             renderSalesHistory(); 
             updateStatistics(); 
             renderAlmacen(); 
@@ -2268,8 +2334,8 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
             showToast(`Se eliminaron todas las ventas del día ${fechaTexto}`);
         }
     }
+
     async function updateStatistics() {
-        // --- 1. ESTADÍSTICAS DEL DÍA (Usando los datos ya cargados en pantalla) ---
         const visibleSales = getVisibleSales();
         const dailyTotal = visibleSales.reduce((sum, s) => sum + s.total, 0);
 
@@ -2331,19 +2397,15 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
             }
         } else { adminPanel.classList.add('hidden'); }
 
-        // --- 2. ESTADÍSTICAS DE LA SEMANA (Magia de la nueva base de datos) ---
         try {
-            // Calculamos la fecha de hace 7 días a la medianoche
             const hace7Dias = new Date();
             hace7Dias.setDate(hace7Dias.getDate() - 6);
             hace7Dias.setHours(0, 0, 0, 0);
             const startMs = hace7Dias.getTime();
 
-            // Descargamos TODAS las ventas de los últimos 7 días desde Firebase
             const snapshot = await db.collection('ventas').where('timestamp', '>=', startMs).get();
             const ventasSemana = snapshot.docs.map(doc => doc.data());
 
-            // Creamos un "esqueleto" vacío con los 7 días para que la gráfica siempre se dibuje bien
             const ventasPorDia = {};
             for(let i = 0; i < 7; i++) {
                 const dia = new Date(hace7Dias);
@@ -2351,7 +2413,6 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
                 ventasPorDia[dia.toDateString()] = { date: dia.toDateString(), total: 0, transactions: 0 };
             }
 
-            // Rellenamos el esqueleto con las ventas reales filtrando por sucursal
             ventasSemana.forEach(sale => {
                 if (currentUser.role === 'admin' || sale.branch === currentUser.branch) {
                     if (ventasPorDia[sale.dateString]) {
@@ -2361,7 +2422,6 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
                 }
             });
 
-            // Convertimos a lista para hacer las matemáticas finales
             const last7Days = Object.values(ventasPorDia);
 
             const totalWeekly = last7Days.reduce((sum, d) => sum + d.total, 0);
@@ -2391,15 +2451,14 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
             console.error("Error al cargar la semana:", error);
         }
     }
-   // ============ FORMATO DE TICKET PROFESIONAL (LETRAS GRANDES + LOGO + ESPACIO FINAL) ============
+
+   // ============ TICKET Y PDF ============
    function generateHTMLTicket(businessName, branch, cajero, fecha, hora, items, total, pagoCliente = 0, timestamp = null) {
         const folio = timestamp ? Math.floor(timestamp / 1000).toString().slice(-6) : Math.floor(Date.now() / 1000).toString().slice(-6);
         
         let html = `
         <div class="ticket-print bg-white mx-auto text-black" style="width: 100%; font-family: 'Courier New', Courier, monospace; line-height: 1.3; box-sizing: border-box;">
-            
             <img src="xavi.png" alt="Logo Xavi" style="display: block; margin: 0 auto 10px auto; max-width: 45mm; height: auto;">
-
             <div style="text-align: center; margin-bottom: 15px;">
                 <h2 style="font-size: 22px; font-weight: 900; margin: 0 0 5px 0; text-transform: uppercase;">${businessName}</h2>
                 <p style="font-size: 16px; font-weight: bold; margin: 0; color: #333;">${branch}</p>
@@ -2452,8 +2511,6 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
             }
         }
 
-       // ... (código anterior del ticket) ...
-
        html += `
             </div>
             <div style="text-align: center; margin-top: 10px;">
@@ -2501,19 +2558,15 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
         const visibleSales = getVisibleSales();
         const dailyTotal = visibleSales.reduce((sum, s) => sum + s.total, 0);
         
-        // --- INICIO NUEVO: Agregar usuarios en la cabecera ---
         let headerText = `REPORTE DIARIO DE VENTAS - ${currentUser.role === 'admin' ? 'TODAS LAS SUCURSALES' : currentUser.branch}\n`;
-        
         if (currentUser.role !== 'admin') {
             const usuariosSucursal = state.users.filter(u => u.branch === currentUser.branch && u.role !== 'admin').map(u => u.username).join(', ');
             headerText += `👤 Encargado(s): ${usuariosSucursal || 'Sin asignar'}\n`;
         }
-        // --- FIN NUEVO ---
 
         let report = `${headerText}Generado: ${new Date().toLocaleTimeString('es-MX')}\n\nTotal: $${dailyTotal.toFixed(2)}\nTransacciones: ${visibleSales.length}\n\nDetalle:\n`;
         
         visibleSales.forEach((sale, i) => {
-            // Aquí agregamos "(Cajero: nombre)" al lado de la sucursal
             report += `#${i+1} [${sale.time}] ${sale.branch} (Cajero: ${sale.user}): $${sale.total.toFixed(2)}\n`;
             sale.items.forEach(item => {
                 const unt = item.saleType === 'pieza' ? 'pz' : 'g';
@@ -2538,7 +2591,6 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
             hace7Dias.setHours(0, 0, 0, 0);
             const startMs = hace7Dias.getTime();
 
-            // Descargar de Firebase directamente
             const snapshot = await db.collection('ventas').where('timestamp', '>=', startMs).get();
             const ventasSemana = snapshot.docs.map(doc => doc.data());
 
@@ -2572,7 +2624,6 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
                 }
             });
 
-            // Buscar mejor y peor día
             Object.values(ventasPorDia).forEach(day => {
                 if (day.total > mejorDia.total) mejorDia = { nombre: day.name, total: day.total };
                 if (day.total < peorDia.total) peorDia = { nombre: day.name, total: day.total };
@@ -2637,8 +2688,8 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
         reportDetails.forEach(day => {
             const nombreDia = day.name.charAt(0).toUpperCase() + day.name.slice(1);
             report += `  🗓️ ${nombreDia.padEnd(30)}\n`;
-            report += `      Total: $${day.total.toFixed(2).padEnd(10)} | Tickets: ${day.trans}\n`;
-            report += `      --------------------------------------------------\n`;
+            report += `     Total: $${day.total.toFixed(2).padEnd(10)} | Tickets: ${day.trans}\n`;
+            report += `     --------------------------------------------------\n`;
         });
 
         report += `\n====================== FIN DEL REPORTE ======================\n`;
@@ -2664,19 +2715,16 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
         let branchSummary = {}; 
 
         try {
-            // 1. Calculamos la fecha de hace 30 días exactos
             const hace30Dias = new Date();
             hace30Dias.setDate(hace30Dias.getDate() - 30);
             hace30Dias.setHours(0, 0, 0, 0);
             const startMs = hace30Dias.getTime();
 
-            // Debe verse así (asegúrate de que diga 'ventas'):
-const snapshot = await db.collection('ventas').where('timestamp', '>=', startMs).get();
+            const snapshot = await db.collection('ventas').where('timestamp', '>=', startMs).get();
             const ventasMes = snapshot.docs.map(doc => doc.data());
 
             if (ventasMes.length === 0) return showToast('No hay datos suficientes este mes', 'error');
 
-            // 3. Sumar todo con datos 100% reales
             ventasMes.forEach(sale => {
                 totalMensual += sale.total; 
                 transaccionesTotales++;
@@ -2700,7 +2748,6 @@ const snapshot = await db.collection('ventas').where('timestamp', '>=', startMs)
         const promTicket = transaccionesTotales > 0 ? (totalMensual / transaccionesTotales) : 0;
         const promDiario = totalMensual / 30;
 
-        // --- CONSTRUCCIÓN DEL HTML DEL PDF ---
         let sucursalesHTML = '';
         Object.entries(branchSummary).sort((a, b) => b[1].total - a[1].total).forEach(([branch, data]) => {
             const usuariosSucursal = state.users.filter(u => u.branch === branch && u.role !== 'admin').map(u => u.username).join(', ') || 'Sin asignar';
@@ -2799,40 +2846,41 @@ const snapshot = await db.collection('ventas').where('timestamp', '>=', startMs)
             showToast('✅ Reporte Mensual descargado con éxito');
         });
     }
+
     // ============ MINIMIZAR CATÁLOGO DE PRODUCTOS ============
     function toggleProductsMenu() {
         const container = document.getElementById('products-grid-container');
         const icon = document.getElementById('toggle-products-icon');
         
         if (container.classList.contains('hidden')) {
-            // Maximizar
             container.classList.remove('hidden');
-            icon.style.transform = 'rotate(0deg)'; // Flecha hacia abajo
+            icon.style.transform = 'rotate(0deg)';
         } else {
-            // Minimizar
             container.classList.add('hidden');
-            icon.style.transform = 'rotate(-90deg)'; // Flecha apuntando a la derecha
+            icon.style.transform = 'rotate(-90deg)';
         }
     }
 
-    // Utilidades (Esto ya lo tienes en tu código)
-
-    // Utilidades
+    // ============ UTILIDADES E INICIO ============
     function showToast(m, type = 'success') {
       const t = document.getElementById('toast'); document.getElementById('toast-message').textContent = m;
       t.className = `fixed bottom-6 left-4 right-4 sm:left-auto sm:right-6 sm:w-auto px-5 sm:px-6 py-3 rounded-xl shadow-2xl transform transition-all duration-300 z-[300] text-center sm:text-left text-sm sm:text-base font-semibold ${type === 'error' ? 'bg-red-500' : 'bg-green-500'} text-white`;
       t.classList.remove('translate-y-20', 'opacity-0'); setTimeout(() => t.classList.add('translate-y-20', 'opacity-0'), 2500);
     }
-    function updateClock() { document.getElementById('current-date').textContent = new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }); document.getElementById('current-time').textContent = new Date().toLocaleTimeString('es-MX'); }
+    
+    function updateClock() { 
+        document.getElementById('current-date').textContent = new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }); 
+        document.getElementById('current-time').textContent = new Date().toLocaleTimeString('es-MX'); 
+    }
 
-    // INICIO
     async function init() { 
         await loadState(); 
-        setupRealtimeUpdates(); // <-- Activamos la magia en tiempo real
+        setupRealtimeUpdates(); 
         setInterval(updateClock, 1000); 
         updateClock(); 
         checkAuth(); 
     }
+    
     document.addEventListener('DOMContentLoaded', init);
   </script>
  </body>
