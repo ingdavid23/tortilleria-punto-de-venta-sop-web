@@ -145,18 +145,21 @@
      <div class="flex gap-1 sm:gap-2 overflow-x-auto no-scrollbar py-1 sm:py-0">
         <button onclick="switchTab('punto-venta')" class="tab-btn active px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-amber-500 text-amber-600 text-sm sm:text-base hover:bg-amber-50 transition-all"> 🛒 Punto de Venta </button> 
         <button onclick="switchTab('almacen')" class="tab-btn px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-transparent text-gray-600 text-sm sm:text-base hover:bg-gray-50 transition-all"> 🌾 Almacén </button> 
+        <button id="tab-btn-inventario-productos" onclick="switchTab('inventario-productos')" class="tab-btn px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-transparent text-gray-600 text-sm sm:text-base hover:bg-gray-50 transition-all hidden"> 🧃 Stock Piezas </button>
         <button onclick="switchTab('reporte-diario')" class="tab-btn px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-transparent text-gray-600 text-sm sm:text-base hover:bg-gray-50 transition-all"> 📊 Diario </button> 
         <button onclick="switchTab('reporte-semanal')" class="tab-btn px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-transparent text-gray-600 text-sm sm:text-base hover:bg-gray-50 transition-all"> 📈 Semanal </button> 
         <button onclick="switchTab('estadisticas')" class="tab-btn px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-transparent text-gray-600 text-sm sm:text-base hover:bg-gray-50 transition-all"> 📉 Estadísticas </button>
         <button id="tab-btn-usuarios" onclick="switchTab('usuarios')" class="tab-btn px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-transparent text-gray-600 text-sm sm:text-base hover:bg-gray-50 transition-all hidden"> 👥 Usuarios </button>
         <button id="tab-btn-calendario" onclick="switchTab('calendario')" class="tab-btn px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-transparent text-gray-600 text-sm sm:text-base hover:bg-gray-50 transition-all hidden"> 📅 Calendario </button>
         <button id="tab-btn-mensual" onclick="switchTab('mensual')" class="tab-btn px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-transparent text-gray-600 text-sm sm:text-base hover:bg-gray-50 transition-all hidden"> 📑 Cierre Mensual </button>
+        
+       
+        
      </div>
     </div>
    </div>
    
    <main class="flex-1 overflow-x-hidden overflow-y-auto max-w-7xl mx-auto w-full px-3 sm:px-4 py-4 sm:py-6 no-print">
-    
     <div id="tab-punto-venta" class="tab-content active">
      <div class="flex flex-col lg:grid lg:grid-cols-3 gap-4 sm:gap-6">
       
@@ -452,7 +455,53 @@
       </section>
     </div>
 
+    <div id="tab-inventario-productos" class="tab-content hidden">
+        <section class="bg-white rounded-2xl shadow-xl p-4 sm:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2"><span class="text-2xl sm:text-3xl">📦</span> Control de Inventario (Por Pieza)</h2>
+            <p class="text-sm text-gray-500">Solo muestra productos marcados como "Por Pieza"</p>
+          </div>
+          <div class="overflow-x-auto no-scrollbar rounded-xl border border-gray-200">
+            <table class="w-full text-left border-collapse min-w-[600px]">
+              <thead>
+                <tr class="bg-gray-100 text-gray-600 border-b-2 border-gray-200 text-sm">
+                  <th class="p-3 font-bold rounded-tl-xl">Producto</th>
+                  <th class="p-3 font-bold text-center">Precio Venta</th>
+                  <th class="p-3 font-bold text-center">Stock Actual</th>
+                  <th class="p-3 font-bold rounded-tr-xl text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="inventario-productos-body"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
    </main>
+
+   <div id="entrada-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-[150] p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm animate-slide flex flex-col">
+        <div class="bg-gradient-to-r from-emerald-500 to-green-600 text-white p-3 sm:p-4 rounded-t-2xl flex justify-between items-center">
+            <h3 class="text-lg font-bold">🚚 Registrar Entrada</h3>
+            <button type="button" onclick="closeEntradaModal()" class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
+        </div>
+        <form class="p-4 sm:p-6 space-y-4" onsubmit="saveEntradaStock(event)">
+            <input type="hidden" id="entrada-product-id">
+            <div class="text-center mb-2">
+                <h4 id="entrada-product-name" class="text-lg font-bold text-gray-800">Producto</h4>
+                <p class="text-sm text-gray-500">Stock actual: <span id="entrada-current-stock" class="font-bold text-gray-800">0</span></p>
+            </div>
+            <div>
+                <label class="text-sm font-semibold text-gray-600">Cantidad a ingresar (Piezas):</label>
+                <input type="number" id="entrada-qty" required min="1" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 mt-1 text-2xl font-bold text-center focus:border-emerald-500 focus:outline-none" placeholder="Ej: 24">
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeEntradaModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl font-bold transition-all"> Cancelar </button> 
+                <button type="submit" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-xl font-bold transition-all flex justify-center items-center gap-2"> ✅ Guardar </button>
+            </div>
+        </form>
+    </div>
+</div>
 
    <div id="product-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-[100] p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-slide flex flex-col max-h-[90vh]">
@@ -1059,6 +1108,11 @@
         const btnMensual = document.getElementById('tab-btn-mensual');
         if (btnMensual) btnMensual.style.display = isAdmin ? 'block' : 'none';
         
+        // 👇 AQUÍ PEGAS TU NUEVO CÓDIGO 👇
+        const btnInvProductos = document.getElementById('tab-btn-inventario-productos');
+        if (btnInvProductos) btnInvProductos.style.display = isAdmin ? 'block' : 'none';
+        // 👆 HASTA AQUÍ 👆
+
         // AQUÍ OCULTAMOS EL BOTÓN DE CORTE DE CAJA SI ES ADMIN
         const btnCorte = document.getElementById('btn-corte-caja');
         if (btnCorte) {
@@ -1267,6 +1321,81 @@
         }
     }
 
+    // ============ CONTROL DE STOCK (PIEZAS) ============
+    function renderInventarioProductos() {
+        const tbody = document.getElementById('inventario-productos-body');
+        if(!tbody) return;
+
+        // Filtramos para mostrar SOLO los productos que se venden por pieza
+        const productosPieza = state.products.filter(p => p.saleType === 'pieza');
+        
+        if (productosPieza.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-gray-500 py-6">No hay productos registrados por pieza en el catálogo.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = productosPieza.map(p => {
+            const stock = p.stock || 0;
+            // Colores dinámicos: Rojo si hay menos de 5, Amarillo si hay menos de 15
+            let stockClass = "text-gray-800";
+            if (stock <= 5) stockClass = "text-red-600 font-black animate-pulse bg-red-50 py-1 px-3 rounded-lg";
+            else if (stock <= 15) stockClass = "text-amber-600 font-bold bg-amber-50 py-1 px-3 rounded-lg";
+
+            const visual = p.image ? `<img src="${p.image}" class="w-full h-full object-cover">` : p.emoji;
+
+            return `
+            <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <td class="p-3 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-2xl bg-white overflow-hidden shrink-0">${visual}</div>
+                    <span class="font-bold text-gray-800">${p.name}</span>
+                </td>
+                <td class="p-3 text-center font-semibold text-gray-600">$${p.price.toFixed(2)}</td>
+                <td class="p-3 text-center text-lg"><span class="${stockClass}">${stock} pz</span></td>
+                <td class="p-3 text-right">
+                    <button onclick="openEntradaModal(${p.id})" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-4 py-2 rounded-xl text-sm font-bold transition-colors shadow-sm">
+                        ➕ Entrada
+                    </button>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    function openEntradaModal(productId) {
+        const p = state.products.find(prod => prod.id === productId);
+        if(!p) return;
+        
+        document.getElementById('entrada-product-id').value = p.id;
+        document.getElementById('entrada-product-name').textContent = p.emoji + " " + p.name;
+        document.getElementById('entrada-current-stock').textContent = p.stock || 0;
+        document.getElementById('entrada-qty').value = '';
+        
+        document.getElementById('entrada-modal').classList.replace('hidden', 'flex');
+        setTimeout(() => document.getElementById('entrada-qty').focus(), 100);
+    }
+
+    function closeEntradaModal() { document.getElementById('entrada-modal').classList.replace('flex', 'hidden'); }
+
+    async function saveEntradaStock(e) {
+        e.preventDefault();
+        const productId = parseInt(document.getElementById('entrada-product-id').value);
+        const qty = parseInt(document.getElementById('entrada-qty').value);
+        
+        if(isNaN(qty) || qty <= 0) return showToast('Cantidad inválida', 'error');
+
+        const pIndex = state.products.findIndex(prod => prod.id === productId);
+        if (pIndex !== -1) {
+            // Sumamos el nuevo stock al stock existente
+            state.products[pIndex].stock = (state.products[pIndex].stock || 0) + qty;
+            
+            showToast('Guardando entrada en la nube...', 'success');
+            await saveState(); // Guardamos el cambio de los productos en Firebase
+            
+            renderInventarioProductos();
+            closeEntradaModal();
+            showToast(`✅ +${qty} piezas registradas correctamente`);
+        }
+    }
+
     // ============ GESTIÓN DE USUARIOS ============
     function renderUsersTable() {
         const tbody = document.getElementById('users-table-body');
@@ -1387,7 +1516,6 @@ ESTADO: ${estado}`;
         window.open(url, '_blank');
     }
 
-    // ============ PESTAÑAS ============
     function switchTab(tabName) {
       document.querySelectorAll('.tab-content').forEach(tab => { tab.classList.add('hidden'); tab.classList.remove('active'); });
       document.querySelectorAll('.tab-btn').forEach(btn => { btn.classList.remove('border-amber-500', 'text-amber-600'); btn.classList.add('border-transparent', 'text-gray-600'); });
@@ -1403,6 +1531,7 @@ ESTADO: ${estado}`;
       else if (tabName === 'estadisticas') { if(currentUser && currentUser.role === 'admin') refreshAdminData(); else updateStatistics(); }
       else if (tabName === 'almacen') renderAlmacen();
       else if (tabName === 'calendario') renderHistorialCalendar();
+      else if (tabName === 'inventario-productos') renderInventarioProductos(); // <-- NUEVO
     }
 
     async function renderHistorialCalendar() {
@@ -1548,31 +1677,37 @@ ESTADO: ${estado}`;
       const isAdmin = currentUser && currentUser.role === 'admin';
       
       grid.innerHTML = state.products.map(product => {
-        // Detectamos la etiqueta correcta
         let unitLabel = 'Kg';
         if (product.saleType === 'pieza') unitLabel = 'Pz';
         if (product.saleType === 'litro') unitLabel = 'L';
         
-        // Decidir si mostramos imagen o emoji
         const visual = product.image 
             ? `<img src="${product.image}" class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-full shadow-sm mb-1 sm:mb-2 border-2 border-${product.color}-300 bg-white">` 
             : `<div class="text-3xl sm:text-4xl text-center mb-1 sm:mb-2">${product.emoji}</div>`;
 
-        // 🎯 LÓGICA MÁGICA: Decide qué hace el botón al tocarlo
+        // 👇 LÓGICA DE AGOTADO 👇
+        const isPieza = product.saleType === 'pieza';
+        const isOutOfStock = isPieza && (product.stock === undefined || product.stock <= 0);
+
         let clickAction = '';
         if (!isAdmin) {
-            if (product.saleType === 'pieza') {
-                // Si es pieza, va directo al carrito
+            if (isOutOfStock) {
+                // Si no hay stock, el clic solo muestra un error
+                clickAction = `showToast('❌ Producto agotado', 'error')`;
+            } else if (isPieza) {
                 clickAction = `addOnePieceToCart(${product.id})`;
             } else {
-                // Si es kilo o litro, abre la ventana para preguntar cantidad
                 clickAction = `openQuantityModal(${product.id})`;
             }
         }
 
         return `
-        <div class="product-card bg-gradient-to-br from-${product.color}-100 to-${product.color}-50 rounded-xl p-3 sm:p-4 cursor-pointer transition-all border-2 border-${product.color}-200 hover:border-${product.color}-400 hover:shadow-lg relative group flex flex-col items-center justify-center" onclick="${clickAction}">
+        <div class="product-card bg-gradient-to-br from-${product.color}-100 to-${product.color}-50 rounded-xl p-3 sm:p-4 cursor-pointer transition-all border-2 border-${product.color}-200 hover:border-${product.color}-400 hover:shadow-lg relative group flex flex-col items-center justify-center ${isOutOfStock ? 'opacity-50 grayscale' : ''}" onclick="${clickAction}">
+          
           ${isAdmin ? `<div class="absolute top-1 sm:top-2 right-1 sm:right-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-10"><button onclick="event.stopPropagation(); editProduct(${product.id})" class="bg-white/80 hover:bg-white p-1 sm:p-2 rounded-lg text-xs shadow-sm">✏️</button><button onclick="event.stopPropagation(); deleteProduct(${product.id})" class="bg-white/80 hover:bg-red-100 p-1 sm:p-2 rounded-lg text-xs shadow-sm">🗑️</button></div>` : ''}
+          
+          ${isOutOfStock ? '<div class="absolute inset-0 bg-white/20 z-20 rounded-xl"></div><span class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-600 text-white text-xs font-black px-3 py-1 rounded shadow-lg z-30 uppercase rotate-[-10deg]">Agotado</span>' : ''}
+          
           ${visual}
           <h3 class="font-bold text-gray-800 text-center text-xs sm:text-sm leading-tight">${product.name}</h3>
           <p class="text-${product.color}-600 font-bold text-center text-xs sm:text-sm mt-1">$${product.price.toFixed(2)}/${unitLabel}</p>
@@ -1617,6 +1752,16 @@ ESTADO: ${estado}`;
       if(product.saleType === 'pieza') {
           qty = Math.floor(amount / product.price);
           if (qty < 1) return showToast(`$${amount} no alcanza para 1 pieza de ${product.name}`, 'error');
+          
+          // 👇 VALIDACIÓN DE STOCK EN VENTA RÁPIDA 👇
+          const qtyInCart = state.cart.filter(item => item.productId === product.id).reduce((sum, item) => sum + item.qty, 0);
+          const currentStock = product.stock || 0;
+          
+          if (qtyInCart + qty > currentStock) {
+              return showToast(`❌ No hay stock suficiente (Disponibles: ${currentStock})`, 'error');
+          }
+          // 👆 FIN VALIDACIÓN 👆
+
           totalCobrar = qty * product.price;
       } else {
           qty = Math.round((amount / product.price) * 1000); 
@@ -1656,12 +1801,22 @@ ESTADO: ${estado}`;
       quickSaleByMoney(amount); document.getElementById('custom-money').value = '';
     }
 
-    // ============ AGREGAR PIEZA DIRECTO AL CARRITO ============
-    function addOnePieceToCart(productId) {
+   // ============ AGREGAR PIEZA DIRECTO AL CARRITO (CON BLOQUEO DE STOCK) ============
+   function addOnePieceToCart(productId) {
         if(!currentUser || currentUser.role === 'admin') return;
         
         const p = state.products.find(prod => prod.id === productId);
         if (!p) return;
+
+        // 👇 VALIDACIÓN ESTRICTA DE STOCK 👇
+        // Contamos cuántas piezas de ESTE producto ya hay en el carrito actualmente
+        const qtyInCart = state.cart.filter(item => item.productId === productId).reduce((sum, item) => sum + item.qty, 0);
+        const currentStock = p.stock || 0;
+
+        if (qtyInCart + 1 > currentStock) {
+            return showToast(`❌ Stock agotado: Solo tienes ${currentStock} de ${p.name}`, 'error');
+        }
+        // 👆 FIN VALIDACIÓN 👆
 
         // Lo mandamos directo al carrito con cantidad = 1
         state.cart.push({ 
@@ -1669,15 +1824,14 @@ ESTADO: ${estado}`;
             name: p.name, 
             emoji: p.emoji, 
             saleType: p.saleType, 
-            qty: 1, // Automáticamente 1 pieza
+            qty: 1, 
             price: p.price, 
-            total: p.price // El total es el precio de 1 pieza
+            total: p.price 
         });
         
         renderCart(); 
         showToast(`+1 ${p.name} agregado`);
         
-        // Si están en celular, baja automáticamente para que vean el carrito
         if(window.innerWidth < 1024) { 
             setTimeout(() => { document.getElementById('pos-right-panel').scrollIntoView({ behavior: 'smooth' }); }, 100); 
         }
@@ -1880,9 +2034,20 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
         // 1. Guardar el ticket en su PROPIA carpeta (colección 'ventas')
         await db.collection('ventas').doc(newSale.timestamp.toString()).set(newSale);
 
-        // 2. Actualizar solo el inventario en el documento principal para no saturarlo
+        // DESCUENTO AUTOMÁTICO DE PIEZAS VENDIDAS
+        state.cart.forEach(item => {
+            if (item.saleType === 'pieza') {
+                const pIndex = state.products.findIndex(p => p.id === item.productId);
+                if (pIndex !== -1) {
+                    state.products[pIndex].stock = (state.products[pIndex].stock || 0) - item.qty;
+                }
+            }
+        });
+
+        // 2. Actualizar inventario de harina y stock de productos en la nube
         await db.collection('datos_sistema').doc('punto_de_venta').set({
-            inventory: state.inventory
+            inventory: state.inventory,
+            products: state.products // <-- Agregamos esto para que se guarde el descuento de piezas
         }, { merge: true });
 
         // 3. Reflejar los cambios en la pantalla al instante
