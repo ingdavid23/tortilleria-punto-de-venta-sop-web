@@ -133,6 +133,7 @@
         <button onclick="switchTab('punto-venta')" class="tab-btn active px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-amber-500 text-amber-600 text-sm sm:text-base hover:bg-amber-50 transition-all"> 🛒 Punto de Venta </button> 
         <button onclick="switchTab('almacen')" class="tab-btn px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-transparent text-gray-600 text-sm sm:text-base hover:bg-gray-50 transition-all"> 🌾 Almacén </button> 
         <button id="tab-btn-inventario-productos" onclick="switchTab('inventario-productos')" class="tab-btn px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-transparent text-gray-600 text-sm sm:text-base hover:bg-gray-50 transition-all hidden"> 🧃 Stock Piezas </button>
+        <button id="tab-btn-registro-entradas" onclick="switchTab('registro-entradas')" class="tab-btn px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-transparent text-gray-600 text-sm sm:text-base hover:bg-gray-50 transition-all hidden"> 📝 Registro Entradas </button>
         <button onclick="switchTab('reporte-diario')" class="tab-btn px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-transparent text-gray-600 text-sm sm:text-base hover:bg-gray-50 transition-all"> 📊 Diario </button> 
         <button onclick="switchTab('reporte-semanal')" class="tab-btn px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-transparent text-gray-600 text-sm sm:text-base hover:bg-gray-50 transition-all"> 📈 Semanal </button> 
         <button onclick="switchTab('estadisticas')" class="tab-btn px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap border-b-2 sm:border-b-4 border-transparent text-gray-600 text-sm sm:text-base hover:bg-gray-50 transition-all"> 📉 Estadísticas </button>
@@ -302,13 +303,42 @@
               </tr>
             </thead>
             <tbody id="inventario-productos-body"></tbody>
-          </table>
-        </div>
-      </section>
+        </table>
     </div>
+  </section>
+</div>
 
-    <div id="tab-reporte-diario" class="tab-content hidden">
-     <section class="bg-white rounded-2xl shadow-xl p-4 sm:p-6">
+<div id="tab-registro-entradas" class="tab-content hidden">
+  <section class="bg-white rounded-2xl shadow-xl p-4 sm:p-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
+      <div>
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2"><span class="text-2xl sm:text-3xl">📝</span> Registro de Movimientos</h2>
+        <p class="text-sm text-gray-500">Historial de entradas y ajustes. Puedes revertir errores aquí.</p>
+      </div>
+      <button onclick="renderRegistroEntradas()" class="btn-action bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 shadow-sm">
+          🔄 Actualizar Lista
+      </button>
+    </div>
+    <div class="overflow-x-auto no-scrollbar rounded-xl border border-gray-200">
+      <table class="w-full text-left border-collapse min-w-[700px]">
+        <thead>
+          <tr class="bg-gray-100 text-gray-600 border-b-2 border-gray-200 text-sm">
+            <th class="p-3 font-bold">Fecha / Hora</th>
+            <th class="p-3 font-bold">Sucursal</th>
+            <th class="p-3 font-bold">Producto</th>
+            <th class="p-3 font-bold">Movimiento</th>
+            <th class="p-3 font-bold">Autor</th>
+            <th class="p-3 font-bold text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="registro-entradas-body">
+            </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+<div id="tab-reporte-diario" class="tab-content hidden">
+ <section class="bg-white rounded-2xl shadow-xl p-4 sm:p-6">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
        <h2 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2"><span class="text-2xl sm:text-3xl">📊</span> Reporte Diario</h2>
        <div class="flex gap-2">
@@ -375,11 +405,18 @@
     </div>
 
     <div id="tab-usuarios" class="tab-content hidden">
-     <section class="bg-white rounded-2xl shadow-xl p-4 sm:p-6">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
-       <h2 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2"><span class="text-2xl sm:text-3xl">👥</span> Empleados</h2>
-       <button onclick="openUserModal()" class="w-full sm:w-auto btn-action bg-blue-500 hover:bg-blue-600 text-white px-4 sm:px-6 py-2 rounded-xl text-sm sm:text-base font-semibold transition-all flex items-center justify-center gap-2"> <span>➕</span> Nuevo Usuario </button>
-      </div>
+        <section class="bg-white rounded-2xl shadow-xl p-4 sm:p-6">
+           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+             <h2 class="text-xl sm:text-2xl font-bold text-gray-800">👤 Control de Usuarios</h2>
+             <div class="flex gap-2">
+                 <button onclick="openBranchNormalizationModal()" class="btn-action bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-xl text-sm sm:text-base font-semibold transition-all flex items-center justify-center gap-2 shadow-md shrink-0">
+                     🔧 Consolidar Sucursales
+                 </button>
+                 <button onclick="openUserModal()" class="btn-action bg-black hover:bg-gray-800 text-white px-4 py-2 rounded-xl text-sm sm:text-base font-semibold transition-all flex items-center justify-center gap-2 shadow-md shrink-0">
+                    ➕ Nuevo Usuario
+                </button>
+             </div>
+           </div>
       
       <div class="overflow-x-auto no-scrollbar rounded-xl border border-gray-200">
         <table class="w-full text-left border-collapse min-w-[600px]">
@@ -695,6 +732,26 @@
   </div>
   </div>
 
+  <div id="branch-normalization-modal" class="modal hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity" onclick="if(event.target === this) closeBranchNormalizationModal()">
+      <div class="modal-content bg-white p-6 sm:p-8 rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto relative animate-fade-in-up">
+          <button onclick="closeBranchNormalizationModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl transition-all">×</button>
+          
+          <div class="flex items-center gap-3 mb-6">
+              <span class="text-3xl text-yellow-500">🔧</span>
+              <h3 class="text-xl sm:text-2xl font-black text-gray-800">Consolidar Historial de Sucursales</h3>
+          </div>
+          
+          <p class="text-sm text-gray-600 mb-4">Esta herramienta busca nombres de sucursales en tu historial que ya no están asociados a ningún usuario actual. Selecciona la sucursal actual para consolidar sus movimientos históricos y que los reportes sumen correctamente.</p>
+          
+          <div id="branch-normalization-list" class="space-y-3">
+              </div>
+          
+          <div class="flex gap-3 mt-6">
+              <button type="button" onclick="closeBranchNormalizationModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl font-bold transition-all">Cancelar</button>
+              <button id="branch-normalization-save" type="button" onclick="saveBranchNormalization()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-black py-3 rounded-xl font-bold transition-all">Guardar Consolidación</button>
+          </div>
+      </div>
+  </div>
   <div id="toast" class="fixed bottom-6 left-4 right-4 sm:left-auto sm:right-6 sm:w-auto bg-green-500 text-white px-5 sm:px-6 py-3 rounded-xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-[300] text-center sm:text-left text-sm sm:text-base font-semibold">
     <p id="toast-message">Mensaje</p>
   </div>
@@ -902,7 +959,8 @@
       salesHistory: [],
       weeklyHistory: [], // Historial de fechas anteriores
       users: [],
-      inventory: {} 
+      inventory: {},
+      branch_aliases: {} // NUEVO: Para guardar las consolidaciones
     };
 
     let currentUser = null;
@@ -938,6 +996,7 @@
           state = { ...state, ...parsed };
           
           if(!state.inventory) state.inventory = {};
+          if(parsed.branch_aliases) state.branch_aliases = parsed.branch_aliases; // NUEVO
 
           if(state.products) {
               state.products = state.products.map(p => ({
@@ -995,12 +1054,14 @@
         db.collection('datos_sistema').doc('punto_de_venta').onSnapshot((doc) => {
             if (doc.exists) {
                 const data = doc.data();
-                
                 // 1. Sincronizar Inventario de harina instantáneamente
                 if (data.inventory) state.inventory = data.inventory;
                 
                 // 2. Sincronizar Usuarios nuevos o contraseñas cambiadas
                 if (data.users) state.users = data.users;
+                
+                // 2.5 Sincronizar Alias (NUEVO)
+                if (data.branch_aliases) state.branch_aliases = data.branch_aliases;
                 
                 // 3. Sincronizar Productos, precios e imágenes al instante
                 if (data.products) {
@@ -1119,6 +1180,10 @@
         
         const btnInvProductos = document.getElementById('tab-btn-inventario-productos');
         if (btnInvProductos) btnInvProductos.style.display = isAdmin ? 'block' : 'none';
+
+        // NUEVO PERMISO
+        const btnRegistroEntradas = document.getElementById('tab-btn-registro-entradas');
+        if (btnRegistroEntradas) btnRegistroEntradas.style.display = isAdmin ? 'block' : 'none';
 
         const btnCorte = document.getElementById('btn-corte-caja');
         if (btnCorte) {
@@ -1664,8 +1729,8 @@ ESTADO: ${estado}`;
       else if (tabName === 'almacen') renderAlmacen();
       else if (tabName === 'calendario') renderHistorialCalendar();
       else if (tabName === 'inventario-productos') renderInventarioProductos();
+      else if (tabName === 'registro-entradas') renderRegistroEntradas(); // NUEVO
     }
-
     // ============ CALENDARIO Y FECHAS ============
     async function renderHistorialCalendar() {
         const year = calendarCurrentDate.getFullYear();
@@ -2865,61 +2930,116 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
         });
     }
 
-    // ============ REPORTE DE INVENTARIO (PDF) ============
-    async function generateStockReportPDF() {
+  // ============ REPORTE DE INVENTARIO (PDF) - ACTUALIZADO CON SOPORTE DE ALIAS Y STOCK ACTUAL ============
+  async function generateStockReportPDF() {
         if (!currentUser || currentUser.role !== 'admin') return showToast('Solo el administrador puede generar esto', 'error');
         if (typeof html2pdf === 'undefined') return showToast('Error: Librería PDF no cargada', 'error');
         
-        showToast('Analizando bitácora de los últimos 30 días, espera...', 'success');
+        showToast('Analizando inventario y bitácora, espera...', 'success');
 
         try {
-            // 1. Obtener todos los movimientos de los últimos 30 días
             const hace30Dias = new Date();
             hace30Dias.setDate(hace30Dias.getDate() - 30);
             hace30Dias.setHours(0, 0, 0, 0);
             
             const snapshot = await db.collection('entradas_stock').where('timestamp', '>=', hace30Dias.getTime()).get();
             const movimientos = snapshot.docs.map(doc => doc.data());
-            
-            // Ordenar cronológicamente (del más reciente al más antiguo)
             movimientos.sort((a, b) => b.timestamp - a.timestamp);
 
-            // 2. Sumar el total de ENTRADAS puras por sucursal y producto
+            const aliases = state.branch_aliases || {};
+            const currentBranches = [...new Set(state.users.map(u => u.branch))].filter(b => b && b !== 'Todas');
+            const productosPieza = state.products.filter(p => p.saleType === 'pieza');
+
             const resumen = {};
+
+            // 👇 CAMBIO 1: Solo inicializar productos en las sucursales donde están ACTIVADOS en el checklist 👇
+            currentBranches.forEach(b => {
+                resumen[b] = {};
+                productosPieza.forEach(p => {
+                    const productBranches = p.branches || currentBranches;
+                    // Solo lo agregamos si esta sucursal está palomeada en el producto
+                    if (productBranches.includes(b)) {
+                        let stockActual = 0;
+                        if (p.stocks && p.stocks[b] !== undefined) stockActual = p.stocks[b];
+                        else if (p.stock !== undefined && (!p.stocks || Object.keys(p.stocks).length===0)) stockActual = p.stock;
+
+                        resumen[b][p.name] = { entradas: 0, stockActual: stockActual };
+                    }
+                });
+            });
+
+            // 👇 CAMBIO 2: Sumar entradas SOLO si el producto sigue activo en esa sucursal 👇
             movimientos.forEach(mov => {
                 if (mov.tipo === 'Entrada') {
-                    if (!resumen[mov.sucursal]) resumen[mov.sucursal] = {};
-                    if (!resumen[mov.sucursal][mov.producto]) resumen[mov.sucursal][mov.producto] = 0;
-                    resumen[mov.sucursal][mov.producto] += mov.cantidad;
+                    const sucursalReal = aliases[mov.sucursal] || mov.sucursal;
+
+                    const prod = state.products.find(p => p.name === mov.producto);
+                    if (prod) {
+                        const productBranches = prod.branches || currentBranches;
+                        // Si le quitaste el checklist a esta sucursal, ignoramos sus entradas pasadas en el resumen
+                        if (!productBranches.includes(sucursalReal)) return; 
+                    }
+
+                    if (!resumen[sucursalReal]) resumen[sucursalReal] = {};
+                    if (!resumen[sucursalReal][mov.producto]) {
+                        resumen[sucursalReal][mov.producto] = { entradas: 0, stockActual: 0 };
+                        if (prod) {
+                             let sAct = 0;
+                             if(prod.stocks && prod.stocks[sucursalReal] !== undefined) sAct = prod.stocks[sucursalReal];
+                             else if (prod.stock !== undefined && (!prod.stocks || Object.keys(prod.stocks).length===0)) sAct = prod.stock;
+                             resumen[sucursalReal][mov.producto].stockActual = sAct;
+                        }
+                    }
+                    resumen[sucursalReal][mov.producto].entradas += mov.cantidad;
                 }
             });
 
-            // 3. Construir el HTML del PDF
+            // Construir HTML del resumen
             let resumenHTML = '';
             Object.keys(resumen).sort().forEach(sucursal => {
+                const prodKeys = Object.keys(resumen[sucursal]);
+                // Si la sucursal no tiene ningún producto asignado, NO LA DIBUJAMOS
+                if (prodKeys.length === 0) return; 
+
                 resumenHTML += `<h4 style="color: #1f2937; margin-top: 15px; border-bottom: 2px solid #d1d5db; padding-bottom: 5px;">🏢 ${sucursal}</h4>
                 <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px;">
-                    <thead><tr style="background-color: #f3f4f6;"><th style="padding: 8px; text-align: left; border-bottom: 1px solid #d1d5db;">Producto</th><th style="padding: 8px; text-align: right; border-bottom: 1px solid #d1d5db;">Total Piezas Ingresadas</th></tr></thead>
+                    <thead>
+                        <tr style="background-color: #f3f4f6;">
+                            <th style="padding: 8px; text-align: left; border-bottom: 1px solid #d1d5db; width: 50%;">Producto</th>
+                            <th style="padding: 8px; text-align: center; border-bottom: 1px solid #d1d5db; width: 25%;">Entradas (30d)</th>
+                            <th style="padding: 8px; text-align: right; border-bottom: 1px solid #d1d5db; width: 25%;">Stock Actual</th>
+                        </tr>
+                    </thead>
                     <tbody>`;
                 
-                Object.entries(resumen[sucursal]).sort((a,b) => b[1] - a[1]).forEach(([producto, total]) => {
-                    resumenHTML += `<tr style="border-bottom: 1px dashed #e5e7eb;"><td style="padding: 8px; color: #4b5563; font-weight: bold;">${producto}</td><td style="padding: 8px; text-align: right; font-weight: bold; color: #059669;">+${total} pz</td></tr>`;
+                prodKeys.sort().forEach(producto => {
+                    const data = resumen[sucursal][producto];
+                    resumenHTML += `<tr style="border-bottom: 1px dashed #e5e7eb;">
+                        <td style="padding: 8px; color: #4b5563; font-weight: bold;">${producto}</td>
+                        <td style="padding: 8px; text-align: center; color: #059669; font-weight: bold;">+${data.entradas} pz</td>
+                        <td style="padding: 8px; text-align: right; color: #1d4ed8; font-weight: 900;">${data.stockActual} pz</td>
+                    </tr>`;
                 });
                 resumenHTML += `</tbody></table>`;
             });
 
-            if (Object.keys(resumen).length === 0) {
-                resumenHTML = '<p style="color: #6b7280; font-style: italic;">No se registraron entradas formales en los últimos 30 días.</p>';
-            }
+            if (resumenHTML === '') resumenHTML = '<p style="color: #6b7280; font-style: italic;">No hay datos de inventario disponibles.</p>';
 
-            // Construir la bitácora detallada (Top 100 últimos movimientos para no hacer PDFs gigantes)
+            // Bitácora detallada
             let logHTML = '';
             movimientos.slice(0, 100).forEach(mov => { 
                 const isEntrada = mov.tipo === 'Entrada';
                 const color = isEntrada ? '#059669' : '#d97706';
+                
+                const loggedBranchName = mov.sucursal;
+                let branchDisplay = loggedBranchName;
+                if (aliases[loggedBranchName]) {
+                    branchDisplay = `${aliases[loggedBranchName]} <br><span style="font-size: 9px; color: #9ca3af; font-weight: normal;">(Reg. orig: ${loggedBranchName})</span>`;
+                }
+
                 logHTML += `<tr style="border-bottom: 1px solid #e5e7eb;">
-                    <td style="padding: 6px; font-size: 11px; color: #6b7280;">${mov.fecha} ${mov.hora}</td>
-                    <td style="padding: 6px; font-size: 11px; font-weight: bold;">${mov.sucursal}</td>
+                    <td style="padding: 6px; font-size: 11px; color: #6b7280;">${mov.fecha}<br>${mov.hora}</td>
+                    <td style="padding: 6px; font-size: 11px; font-weight: bold;">${branchDisplay}</td>
                     <td style="padding: 6px; font-size: 11px;">${mov.producto}</td>
                     <td style="padding: 6px; font-size: 11px; color: ${color};"><b>${isEntrada ? '+'+mov.cantidad : mov.cantidad}</b><br><span style="font-size: 9px; color: #9ca3af;">${mov.tipo}</span></td>
                     <td style="padding: 6px; font-size: 11px;">${mov.usuario}</td>
@@ -2930,27 +3050,29 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
             <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 30px; background: white; color: #333;">
                 <div style="text-align: center; border-bottom: 4px solid #3b82f6; padding-bottom: 15px; margin-bottom: 20px;">
                     <h1 style="color: #1d4ed8; margin: 0; font-size: 26px; font-weight: 900; text-transform: uppercase;">Xavi Comercializadora</h1>
-                    <h2 style="color: #4b5563; margin: 5px 0; font-size: 16px;">Reporte Mensual de Inventario (Piezas)</h2>
+                    <h2 style="color: #4b5563; margin: 5px 0; font-size: 16px;">Reporte de Inventario (Piezas)</h2>
                     <p style="color: #6b7280; margin: 0; font-size: 11px;">Generado: ${new Date().toLocaleDateString('es-MX')} a las ${new Date().toLocaleTimeString('es-MX')} por ${currentUser.username}</p>
                 </div>
 
-                <h3 style="color: #1e3a8a; font-size: 16px; margin-bottom: 10px;">📊 Resumen Global de Entradas (Últimos 30 días)</h3>
-                <p style="font-size: 11px; color: #6b7280; margin-top: -5px; margin-bottom: 15px;">Suma total de piezas abastecidas a cada sucursal.</p>
+                <h3 style="color: #1e3a8a; font-size: 16px; margin-bottom: 10px;">📊 Entradas Recientes y Stock Actual</h3>
+                <p style="font-size: 11px; color: #6b7280; margin-top: -5px; margin-bottom: 15px;">Los historiales de sucursales modificadas han sido consolidados.</p>
                 ${resumenHTML}
 
-                <h3 style="color: #1e3a8a; font-size: 16px; margin-top: 30px; margin-bottom: 10px;">🕒 Bitácora de Movimientos (Últimos 100 registros)</h3>
-                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-                    <thead>
-                        <tr style="background-color: #e5e7eb; color: #374151;">
-                            <th style="padding: 8px; text-align: left;">Fecha/Hora</th>
-                            <th style="padding: 8px; text-align: left;">Sucursal</th>
-                            <th style="padding: 8px; text-align: left;">Producto</th>
-                            <th style="padding: 8px; text-align: left;">Movimiento</th>
-                            <th style="padding: 8px; text-align: left;">Autor</th>
-                        </tr>
-                    </thead>
-                    <tbody>${logHTML || '<tr><td colspan="5" style="text-align: center; padding: 10px;">Sin movimientos recientes</td></tr>'}</tbody>
-                </table>
+                <div style="page-break-before: auto; margin-top: 30px;">
+                    <h3 style="color: #1e3a8a; font-size: 16px; margin-bottom: 10px;">🕒 Bitácora de Movimientos (Últimos 100)</h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <thead>
+                            <tr style="background-color: #e5e7eb; color: #374151;">
+                                <th style="padding: 8px; text-align: left;">Fecha/Hora</th>
+                                <th style="padding: 8px; text-align: left;">Sucursal</th>
+                                <th style="padding: 8px; text-align: left;">Producto</th>
+                                <th style="padding: 8px; text-align: left;">Mov.</th>
+                                <th style="padding: 8px; text-align: left;">Autor</th>
+                            </tr>
+                        </thead>
+                        <tbody>${logHTML || '<tr><td colspan="5" style="text-align: center; padding: 10px;">Sin movimientos recientes</td></tr>'}</tbody>
+                    </table>
+                </div>
             </div>`;
 
             let finalHTML = `<div style="width: 700px;">${pdfHTML}</div>`;
@@ -2963,15 +3085,226 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
             };
 
             html2pdf().set(opt).from(finalHTML).save().then(() => {
-                showToast('✅ Reporte PDF descargado con éxito');
+                showToast('✅ Reporte de Inventario descargado con éxito');
             });
 
         } catch (e) {
             console.error(e);
-            showToast('Error obteniendo historial de entradas', 'error');
+            showToast('Error obteniendo datos del inventario', 'error');
         }
     }
 
+
+   // ============ CONSOLIDACIÓN DE SUCURSALES (LOG NORMALIZATION) ============
+   async function openBranchNormalizationModal() {
+        if (!currentUser || currentUser.role !== 'admin') return showToast('Solo el administrador puede acceder', 'error');
+        
+        showToast('Buscando sucursales históricas...', 'success');
+        try {
+            // Descargar historial de entradas directamente de Firebase
+            const snapshot = await db.collection('entradas_stock').get();
+            const movimientos = snapshot.docs.map(doc => doc.data());
+            
+            const currentBranches = [...new Set(state.users.map(u => u.branch))].filter(b => b && b !== 'Todas');
+            const historicalBranches = [...new Set(movimientos.map(mov => mov.sucursal))].filter(b => b);
+            const historicalSalesBranches = [...new Set(state.salesHistory.map(s => s.branch))].filter(b => b);
+            
+            const allHistorical = [...new Set([...historicalBranches, ...historicalSalesBranches])];
+            const oldBranchesToMap = allHistorical.filter(b => !currentBranches.includes(b));
+            
+            const aliases = state.branch_aliases || {};
+
+            const mappingHtml = oldBranchesToMap.map(oldName => {
+                const selectOptions = currentBranches.map(branchName => {
+                    const selected = aliases[oldName] === branchName ? 'selected' : '';
+                    return `<option value="${branchName}" ${selected}>${branchName}</option>`;
+                }).join('');
+
+                // ID seguro sin espacios
+                const safeId = oldName.replace(/[^a-zA-Z0-9]/g, '-');
+
+                return `
+                    <div class="border border-gray-200 rounded-lg p-3 mb-3 bg-gray-50/50">
+                        <p class="font-bold text-gray-700 text-sm">Nombre Antiguo/Huérfano: <span class="font-normal text-red-600">${oldName}</span></p>
+                        <div class="flex items-center gap-2 mt-2">
+                            <label class="text-xs text-gray-600">Fusionar con:</label>
+                            <select id="branch-map-${safeId}" class="w-full text-sm border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-yellow-300 focus:border-yellow-500 transition-all">
+                                <option value="">-- Mantener separado --</option>
+                                ${selectOptions}
+                            </select>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            if (oldBranchesToMap.length === 0) {
+                document.getElementById('branch-normalization-list').innerHTML = '<p class="text-center text-gray-500 py-4 text-sm">Todo está en orden. No hay sucursales desvinculadas.</p>';
+                document.getElementById('branch-normalization-save').style.display = 'none';
+            } else {
+                document.getElementById('branch-normalization-list').innerHTML = mappingHtml;
+                document.getElementById('branch-normalization-save').style.display = 'block';
+                // Guardar la lista para usarla al guardar
+                window.currentOldBranchesToMap = oldBranchesToMap; 
+            }
+
+            document.getElementById('branch-normalization-modal').classList.remove('hidden');
+        } catch (e) {
+            console.error(e);
+            showToast('Error cargando historial', 'error');
+        }
+    }
+
+    function closeBranchNormalizationModal() {
+        document.getElementById('branch-normalization-modal').classList.add('hidden');
+    }
+
+    async function saveBranchNormalization() {
+        if (!window.currentOldBranchesToMap) return;
+        
+        const newAliases = state.branch_aliases || {};
+
+        window.currentOldBranchesToMap.forEach(oldName => {
+            const safeId = oldName.replace(/[^a-zA-Z0-9]/g, '-');
+            const selectElement = document.getElementById(`branch-map-${safeId}`);
+            if (selectElement) {
+                if (selectElement.value) {
+                    newAliases[oldName] = selectElement.value;
+                } else {
+                    delete newAliases[oldName]; 
+                }
+            }
+        });
+
+        state.branch_aliases = newAliases;
+        showToast('Guardando consolidación...', 'success');
+
+        if(typeof db !== 'undefined') {
+            await db.collection('datos_sistema').doc('punto_de_venta').set({ branch_aliases: state.branch_aliases }, { merge: true });
+        } else if (typeof saveState === 'function') {
+            await saveState();
+        }
+        
+        closeBranchNormalizationModal();
+        showToast('✅ Sucursales consolidadas correctamente');
+    }
+
+    // ============ REGISTRO Y REVERSIÓN DE ENTRADAS ============
+    async function renderRegistroEntradas() {
+        if (!currentUser || currentUser.role !== 'admin') return;
+        const tbody = document.getElementById('registro-entradas-body');
+        if (!tbody) return;
+
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-400 font-bold animate-pulse">Cargando registros desde la nube...</td></tr>';
+        
+        try {
+            const snapshot = await db.collection('entradas_stock').get();
+            let logs = snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
+            
+            // Ordenar del más nuevo al más viejo
+            logs.sort((a, b) => b.timestamp - a.timestamp);
+            // Solo mostramos los últimos 150 para que la pantalla cargue rápido
+            logs = logs.slice(0, 150);
+
+            if (logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">No hay movimientos registrados.</td></tr>';
+                return;
+            }
+
+            const aliases = state.branch_aliases || {};
+
+            tbody.innerHTML = logs.map(log => {
+                const isEntrada = log.tipo === 'Entrada';
+                const color = isEntrada ? 'text-green-600' : 'text-amber-600';
+                
+                // Aplicar el alias para mostrar el nombre actual
+                let sucursalReal = aliases[log.sucursal] || log.sucursal;
+                let originalLabel = aliases[log.sucursal] ? `<br><span class="text-[9px] text-gray-400 font-normal">(Reg. orig: ${log.sucursal})</span>` : '';
+
+                // Truco para pasar texto con espacios en funciones onclick:
+                const safeName = log.producto.replace(/'/g, "\\'");
+                const safeBranch = log.sucursal.replace(/'/g, "\\'");
+                const safeType = log.tipo.replace(/'/g, "\\'");
+
+                return `
+                <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <td class="p-3 text-xs text-gray-500">${log.fecha}<br>${log.hora}</td>
+                    <td class="p-3 text-sm font-bold text-gray-700 leading-tight">${sucursalReal}${originalLabel}</td>
+                    <td class="p-3 text-sm font-bold text-gray-800">${log.producto}</td>
+                    <td class="p-3 text-sm font-bold ${color}">${isEntrada ? '+' : ''}${log.cantidad} <span class="text-[10px] text-gray-500 font-normal block">${log.tipo}</span></td>
+                    <td class="p-3 text-xs text-gray-600 font-semibold">${log.usuario}</td>
+                    <td class="p-3 text-right">
+                        <button onclick="revertirEntrada('${log.docId}', '${safeName}', '${safeBranch}', ${log.cantidad}, '${safeType}')" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-2 rounded-xl text-xs font-bold transition-all shadow-sm">
+                            🗑️ Revertir
+                        </button>
+                    </td>
+                </tr>`;
+            }).join('');
+
+        } catch (e) {
+            console.error("Error al cargar registro", e);
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-red-500">Error al cargar datos. Revisa tu conexión.</td></tr>';
+        }
+    }
+
+    async function revertirEntrada(docId, productName, branchName, qty, tipo) {
+        if (!confirm(`⚠️ ATENCIÓN:\n\n¿Estás seguro de REVERTIR este movimiento de ${productName}?\n\n- Se borrará del historial y del PDF.\n- El stock de la sucursal se ajustará automáticamente.`)) return;
+
+        showToast('Revirtiendo y ajustando stock...', 'success');
+        try {
+            // 1. Buscamos el producto en el catálogo actual
+            const pIndex = state.products.findIndex(p => p.name === productName);
+            
+            if (pIndex !== -1) {
+                let p = state.products[pIndex];
+                if (!p.stocks) p.stocks = {};
+                
+                // Si es un producto viejo que aún no migraba
+                if (p.stocks[branchName] === undefined && p.stock !== undefined) {
+                    p.stocks[branchName] = p.stock;
+                }
+
+                let stockActual = p.stocks[branchName] || 0;
+
+                // LÓGICA INTELIGENTE DE REVERSIÓN
+                if (tipo === 'Entrada') {
+                    // Si le habías sumado, le restamos la cantidad
+                    p.stocks[branchName] = stockActual - qty;
+                    if (p.stocks[branchName] < 0) p.stocks[branchName] = 0; // Evitar negativos
+                } 
+                else if (tipo.includes('Ajuste manual')) {
+                    // Si usaste el botón de Editar (Ej: "Ajuste manual (Antes: 15)")
+                    // Rescatamos el número viejo y se lo devolvemos
+                    const match = tipo.match(/Antes: (\d+)/);
+                    if (match) {
+                        p.stocks[branchName] = parseInt(match[1]);
+                    }
+                }
+
+                // Guardamos los productos en la nube
+                if(typeof db !== 'undefined') {
+                    await db.collection('datos_sistema').doc('punto_de_venta').set({ products: state.products }, { merge: true });
+                } else if (typeof saveState === 'function') {
+                    await saveState();
+                }
+            }
+
+            // 2. Borramos el documento de la bitácora para siempre
+            if(typeof db !== 'undefined') {
+                await db.collection('entradas_stock').doc(docId).delete();
+            }
+
+            showToast('✅ Movimiento revertido con éxito');
+            
+            // 3. Recargamos la lista
+            renderRegistroEntradas();
+            // Actualizamos la otra tabla por si acaso
+            if(document.getElementById('tab-inventario-productos').classList.contains('active')) renderInventarioProductos();
+
+        } catch (e) {
+            console.error(e);
+            showToast('Error al revertir. Intenta de nuevo.', 'error');
+        }
+    }
     // ============ MINIMIZAR CATÁLOGO DE PRODUCTOS ============
     function toggleProductsMenu() {
         const container = document.getElementById('products-grid-container');
