@@ -243,14 +243,24 @@
       <button id="btn-clear-history" onclick="clearDailySales()" class="text-red-500 hover:bg-red-50 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold border border-red-200 transition-colors shadow-sm"> 🗑️ Limpiar todo </button>
      </div>
      
-     <div id="sales-history" class="space-y-2 max-h-[60vh] overflow-y-auto pr-1 sm:pr-2"></div>
+     <div id="sales-history" class="space-y-2 max-h-[50vh] overflow-y-auto pr-1 sm:pr-2"></div>
      
-     <div class="mt-4 pt-4 flex justify-between items-center bg-gray-50 p-4 rounded-xl border border-gray-200">
-         <span class="text-sm sm:text-base text-gray-600 font-bold uppercase tracking-wider">Corte total de hoy:</span> 
-         <span id="daily-total" class="text-2xl sm:text-4xl font-black text-green-600 drop-shadow-sm">$0.00</span>
+     <div class="mt-4 bg-gray-50 rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+         <div class="p-4 flex justify-between items-center border-b border-gray-200 bg-white">
+             <span class="text-base sm:text-lg text-gray-800 font-black uppercase tracking-wider">Corte Total de Hoy:</span> 
+             <span id="daily-total" class="text-3xl sm:text-4xl font-black text-green-600 drop-shadow-sm">$0.00</span>
+         </div>
+         <div class="bg-gray-100 p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-center gap-2 text-sm sm:text-base font-semibold">
+             <div class="text-amber-800 bg-amber-100/50 px-4 py-2 rounded-lg w-full sm:w-auto flex justify-between sm:block border border-amber-200">
+                 🫓 Tortillas/Masa: <span id="daily-total-tortillas" class="font-black text-amber-600 ml-1">$0.00</span>
+             </div>
+             <div class="text-blue-800 bg-blue-100/50 px-4 py-2 rounded-lg w-full sm:w-auto flex justify-between sm:block border border-blue-200">
+                 📦 Otros Productos: <span id="daily-total-productos" class="font-black text-blue-600 ml-1">$0.00</span>
+             </div>
+         </div>
      </div>
-    </section>
- </div>
+     </section>
+</div>
  <div id="tab-almacen" class="tab-content hidden">
         <div class="flex flex-col gap-4 sm:gap-6">
             <section id="almacen-admin-panel" class="bg-white rounded-2xl shadow-xl p-4 sm:p-6 hidden">
@@ -2318,24 +2328,49 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
       if(!historyDiv) return;
       const visibleSales = getVisibleSales();
 
-      if (visibleSales.length === 0) { historyDiv.innerHTML = '<p class="text-gray-400 text-sm sm:text-base text-center py-4">Sin ventas hoy</p>'; document.getElementById('daily-total').textContent = '$0.00'; return; }
+      if (visibleSales.length === 0) { 
+          historyDiv.innerHTML = '<p class="text-gray-400 text-sm sm:text-base text-center py-4">Sin ventas hoy</p>'; 
+          document.getElementById('daily-total').textContent = '$0.00'; 
+          if(document.getElementById('daily-total-tortillas')) document.getElementById('daily-total-tortillas').textContent = '$0.00';
+          if(document.getElementById('daily-total-productos')) document.getElementById('daily-total-productos').textContent = '$0.00';
+          return; 
+      }
       
       const isAdmin = currentUser && currentUser.role === 'admin';
 
       historyDiv.innerHTML = visibleSales.map((sale, index) => `
-        <div class="flex items-center justify-between bg-gray-50 rounded-lg p-2 sm:p-3 text-xs sm:text-sm transition-all hover:bg-gray-100 group">
+        <div class="flex items-center justify-between bg-white rounded-lg p-3 sm:p-4 text-xs sm:text-sm transition-all border border-gray-100 shadow-sm hover:shadow-md mb-2 group">
           <div class="cursor-pointer flex-1" onclick="showHistoricSale(${sale.timestamp})">
-            <span class="text-gray-500 font-bold">#${index + 1}</span>
-            <span class="text-gray-400 ml-1 sm:ml-2">${sale.time}</span> 
-            <span class="text-[9px] sm:text-[10px] ml-1 font-bold text-amber-600 block sm:inline">(${sale.branch})</span>
+            <span class="text-gray-500 font-bold bg-gray-100 px-2 py-1 rounded-md">#${index + 1}</span>
+            <span class="text-gray-600 ml-2 font-semibold">${sale.time}</span> 
+            <span class="text-[10px] sm:text-xs ml-2 font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-full border border-amber-100 block mt-2 sm:mt-0 sm:inline-block">${sale.branch}</span>
           </div>
-          <div class="flex items-center gap-2 sm:gap-3">
-            <span class="font-bold text-green-600 cursor-pointer text-sm sm:text-base" onclick="showHistoricSale(${sale.timestamp})">$${sale.total.toFixed(2)}</span>
-            ${isAdmin ? `<button onclick="event.stopPropagation(); deleteIndividualSale(${sale.timestamp})" class="text-red-400 hover:text-red-600 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity p-2 sm:p-1" title="Eliminar">🗑️</button>` : ''}
+          <div class="flex items-center gap-3 sm:gap-4">
+            <span class="font-black text-green-600 cursor-pointer text-base sm:text-lg" onclick="showHistoricSale(${sale.timestamp})">$${sale.total.toFixed(2)}</span>
+            ${isAdmin ? `<button onclick="event.stopPropagation(); deleteIndividualSale(${sale.timestamp})" class="text-red-400 hover:text-white hover:bg-red-500 bg-red-50 rounded-lg transition-all p-2" title="Eliminar">🗑️</button>` : ''}
           </div>
         </div>`).reverse().join(''); 
         
-      document.getElementById('daily-total').textContent = `$${visibleSales.reduce((sum, s) => sum + s.total, 0).toFixed(2)}`;
+      // 👇 NUEVO: CÁLCULO DEL DESGLOSE DE VENTAS 👇
+      let totalTortillas = 0;
+      let totalProductos = 0;
+      const totalDia = visibleSales.reduce((sum, s) => sum + s.total, 0);
+
+      // Recorremos cada ticket y cada artículo adentro del ticket
+      visibleSales.forEach(sale => {
+          sale.items.forEach(item => {
+              if (item.saleType === 'kg') {
+                  totalTortillas += item.total; // Si es por Kg, va a Tortilla/Masa
+              } else {
+                  totalProductos += item.total; // Si es pieza/litro, va a Otros Productos
+              }
+          });
+      });
+
+      // Imprimimos los resultados en pantalla
+      document.getElementById('daily-total').textContent = `$${totalDia.toFixed(2)}`;
+      if (document.getElementById('daily-total-tortillas')) document.getElementById('daily-total-tortillas').textContent = `$${totalTortillas.toFixed(2)}`;
+      if (document.getElementById('daily-total-productos')) document.getElementById('daily-total-productos').textContent = `$${totalProductos.toFixed(2)}`;
     }
 
     async function deleteIndividualSale(timestamp) {
@@ -3421,6 +3456,81 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
         updateClock(); 
         checkAuth(); 
         enableTabsScroll(); // <--- Aquí activamos el movimiento del mouse
+    }
+
+    // ============ FUNCIONES PARA EDITAR STOCK (LÁPIZ AZUL) ============
+    function openEditarStockModal(productId, branchName) {
+        const p = state.products.find(prod => prod.id === productId);
+        if(!p) return;
+
+        currentStockBranch = branchName;
+
+        let currentStock = 0;
+        if (p.stocks && p.stocks[branchName] !== undefined) {
+            currentStock = p.stocks[branchName];
+        } else if (p.stock !== undefined) {
+            currentStock = p.stock;
+        }
+
+        document.getElementById('editar-stock-product-id').value = p.id;
+        document.getElementById('editar-stock-product-name').textContent = p.emoji + " " + p.name + ` (${branchName})`;
+        document.getElementById('editar-stock-qty').value = currentStock;
+
+        document.getElementById('editar-stock-modal').classList.replace('hidden', 'flex');
+        setTimeout(() => { const input = document.getElementById('editar-stock-qty'); input.focus(); input.select(); }, 100);
+    }
+
+    function closeEditarStockModal() { 
+        document.getElementById('editar-stock-modal').classList.replace('flex', 'hidden'); 
+    }
+
+    async function saveEditarStock(e) {
+        e.preventDefault();
+        const productId = parseInt(document.getElementById('editar-stock-product-id').value);
+        const qty = parseInt(document.getElementById('editar-stock-qty').value);
+
+        if(isNaN(qty) || qty < 0) return showToast('Cantidad inválida', 'error');
+
+        const pIndex = state.products.findIndex(prod => prod.id === productId);
+        if (pIndex !== -1) {
+            let p = state.products[pIndex];
+            if (!p.stocks) p.stocks = {};
+
+            if (p.stock !== undefined) {
+                const uniqueBranches = [...new Set(state.users.map(u => u.branch))].filter(b => b && b !== 'Todas');
+                const myBranches = p.branches || uniqueBranches;
+                myBranches.forEach(b => { if (p.stocks[b] === undefined) p.stocks[b] = p.stock; });
+                delete p.stock;
+            }
+
+            const prevStock = p.stocks[currentStockBranch] || 0;
+            p.stocks[currentStockBranch] = qty;
+
+            showToast('Actualizando inventario...', 'success');
+            
+            try {
+                const now = new Date();
+                await db.collection('entradas_stock').add({
+                    timestamp: now.getTime(),
+                    fecha: now.toLocaleDateString('es-MX'),
+                    hora: now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+                    producto: p.name,
+                    sucursal: currentStockBranch,
+                    cantidad: qty,
+                    tipo: `Ajuste manual (Antes: ${prevStock})`,
+                    usuario: currentUser.username
+                });
+            } catch(e) { console.error("Error registrando bitácora:", e); }
+
+            if(typeof db !== 'undefined') {
+                await db.collection('datos_sistema').doc('punto_de_venta').set({ products: state.products }, { merge: true });
+            } else if (typeof saveState === 'function') {
+                await saveState();
+            }
+            renderInventarioProductos();
+            closeEditarStockModal();
+            showToast(`✅ Stock de ${currentStockBranch} corregido a ${qty}`);
+        }
     }
 
     
