@@ -1157,6 +1157,9 @@
         showToast('Obteniendo información en tiempo real...');
         
         try {
+            // 👇 AQUÍ LIMPIAMOS LA MEMORIA CACHÉ PARA FORZAR LA ACTUALIZACIÓN 👇
+            window.cachedWeeklyVentas = null; 
+            
             // 1. Actualizar configuración base sin tocar las ventas
             const doc = await db.collection('datos_sistema').doc('punto_de_venta').get();
             if(doc.exists) {
@@ -2636,8 +2639,19 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
             hace7Dias.setHours(0, 0, 0, 0);
             const startMs = hace7Dias.getTime();
 
-            const snapshot = await db.collection('ventas').where('timestamp', '>=', startMs).get();
-            const ventasSemana = snapshot.docs.map(doc => doc.data());
+            // 🔥 AQUÍ MATAMOS AL VAMPIRO DE LECTURAS 🔥
+            let ventasSemana = [];
+            
+            // Verificamos si YA descargamos la semana al iniciar. Si no, la descargamos una sola vez.
+            if (!window.cachedWeeklyVentas) {
+                const snapshot = await db.collection('ventas').where('timestamp', '>=', startMs).get();
+                window.cachedWeeklyVentas = snapshot.docs.map(doc => doc.data());
+            }
+            
+            // Usamos la memoria caché y le inyectamos los tickets nuevos de hoy en vivo sin gastar lecturas
+            const todayStr = new Date().toDateString();
+            const ventasPasadas = window.cachedWeeklyVentas.filter(s => s.dateString !== todayStr);
+            ventasSemana = [...ventasPasadas, ...visibleSales];
 
             const ventasPorDia = {};
             for(let i = 0; i < 7; i++) {
