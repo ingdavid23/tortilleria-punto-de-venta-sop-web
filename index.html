@@ -999,15 +999,13 @@
       measurementId: "G-V8W68SQZSW"
     };
 
-    // Inicializamos Firebase manteniendo la versión que usa tu sistema
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    db.enablePersistence()
-      .catch((err) => {
-          console.error("Error al habilitar caché:", err);
-      });
-
+    // ESTO SALVA MILES DE LECTURAS
+    db.enablePersistence().catch((err) => {
+        console.error("Error al habilitar caché:", err);
+    });
 
    // ============ ESTADO GLOBAL ============
    let state = {
@@ -1054,7 +1052,7 @@
           state = { ...state, ...parsed };
           
           if(!state.inventory) state.inventory = {};
-          if(parsed.branch_aliases) state.branch_aliases = parsed.branch_aliases; // NUEVO
+          if(parsed.branch_aliases) state.branch_aliases = parsed.branch_aliases; 
 
           if(state.products) {
               state.products = state.products.map(p => ({
@@ -1072,25 +1070,33 @@
             await saveState();
           }
 
+          // OPTIMIZACIÓN DE FECHAS
           const today = new Date().toDateString();
-          const dateDoc = await db.collection('datos_sistema').doc('control_fechas').get();
-          const savedDate = dateDoc.exists ? dateDoc.data().ultimaFecha : null;
+          const localSavedDate = localStorage.getItem('pos_last_date_check');
+          
+          if (localSavedDate !== today) {
+              const dateDoc = await db.collection('datos_sistema').doc('control_fechas').get();
+              const savedDate = dateDoc.exists ? dateDoc.data().ultimaFecha : null;
 
-          if (savedDate !== today) {
-            if (state.salesHistory && state.salesHistory.length > 0) {
-              state.weeklyHistory.push({
-                date: savedDate,
-                total: state.salesHistory.reduce((sum, s) => sum + s.total, 0),
-                transactions: state.salesHistory.length,
-                sales: [...state.salesHistory]
-              });
-              if (state.weeklyHistory.length > 31) state.weeklyHistory.shift();
-            }
-            state.salesHistory = [];
-            await db.collection('datos_sistema').doc('control_fechas').set({ ultimaFecha: today });
-            await saveState();
+              if (savedDate !== today) {
+                if (state.salesHistory && state.salesHistory.length > 0) {
+                  state.weeklyHistory.push({
+                    date: savedDate,
+                    total: state.salesHistory.reduce((sum, s) => sum + s.total, 0),
+                    transactions: state.salesHistory.length,
+                    sales: [...state.salesHistory]
+                  });
+                  if (state.weeklyHistory.length > 31) state.weeklyHistory.shift();
+                }
+                state.salesHistory = [];
+                await db.collection('datos_sistema').doc('control_fechas').set({ ultimaFecha: today });
+                await saveState();
+              }
+              localStorage.setItem('pos_last_date_check', today);
           }
+
         } else {
+          // Valores por defecto
           state.products = [
               { id: 1, name: 'Tortilla de Maíz', price: 22, saleType: 'kg', emoji: '🫓', color: 'amber' }, 
               { id: 2, name: 'Queso Fresco', price: 45, saleType: 'pieza', emoji: '🧀', color: 'yellow' }
@@ -1106,61 +1112,55 @@
       } catch (error) { showToast("Error de conexión", "error"); }
     }
 
-   // ============ ACTUALIZACIÓN EN TIEMPO REAL (VERSIÓN BLINDADA) ============
-   function setupRealtimeUpdates() {
-        // 1. Escuchar cambios en Configuración, Productos y Almacén SOLO SI ES ADMIN
-        if (currentUser && currentUser.role === 'admin') {
-            db.collection('datos_sistema').doc('punto_de_venta').onSnapshot((doc) => {
-                if (doc.exists) {
-                    const data = doc.data();
-                    
-                    if (data.inventory) state.inventory = data.inventory;
-                    if (data.users) state.users = data.users;
-                    if (data.branch_aliases) state.branch_aliases = data.branch_aliases;
-                    
-                    if (data.products) {
-                        state.products = data.products.map(p => ({
-                            ...p,
-                            price: p.price !== undefined ? p.price : p.pricePerKg,
-                            saleType: p.saleType || 'kg'
-                        }));
-                    }
+    function setupRealtimeUpdates() {
+        // 🛑 SI NO ES ADMIN, NO HACE NADA Y NO GASTA LECTURAS 🛑
+        if (!currentUser || currentUser.role !== 'admin') return;
 
-                    renderProducts();
-                    renderAlmacen();
-                    if (document.getElementById('tab-inventario-productos').classList.contains('active')) renderInventarioProductos();
-                    renderUsersTable();
+        // 1. Escuchar cambios en Configuración, Productos y Almacén (SOLO ADMIN)
+        db.collection('datos_sistema').doc('punto_de_venta').onSnapshot((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                if (data.inventory) state.inventory = data.inventory;
+                if (data.users) state.users = data.users;
+                if (data.branch_aliases) state.branch_aliases = data.branch_aliases;
+                
+                if (data.products) {
+                    state.products = data.products.map(p => ({
+                        ...p, price: p.price !== undefined ? p.price : p.pricePerKg, saleType: p.saleType || 'kg'
+                    }));
                 }
-            });
+                renderProducts();
+                renderAlmacen();
+                if (document.getElementById('tab-inventario-productos').classList.contains('active')) renderInventarioProductos();
+                renderUsersTable();
+            }
+        });
 
-            // 2. Escuchar VENTAS en tiempo real SOLO SI ES ADMIN
-            const todayStr = new Date().toDateString();
-            db.collection('ventas')
-              .where('dateString', '==', todayStr)
-              .onSnapshot((snapshot) => {
-                  if (!selectedFilterDate || new Date(selectedFilterDate).toDateString() === todayStr) {
-                      state.salesHistory = snapshot.docs.map(doc => doc.data());
-                      state.salesHistory.sort((a, b) => a.timestamp - b.timestamp);
-                      
-                      renderSalesHistory();
-                      updateStatistics();
-                      
-                      if(document.getElementById('tab-reporte-diario').classList.contains('active')) {
-                          generateDailyReport();
-                      }
+        // 2. Escuchar VENTAS en tiempo real (SOLO ADMIN)
+        const todayStr = new Date().toDateString();
+        db.collection('ventas')
+          .where('dateString', '==', todayStr)
+          .onSnapshot((snapshot) => {
+              if (!selectedFilterDate || new Date(selectedFilterDate).toDateString() === todayStr) {
+                  state.salesHistory = snapshot.docs.map(doc => doc.data());
+                  state.salesHistory.sort((a, b) => a.timestamp - b.timestamp);
+                  
+                  renderSalesHistory();
+                  updateStatistics();
+                  
+                  if(document.getElementById('tab-reporte-diario').classList.contains('active')) {
+                      generateDailyReport();
                   }
-              });
-        }
+              }
+          });
     }
 
     async function refreshAdminData() {
         showToast('Obteniendo información en tiempo real...');
-        
         try {
-            // 👇 AQUÍ LIMPIAMOS LA MEMORIA CACHÉ PARA FORZAR LA ACTUALIZACIÓN 👇
+            // LIMPIAR CACHÉ PARA FORZAR DESCARGA FRESCA
             window.cachedWeeklyVentas = null; 
             
-            // 1. Actualizar configuración base sin tocar las ventas
             const doc = await db.collection('datos_sistema').doc('punto_de_venta').get();
             if(doc.exists) {
                 const parsed = doc.data();
@@ -1175,27 +1175,21 @@
                 }
             }
             
-            // 2. MAGIA: Ir a la carpeta independiente y descargar sólo el día que estamos viendo
             const dateToFetch = selectedFilterDate ? new Date(selectedFilterDate).toDateString() : new Date().toDateString();
             const snapshot = await db.collection('ventas').where('dateString', '==', dateToFetch).get();
             state.salesHistory = snapshot.docs.map(d => d.data());
             
-            // Ordenar los tickets por hora
             state.salesHistory.sort((a, b) => a.timestamp - b.timestamp);
             
-            // 3. Redibujar toda la pantalla con la verdad absoluta
             updateStatistics(); 
             renderSalesHistory(); 
             renderAlmacen(); 
             
-            if(document.getElementById('tab-reporte-diario').classList.contains('active')) {
-                generateDailyReport();
-            }
-            
+            if(document.getElementById('tab-reporte-diario').classList.contains('active')) { generateDailyReport(); }
             showToast('Datos actualizados correctamente');
             
         } catch(e) {
-            console.error("Error en refreshAdminData:", e);
+            console.error(e);
             showToast('Error al sincronizar datos', 'error');
         }
     }
@@ -2591,47 +2585,49 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
         document.getElementById('stat-daily-best').textContent = bestProductToday;
 
         const adminPanel = document.getElementById('admin-branches-stats');
-        if (currentUser.role === 'admin') {
-            adminPanel.classList.remove('hidden');
-            const branchesGrid = document.getElementById('branches-stats-grid');
-            const uniqueBranches = [...new Set(state.users.map(u => u.branch))].filter(b => b && b !== 'Todas');
-            
-            if (uniqueBranches.length === 0) branchesGrid.innerHTML = '<p class="text-gray-400 text-sm">No hay sucursales registradas aún.</p>';
-            else {
-                branchesGrid.innerHTML = uniqueBranches.map(bName => {
-                    const bSales = visibleSales.filter(s => s.branch === bName); 
-                    const bTotal = bSales.reduce((sum, s) => sum + s.total, 0);
-                    let bBest = 'N/A';
-                    const bProductCount = {};
-                    bSales.forEach(sale => { sale.items.forEach(item => { bProductCount[item.name] = (bProductCount[item.name] || 0) + 1; }); });
-                    const bMax = Object.entries(bProductCount).sort((a, b) => b[1] - a[1])[0];
-                    if (bMax) bBest = bMax[0];
+        
+        // 🛑 MURO DE CONTENCIÓN
+        if (currentUser.role !== 'admin') {
+            if(adminPanel) adminPanel.classList.add('hidden');
+            const chartDiv = document.getElementById('weekly-chart');
+            if(chartDiv) chartDiv.innerHTML = '<p class="text-gray-400 text-sm text-center py-8 w-full">Gráfica y desglose solo disponibles para Administrador.</p>';
+            return; // ESTE RETURN SALVA LECTURAS MASIVAS
+        }
 
-                    const usuariosSucursal = state.users
-                        .filter(u => u.branch === bName && u.role !== 'admin')
-                        .map(u => u.username)
-                        .join(', ');
-                    const encargadoTexto = usuariosSucursal ? usuariosSucursal : 'Sin asignar';
+        adminPanel.classList.remove('hidden');
+        const branchesGrid = document.getElementById('branches-stats-grid');
+        const uniqueBranches = [...new Set(state.users.map(u => u.branch))].filter(b => b && b !== 'Todas');
+        
+        if (uniqueBranches.length === 0) branchesGrid.innerHTML = '<p class="text-gray-400 text-sm">No hay sucursales registradas aún.</p>';
+        else {
+            branchesGrid.innerHTML = uniqueBranches.map(bName => {
+                const bSales = visibleSales.filter(s => s.branch === bName); 
+                const bTotal = bSales.reduce((sum, s) => sum + s.total, 0);
+                let bBest = 'N/A';
+                const bProductCount = {};
+                bSales.forEach(sale => { sale.items.forEach(item => { bProductCount[item.name] = (bProductCount[item.name] || 0) + 1; }); });
+                const bMax = Object.entries(bProductCount).sort((a, b) => b[1] - a[1])[0];
+                if (bMax) bBest = bMax[0];
 
-                    return `
-                    <div class="bg-white rounded-2xl shadow border-2 border-gray-100 p-4 sm:p-5 relative overflow-hidden transition-all hover:shadow-lg hover:border-blue-200 group">
-                        <div class="absolute -right-4 -top-4 text-5xl sm:text-6xl opacity-10 group-hover:scale-110 transition-transform">🏬</div>
-                        
-                        <div class="border-b border-gray-100 pb-2 mb-2 sm:mb-3">
-                            <h4 class="text-base sm:text-lg font-bold text-gray-800 leading-tight">${bName}</h4>
-                            <p class="text-xs text-blue-600 font-semibold mt-0.5">👤 ${encargadoTexto}</p>
-                        </div>
-                        
-                        <div class="space-y-1 sm:space-y-2 text-xs sm:text-sm">
-                            <div class="flex justify-between"><span class="text-gray-500">Ventas:</span> <span class="font-bold text-blue-600">$${bTotal.toFixed(2)}</span></div>
-                            <div class="flex justify-between"><span class="text-gray-500">Tickets:</span> <span class="font-bold text-gray-800">${bSales.length}</span></div>
-                            <div class="flex justify-between"><span class="text-gray-500">Promedio:</span> <span class="font-bold text-gray-800">$${bSales.length > 0 ? (bTotal/bSales.length).toFixed(2) : '0.00'}</span></div>
-                            <div class="flex justify-between"><span class="text-gray-500">Top:</span> <span class="font-bold text-amber-600 truncate ml-2 max-w-[100px] text-right">${bBest}</span></div>
-                        </div>
-                    </div>`;
-                }).join('');
-            }
-        } else { adminPanel.classList.add('hidden'); }
+                const usuariosSucursal = state.users.filter(u => u.branch === bName && u.role !== 'admin').map(u => u.username).join(', ');
+                const encargadoTexto = usuariosSucursal ? usuariosSucursal : 'Sin asignar';
+
+                return `
+                <div class="bg-white rounded-2xl shadow border-2 border-gray-100 p-4 sm:p-5 relative overflow-hidden transition-all hover:shadow-lg hover:border-blue-200 group">
+                    <div class="absolute -right-4 -top-4 text-5xl sm:text-6xl opacity-10 group-hover:scale-110 transition-transform">🏬</div>
+                    <div class="border-b border-gray-100 pb-2 mb-2 sm:mb-3">
+                        <h4 class="text-base sm:text-lg font-bold text-gray-800 leading-tight">${bName}</h4>
+                        <p class="text-xs text-blue-600 font-semibold mt-0.5">👤 ${encargadoTexto}</p>
+                    </div>
+                    <div class="space-y-1 sm:space-y-2 text-xs sm:text-sm">
+                        <div class="flex justify-between"><span class="text-gray-500">Ventas:</span> <span class="font-bold text-blue-600">$${bTotal.toFixed(2)}</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Tickets:</span> <span class="font-bold text-gray-800">${bSales.length}</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Promedio:</span> <span class="font-bold text-gray-800">$${bSales.length > 0 ? (bTotal/bSales.length).toFixed(2) : '0.00'}</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Top:</span> <span class="font-bold text-amber-600 truncate ml-2 max-w-[100px] text-right">${bBest}</span></div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
 
         try {
             const hace7Dias = new Date();
@@ -2639,16 +2635,14 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
             hace7Dias.setHours(0, 0, 0, 0);
             const startMs = hace7Dias.getTime();
 
-            // 🔥 AQUÍ MATAMOS AL VAMPIRO DE LECTURAS 🔥
             let ventasSemana = [];
             
-            // Verificamos si YA descargamos la semana al iniciar. Si no, la descargamos una sola vez.
+            // LA CACHÉ SALVA EL BUCLE DE DESCARGA
             if (!window.cachedWeeklyVentas) {
                 const snapshot = await db.collection('ventas').where('timestamp', '>=', startMs).get();
                 window.cachedWeeklyVentas = snapshot.docs.map(doc => doc.data());
             }
             
-            // Usamos la memoria caché y le inyectamos los tickets nuevos de hoy en vivo sin gastar lecturas
             const todayStr = new Date().toDateString();
             const ventasPasadas = window.cachedWeeklyVentas.filter(s => s.dateString !== todayStr);
             ventasSemana = [...ventasPasadas, ...visibleSales];
@@ -2661,16 +2655,13 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
             }
 
             ventasSemana.forEach(sale => {
-                if (currentUser.role === 'admin' || sale.branch === currentUser.branch) {
-                    if (ventasPorDia[sale.dateString]) {
-                        ventasPorDia[sale.dateString].total += sale.total;
-                        ventasPorDia[sale.dateString].transactions++;
-                    }
+                if (ventasPorDia[sale.dateString]) {
+                    ventasPorDia[sale.dateString].total += sale.total;
+                    ventasPorDia[sale.dateString].transactions++;
                 }
             });
 
             const last7Days = Object.values(ventasPorDia);
-
             const totalWeekly = last7Days.reduce((sum, d) => sum + d.total, 0);
             const transWeekly = last7Days.reduce((sum, d) => sum + d.transactions, 0);
             
@@ -2694,9 +2685,7 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
                     return `<div class="flex flex-col items-center gap-1 sm:gap-2"><div class="bg-gradient-to-t from-purple-500 to-pink-500 rounded-t-sm sm:rounded-t-lg transition-all hover:from-purple-600 hover:to-pink-600 w-6 sm:w-8 md:w-12 shadow-sm" style="height: ${height}px; cursor: pointer;" title="$${day.total.toFixed(2)}"></div><span class="text-[10px] sm:text-xs font-semibold text-gray-600 capitalize">${dayName}</span><span class="text-[9px] sm:text-[10px] md:text-xs text-gray-500">${kValue}</span></div>`;
                 }).join('');
             }
-        } catch (error) {
-            console.error("Error al cargar la semana:", error);
-        }
+        } catch (error) { console.error(error); }
     }
 
    // ============ TICKET Y PDF ============
