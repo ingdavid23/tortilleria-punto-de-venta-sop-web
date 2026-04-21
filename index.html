@@ -178,11 +178,13 @@
             <label class="text-xs sm:text-sm font-semibold opacity-90 mb-1 block">Producto:</label>
             <select id="quick-sale-product" onchange="updateQuickSaleButtons()" class="w-full bg-white/20 backdrop-blur text-white border-2 border-white/30 rounded-xl px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base focus:border-white focus:outline-none cursor-pointer"></select>
         </div>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
             <button onclick="quickSaleByMoney(5)" class="btn-action bg-white/20 hover:bg-white/30 backdrop-blur rounded-xl p-3 sm:p-4 text-center transition-all"> <p class="text-xl sm:text-2xl font-bold">$5</p><p id="quick-5" class="text-xs sm:text-sm opacity-80">-</p></button> 
             <button onclick="quickSaleByMoney(10)" class="btn-action bg-white/20 hover:bg-white/30 backdrop-blur rounded-xl p-3 sm:p-4 text-center transition-all"> <p class="text-xl sm:text-2xl font-bold">$10</p><p id="quick-10" class="text-xs sm:text-sm opacity-80">-</p></button> 
             <button onclick="quickSaleByMoney(20)" class="btn-action bg-white/20 hover:bg-white/30 backdrop-blur rounded-xl p-3 sm:p-4 text-center transition-all"> <p class="text-xl sm:text-2xl font-bold">$20</p><p id="quick-20" class="text-xs sm:text-sm opacity-80">-</p></button> 
             <button onclick="quickSaleByMoney(50)" class="btn-action bg-white/20 hover:bg-white/30 backdrop-blur rounded-xl p-3 sm:p-4 text-center transition-all"> <p class="text-xl sm:text-2xl font-bold">$50</p><p id="quick-50" class="text-xs sm:text-sm opacity-80">-</p></button>
+            
+            <button onclick="quickSale1Kg()" class="btn-action bg-amber-400/90 hover:bg-amber-500 backdrop-blur rounded-xl p-3 sm:p-4 text-center transition-all shadow-md text-amber-900 border border-amber-300/50"> <p class="text-xl sm:text-2xl font-black">1 Kg</p><p id="quick-1kg-price" class="text-xs sm:text-sm font-bold opacity-90">-</p></button>
         </div>
         <div class="mt-4 flex flex-col sm:flex-row gap-2 sm:gap-3">
             <input type="number" id="custom-money" placeholder="Monto a cobrar" class="flex-1 bg-white/20 backdrop-blur rounded-xl px-4 py-3 placeholder-white/60 text-white border-2 border-white/30 focus:border-white focus:outline-none text-sm sm:text-base"> 
@@ -2101,6 +2103,38 @@ function renderProducts() {
               }
           }
       });
+
+      // 👇 ACTUALIZAR PRECIO DEL BOTÓN 1 KG 👇
+      const el1kg = document.getElementById('quick-1kg-price');
+      if (el1kg) {
+          if (product.saleType === 'pieza') {
+              el1kg.textContent = 'N/A';
+          } else {
+              el1kg.textContent = `$${price.toFixed(2)}`;
+          }
+      }
+    }
+
+    // 👇 NUEVA FUNCIÓN PARA EL BOTÓN DE 1 KG EXACTO 👇
+    function quickSale1Kg() {
+      if(!currentUser || currentUser.role === 'admin') return;
+      const select = document.getElementById('quick-sale-product');
+      let product;
+      
+      if (select && select.value) { product = state.products.find(p => p.id === parseInt(select.value)); } 
+      else { product = state.products.find(p => p.name.toLowerCase().includes('maíz')) || state.products[0]; }
+      
+      if (!product) return showToast('No hay productos disponibles', 'error');
+      
+      if(product.saleType === 'pieza') {
+          return showToast('Este botón es solo para venta a granel (Kg)', 'error');
+      }
+      
+      state.cart.push({ 
+          productId: product.id, name: product.name, emoji: product.emoji, 
+          saleType: product.saleType, qty: 1000, price: product.price, total: product.price 
+      });
+      renderCart(); showToast(`Agregado 1 Kg exacto`);
     }
 
     function quickSaleCustomMoney() {
