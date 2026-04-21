@@ -246,20 +246,35 @@
      <div id="sales-history" class="space-y-2 max-h-[50vh] overflow-y-auto pr-1 sm:pr-2"></div>
      
      <div class="mt-4 bg-gray-50 rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-         <div class="p-4 flex justify-between items-center border-b border-gray-200 bg-white">
-             <span class="text-base sm:text-lg text-gray-800 font-black uppercase tracking-wider">Corte Total de Hoy:</span> 
-             <span id="daily-total" class="text-3xl sm:text-4xl font-black text-green-600 drop-shadow-sm">$0.00</span>
-         </div>
-         <div class="bg-gray-100 p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-center gap-2 text-sm sm:text-base font-semibold">
-             <div class="text-amber-800 bg-amber-100/50 px-4 py-2 rounded-lg w-full sm:w-auto flex justify-between sm:block border border-amber-200">
-                 🫓 Tortillas/Masa: <span id="daily-total-tortillas" class="font-black text-amber-600 ml-1">$0.00</span>
-             </div>
-             
-             <div onclick="openOtrosProductosDetalleModal()" class="text-blue-800 bg-blue-100/50 hover:bg-blue-200 hover:shadow-md cursor-pointer transition-all px-4 py-2 rounded-lg w-full sm:w-auto flex justify-between sm:block border border-blue-300 shadow-sm" title="Ver desglose detallado">
-                📦 Otros Productos: <span id="daily-total-productos" class="font-black text-blue-700 ml-1">$0.00</span>
+        <div class="p-4 flex justify-between items-center border-b border-gray-200 bg-white">
+            <span class="text-base sm:text-lg text-gray-800 font-black uppercase tracking-wider">Corte Total de Hoy:</span> 
+            <span id="daily-total" class="text-3xl sm:text-4xl font-black text-green-600 drop-shadow-sm">$0.00</span>
+        </div>
+        
+        <div class="bg-gray-100 p-2 sm:p-4 grid grid-cols-2 lg:grid-cols-4 gap-2 text-xs sm:text-sm font-semibold">
+            
+            <div class="text-amber-800 bg-amber-100/60 p-2 sm:p-3 rounded-lg border border-amber-200 flex flex-col justify-center items-center text-center">
+                <span>🫓 Masa/Tortilla</span>
+                <span id="daily-total-tortillas" class="font-black text-amber-600 text-base sm:text-lg">$0.00</span>
             </div>
-         </div>
-     </div>
+            
+            <div class="text-red-800 bg-red-100/60 p-2 sm:p-3 rounded-lg border border-red-200 flex flex-col justify-center items-center text-center">
+                <span>🔴 Prod. Rojos</span>
+                <span id="daily-total-rojos" class="font-black text-red-600 text-base sm:text-lg">$0.00</span>
+            </div>
+            
+            <div class="text-blue-800 bg-blue-100/60 p-2 sm:p-3 rounded-lg border border-blue-200 flex flex-col justify-center items-center text-center">
+                <span>🔵 Prod. Azules</span>
+                <span id="daily-total-azules" class="font-black text-blue-600 text-base sm:text-lg">$0.00</span>
+            </div>
+            
+            <div onclick="openOtrosProductosDetalleModal()" class="text-gray-800 bg-white hover:bg-gray-50 cursor-pointer transition-all p-2 sm:p-3 rounded-lg border border-gray-300 shadow-sm flex flex-col justify-center items-center text-center group" title="Ver desglose detallado">
+                <span class="group-hover:text-indigo-600 transition-colors">📦 Otros (Click)</span>
+                <span id="daily-total-productos" class="font-black text-gray-700 group-hover:text-indigo-600 text-base sm:text-lg">$0.00</span>
+            </div>
+
+        </div>
+        </div>
      </section>
 </div>
  <div id="tab-almacen" class="tab-content hidden">
@@ -2411,18 +2426,28 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
           </div>
         </div>`).reverse().join(''); 
         
-      // 👇 NUEVO: CÁLCULO DEL DESGLOSE DE VENTAS 👇
-      let totalTortillas = 0;
-      let totalProductos = 0;
+     // 👇 NUEVO: CÁLCULO DEL DESGLOSE DE VENTAS EN 4 CATEGORÍAS 👇
+     let totalTortillas = 0;
+      let totalRojos = 0;
+      let totalAzules = 0;
+      let totalOtros = 0;
       const totalDia = visibleSales.reduce((sum, s) => sum + s.total, 0);
 
       // Recorremos cada ticket y cada artículo adentro del ticket
       visibleSales.forEach(sale => {
           sale.items.forEach(item => {
+              // Buscamos el producto en el catálogo para ver qué color le asignaste
+              const prodRef = state.products.find(p => p.id === item.productId || p.name === item.name);
+              const colorProd = prodRef ? prodRef.color : '';
+
               if (item.saleType === 'kg') {
-                  totalTortillas += item.total; // Si es por Kg, va a Tortilla/Masa
+                  totalTortillas += item.total; // Tortillas y Masa
+              } else if (colorProd === 'red') {
+                  totalRojos += item.total;     // Productos marcados en Rojo
+              } else if (colorProd === 'blue') {
+                  totalAzules += item.total;    // Productos marcados en Azul
               } else {
-                  totalProductos += item.total; // Si es pieza/litro, va a Otros Productos
+                  totalOtros += item.total;     // Cualquier otro color (Amarillo, Verde, etc.)
               }
           });
       });
@@ -2430,7 +2455,9 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
       // Imprimimos los resultados en pantalla
       document.getElementById('daily-total').textContent = `$${totalDia.toFixed(2)}`;
       if (document.getElementById('daily-total-tortillas')) document.getElementById('daily-total-tortillas').textContent = `$${totalTortillas.toFixed(2)}`;
-      if (document.getElementById('daily-total-productos')) document.getElementById('daily-total-productos').textContent = `$${totalProductos.toFixed(2)}`;
+      if (document.getElementById('daily-total-rojos')) document.getElementById('daily-total-rojos').textContent = `$${totalRojos.toFixed(2)}`;
+      if (document.getElementById('daily-total-azules')) document.getElementById('daily-total-azules').textContent = `$${totalAzules.toFixed(2)}`;
+      if (document.getElementById('daily-total-productos')) document.getElementById('daily-total-productos').textContent = `$${totalOtros.toFixed(2)}`;
 
       // 👇 AGREGA ESTO PARA QUE LA VENTANA EMERGENTE SE ACTUALICE EN VIVO 👇
       const modalOtros = document.getElementById('otros-productos-modal');
