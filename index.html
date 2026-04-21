@@ -1003,6 +1003,11 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    db.enablePersistence()
+      .catch((err) => {
+          console.error("Error al habilitar caché:", err);
+      });
+
 
    // ============ ESTADO GLOBAL ============
    let state = {
@@ -1129,28 +1134,29 @@
             }
         });
 
-        // 👇 2. NUEVO: ESCUCHAR VENTAS EN TIEMPO REAL 👇
-        const todayStr = new Date().toDateString();
-        db.collection('ventas')
-          .where('dateString', '==', todayStr)
-          .onSnapshot((snapshot) => {
-              // Solo actualizamos la tabla automáticamente si el usuario NO está viendo una fecha del pasado en el calendario
-              if (!selectedFilterDate || new Date(selectedFilterDate).toDateString() === todayStr) {
-                  // Descargamos y ordenamos los tickets
-                  state.salesHistory = snapshot.docs.map(doc => doc.data());
-                  state.salesHistory.sort((a, b) => a.timestamp - b.timestamp);
-                  
-                  // Si el usuario ya inició sesión, redibujamos las estadísticas y la tabla
-                  if (currentUser) {
+        // 👇 2. CORRECCIÓN: ESCUCHAR VENTAS SOLO SI ES ADMIN 👇
+        if (currentUser && currentUser.role === 'admin') {
+            const todayStr = new Date().toDateString();
+            db.collection('ventas')
+              .where('dateString', '==', todayStr)
+              .onSnapshot((snapshot) => {
+                  // Solo actualizamos la tabla automáticamente si el usuario NO está viendo una fecha del pasado en el calendario
+                  if (!selectedFilterDate || new Date(selectedFilterDate).toDateString() === todayStr) {
+                      // Descargamos y ordenamos los tickets
+                      state.salesHistory = snapshot.docs.map(doc => doc.data());
+                      state.salesHistory.sort((a, b) => a.timestamp - b.timestamp);
+                      
+                      // Redibujamos las estadísticas y la tabla
                       renderSalesHistory();
                       updateStatistics();
+                      
                       // Si tiene abierto el reporte diario, que se actualice solo también
                       if(document.getElementById('tab-reporte-diario').classList.contains('active')) {
                           generateDailyReport();
                       }
                   }
-              }
-          });
+              });
+        }
         // 👆 ------------------------------------------ 👆
     }
 
@@ -3522,11 +3528,11 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
 
     async function init() { 
         await loadState(); 
-        setupRealtimeUpdates(); 
+        checkAuth(); // <--- VERIFICA QUIÉN ERES PRIMERO
+        setupRealtimeUpdates(); // <--- LUEGO ACTIVA EL TIEMPO REAL
         setInterval(updateClock, 1000); 
         updateClock(); 
-        checkAuth(); 
-        enableTabsScroll(); // <--- Aquí activamos el movimiento del mouse
+        enableTabsScroll(); 
     }
 
     // ============ FUNCIONES PARA EDITAR STOCK (LÁPIZ AZUL) ============
