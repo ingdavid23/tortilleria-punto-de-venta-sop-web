@@ -1106,58 +1106,51 @@
       } catch (error) { showToast("Error de conexión", "error"); }
     }
 
-   // ============ ACTUALIZACIÓN EN TIEMPO REAL ============
+   // ============ ACTUALIZACIÓN EN TIEMPO REAL (VERSIÓN BLINDADA) ============
    function setupRealtimeUpdates() {
-        // 1. Escuchar cambios en Configuración, Productos y Almacén
-        db.collection('datos_sistema').doc('punto_de_venta').onSnapshot((doc) => {
-            if (doc.exists) {
-                const data = doc.data();
-                
-                if (data.inventory) state.inventory = data.inventory;
-                if (data.users) state.users = data.users;
-                if (data.branch_aliases) state.branch_aliases = data.branch_aliases;
-                
-                if (data.products) {
-                    state.products = data.products.map(p => ({
-                        ...p,
-                        price: p.price !== undefined ? p.price : p.pricePerKg,
-                        saleType: p.saleType || 'kg'
-                    }));
-                }
+        // 1. Escuchar cambios en Configuración, Productos y Almacén SOLO SI ES ADMIN
+        if (currentUser && currentUser.role === 'admin') {
+            db.collection('datos_sistema').doc('punto_de_venta').onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    
+                    if (data.inventory) state.inventory = data.inventory;
+                    if (data.users) state.users = data.users;
+                    if (data.branch_aliases) state.branch_aliases = data.branch_aliases;
+                    
+                    if (data.products) {
+                        state.products = data.products.map(p => ({
+                            ...p,
+                            price: p.price !== undefined ? p.price : p.pricePerKg,
+                            saleType: p.saleType || 'kg'
+                        }));
+                    }
 
-                if (currentUser) {
                     renderProducts();
                     renderAlmacen();
                     if (document.getElementById('tab-inventario-productos').classList.contains('active')) renderInventarioProductos();
-                    if (currentUser.role === 'admin') renderUsersTable();
+                    renderUsersTable();
                 }
-            }
-        });
+            });
 
-        // 👇 2. CORRECCIÓN: ESCUCHAR VENTAS SOLO SI ES ADMIN 👇
-        if (currentUser && currentUser.role === 'admin') {
+            // 2. Escuchar VENTAS en tiempo real SOLO SI ES ADMIN
             const todayStr = new Date().toDateString();
             db.collection('ventas')
               .where('dateString', '==', todayStr)
               .onSnapshot((snapshot) => {
-                  // Solo actualizamos la tabla automáticamente si el usuario NO está viendo una fecha del pasado en el calendario
                   if (!selectedFilterDate || new Date(selectedFilterDate).toDateString() === todayStr) {
-                      // Descargamos y ordenamos los tickets
                       state.salesHistory = snapshot.docs.map(doc => doc.data());
                       state.salesHistory.sort((a, b) => a.timestamp - b.timestamp);
                       
-                      // Redibujamos las estadísticas y la tabla
                       renderSalesHistory();
                       updateStatistics();
                       
-                      // Si tiene abierto el reporte diario, que se actualice solo también
                       if(document.getElementById('tab-reporte-diario').classList.contains('active')) {
                           generateDailyReport();
                       }
                   }
               });
         }
-        // 👆 ------------------------------------------ 👆
     }
 
     async function refreshAdminData() {
@@ -3535,13 +3528,18 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
 
     async function init() { 
         await loadState(); 
-        checkAuth(); // <--- VERIFICA QUIÉN ERES PRIMERO
-        setupRealtimeUpdates(); // <--- LUEGO ACTIVA EL TIEMPO REAL
+        
+        // Primero verificamos si hay alguien logueado
+        checkAuth(); 
+        
+        // El setupRealtimeUpdates AHORA ya tiene adentro su propio "if (currentUser.role === 'admin')", 
+        // así que si es un cajero, esta función simplemente no hará NADA y no gastará lecturas.
+        setupRealtimeUpdates(); 
+        
         setInterval(updateClock, 1000); 
         updateClock(); 
         enableTabsScroll(); 
     }
-
     // ============ FUNCIONES PARA EDITAR STOCK (LÁPIZ AZUL) ============
     function openEditarStockModal(productId, branchName) {
         const p = state.products.find(prod => prod.id === productId);
