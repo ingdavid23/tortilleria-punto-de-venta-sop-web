@@ -2227,30 +2227,41 @@ function renderProducts() {
       else { cd.classList.add('hidden'); }
     }
 
+    // ============ PROCESAR VENTA (CON CANDADO ANTI-DOBLE CLIC) ============
+    let isProcessingSale = false; // Variable global para el candado
+
     async function completeSale() {
+      if (isProcessingSale) return; // Si el candado está cerrado, ignoramos clics extra
       if (state.cart.length === 0) return showToast('Carrito vacío', 'error');
-      const total = state.cart.reduce((sum, item) => sum + item.total, 0);
       
-      const kilosVendidos = state.cart.reduce((sum, item) => {
-          if (item.saleType === 'kg') return sum + (item.qty / 1000);
-          return sum; 
-      }, 0);
+      // 1. Cerramos el candado y damos feedback visual
+      isProcessingSale = true; 
+      const btnCompletar = document.querySelector('button[onclick="completeSale()"]');
+      if (btnCompletar) btnCompletar.innerHTML = '⏳ Procesando...';
+      
+      try {
+          const total = state.cart.reduce((sum, item) => sum + item.total, 0);
+          
+          const kilosVendidos = state.cart.reduce((sum, item) => {
+              if (item.saleType === 'kg') return sum + (item.qty / 1000);
+              return sum; 
+          }, 0);
 
-      // DESCUENTO AUTOMÁTICO E INTELIGENTE DE HARINA
-      if (kilosVendidos > 0) {
-          let inv = state.inventory[currentUser.branch];
-          if (!inv) {
-              inv = { maseca: 0, blanca: 0, amarilla: 0, fardo: 0, yieldRemainingKg: 0 };
-              state.inventory[currentUser.branch] = inv;
-          }
+          // DESCUENTO AUTOMÁTICO E INTELIGENTE DE HARINA
+          if (kilosVendidos > 0) {
+              let inv = state.inventory[currentUser.branch];
+              if (!inv) {
+                  inv = { maseca: 0, blanca: 0, amarilla: 0, fardo: 0, yieldRemainingKg: 0 };
+                  state.inventory[currentUser.branch] = inv;
+              }
 
-          let bultosNecesarios = kilosVendidos / 41;
-          const totalBultosDisponibles = (inv.maseca || 0) + (inv.blanca || 0) + (inv.amarilla || 0) + (inv.fardo || 0);
+              let bultosNecesarios = kilosVendidos / 41;
+              const totalBultosDisponibles = (inv.maseca || 0) + (inv.blanca || 0) + (inv.amarilla || 0) + (inv.fardo || 0);
 
-          if (totalBultosDisponibles < bultosNecesarios) {
-              showToast(`❌ Venta denegada: Inventario global insuficiente`, 'error');
-              
-              const mensajeAlerta = `*ALERTA CRÍTICA DE INVENTARIO* 🚨
+              if (totalBultosDisponibles < bultosNecesarios) {
+                  showToast(`❌ Venta denegada: Inventario global insuficiente`, 'error');
+                  
+                  const mensajeAlerta = `*ALERTA CRÍTICA DE INVENTARIO* 🚨
 Sucursal: ${currentUser.branch}
 Usuario: ${currentUser.username}
 Hora: ${new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
@@ -2261,88 +2272,91 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
 
 ⚠️ *VENTA BLOQUEADA.* Envía harina urgentemente.`;
 
-              enviarWhatsAppOficial(mensajeAlerta);
-              return;
-          }
-
-          let remainingToDeduct = bultosNecesarios;
-          const flourTypes = ['maseca', 'blanca', 'amarilla', 'fardo'];
-
-          while (remainingToDeduct > 0.0001) {
-              flourTypes.sort((a, b) => (inv[b] || 0) - (inv[a] || 0));
-              let highestFlour = flourTypes[0];
-
-              if (inv[highestFlour] >= remainingToDeduct) {
-                  inv[highestFlour] -= remainingToDeduct;
-                  remainingToDeduct = 0; 
-              } else {
-                  remainingToDeduct -= inv[highestFlour];
-                  inv[highestFlour] = 0;
+                  enviarWhatsAppOficial(mensajeAlerta);
+                  return; // Al hacer 'return' aquí, el código salta directo al 'finally' de abajo
               }
+
+              let remainingToDeduct = bultosNecesarios;
+              const flourTypes = ['maseca', 'blanca', 'amarilla', 'fardo'];
+
+              while (remainingToDeduct > 0.0001) {
+                  flourTypes.sort((a, b) => (inv[b] || 0) - (inv[a] || 0));
+                  let highestFlour = flourTypes[0];
+
+                  if (inv[highestFlour] >= remainingToDeduct) {
+                      inv[highestFlour] -= remainingToDeduct;
+                      remainingToDeduct = 0; 
+                  } else {
+                      remainingToDeduct -= inv[highestFlour];
+                      inv[highestFlour] = 0;
+                  }
+              }
+              inv.yieldRemainingKg -= kilosVendidos;
           }
-          inv.yieldRemainingKg -= kilosVendidos;
-      }
 
-      const now = new Date();
-      
-      const itemsLimpios = state.cart.map(item => {
-          return {
-              productId: item.productId,
-              name: item.name,
-              emoji: item.emoji,
-              saleType: item.saleType,
-              qty: item.qty,
-              price: item.price,
-              total: item.total
+          const now = new Date();
+          
+          const itemsLimpios = state.cart.map(item => {
+              return {
+                  productId: item.productId,
+                  name: item.name,
+                  emoji: item.emoji,
+                  saleType: item.saleType,
+                  qty: item.qty,
+                  price: item.price,
+                  total: item.total
+              };
+          });
+          
+          const newSale = {
+            time: now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+            total: total, 
+            items: itemsLimpios, 
+            timestamp: now.getTime(),
+            user: currentUser.username, 
+            branch: currentUser.branch,
+            dateString: now.toDateString()
           };
-      });
-      
-      const newSale = {
-        time: now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
-        total: total, 
-        items: itemsLimpios, 
-        timestamp: now.getTime(),
-        user: currentUser.username, 
-        branch: currentUser.branch,
-        dateString: now.toDateString()
-      };
 
-      try {
-        await db.collection('ventas').doc(newSale.timestamp.toString()).set(newSale);
+          await db.collection('ventas').doc(newSale.timestamp.toString()).set(newSale);
 
-        // DESCUENTO AUTOMÁTICO DE PIEZAS VENDIDAS DE ESA SUCURSAL
-        state.cart.forEach(item => {
-            if (item.saleType === 'pieza') {
-                const pIndex = state.products.findIndex(p => p.id === item.productId);
-                if (pIndex !== -1) {
-                    let p = state.products[pIndex];
-                    if(!p.stocks) p.stocks = {};
-                    let stockActual = p.stocks[currentUser.branch];
-                    if (stockActual === undefined) stockActual = p.stock || 0;
-                    
-                    p.stocks[currentUser.branch] = stockActual - item.qty;
-                }
-            }
-        });
+          // DESCUENTO AUTOMÁTICO DE PIEZAS VENDIDAS DE ESA SUCURSAL
+          state.cart.forEach(item => {
+              if (item.saleType === 'pieza') {
+                  const pIndex = state.products.findIndex(p => p.id === item.productId);
+                  if (pIndex !== -1) {
+                      let p = state.products[pIndex];
+                      if(!p.stocks) p.stocks = {};
+                      let stockActual = p.stocks[currentUser.branch];
+                      if (stockActual === undefined) stockActual = p.stock || 0;
+                      
+                      p.stocks[currentUser.branch] = stockActual - item.qty;
+                  }
+              }
+          });
 
-        await db.collection('datos_sistema').doc('punto_de_venta').set({
-            inventory: state.inventory,
-            products: state.products 
-        }, { merge: true });
+          await db.collection('datos_sistema').doc('punto_de_venta').set({
+              inventory: state.inventory,
+              products: state.products 
+          }, { merge: true });
 
-        state.salesHistory.push(newSale); 
-        clearCart(); 
-        const flourSelect = document.getElementById('sale-flour-type');
-        if (flourSelect) flourSelect.value = ''; 
-        
-        renderSalesHistory(); 
-        renderAlmacen(); 
-        updateStatistics();
-        showToast(`Venta procesada: $${total.toFixed(2)}`);
-        
+          state.salesHistory.push(newSale); 
+          clearCart(); 
+          const flourSelect = document.getElementById('sale-flour-type');
+          if (flourSelect) flourSelect.value = ''; 
+          
+          renderSalesHistory(); 
+          renderAlmacen(); 
+          updateStatistics();
+          showToast(`Venta procesada: $${total.toFixed(2)}`);
+          
       } catch (error) { 
           console.error(error);
           showToast("Error al procesar venta en la red", "error"); 
+      } finally {
+          // 2. PASE LO QUE PASE (éxito o error), abrimos el candado y restauramos el botón
+          isProcessingSale = false; 
+          if (btnCompletar) btnCompletar.innerHTML = '✅ Completar Venta';
       }
     }
 
