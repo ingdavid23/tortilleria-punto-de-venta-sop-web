@@ -2559,7 +2559,14 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
               products: state.products 
           }, { merge: true });
 
-          state.salesHistory.push(newSale); 
+          // 👇 PARCHE: EVITAR DUPLICADO VISUAL (0 CONSUMO) 👇
+          // Revisamos si el Radio ya dibujó esta venta milisegundos antes. 
+          // Si no está, la agregamos. Si ya está, la ignoramos.
+          if (!state.salesHistory.some(s => s.timestamp === newSale.timestamp)) {
+              state.salesHistory.push(newSale);
+          }
+          // 👆 ------------------------------------------- 👆
+
           clearCart(); 
           const flourSelect = document.getElementById('sale-flour-type');
           if (flourSelect) flourSelect.value = ''; 
