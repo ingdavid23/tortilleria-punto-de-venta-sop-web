@@ -984,11 +984,20 @@
         }
 
         await saveState();
-        renderProducts();
-        if(document.getElementById('tab-inventario-productos').classList.contains('active')) renderInventarioProductos();
-        closeProductModal();
-        showToast('Producto guardado correctamente');
-    }
+
+// 👇 NUEVO: TOCAR LA CAMPANITA PARA AVISAR A LOS CAJEROS 👇
+try {
+    await db.collection('datos_sistema').doc('campanita_precios').set({
+        ultimaActualizacion: Date.now()
+    });
+} catch(e) { console.error("Error al tocar campana", e); }
+// 👆 ---------------------------------------------------- 👆
+
+renderProducts();
+if(document.getElementById('tab-inventario-productos').classList.contains('active')) renderInventarioProductos();
+closeProductModal();
+showToast('Producto guardado correctamente');
+}
 
     function editProduct(id) {
         openProductModal(id);
@@ -1130,46 +1139,74 @@
     }
 
     function setupRealtimeUpdates() {
-        // 🛑 SI NO ES ADMIN, NO HACE NADA Y NO GASTA LECTURAS 🛑
-        if (!currentUser || currentUser.role !== 'admin') return;
-
-        // 1. Escuchar cambios en Configuración, Productos y Almacén (SOLO ADMIN)
-        db.collection('datos_sistema').doc('punto_de_venta').onSnapshot((doc) => {
-            if (doc.exists) {
-                const data = doc.data();
-                if (data.inventory) state.inventory = data.inventory;
-                if (data.users) state.users = data.users;
-                if (data.branch_aliases) state.branch_aliases = data.branch_aliases;
-                
-                if (data.products) {
-                    state.products = data.products.map(p => ({
-                        ...p, price: p.price !== undefined ? p.price : p.pricePerKg, saleType: p.saleType || 'kg'
-                    }));
+        // =========================================================
+        // 1. SI ERES ADMIN: Escuchas TODO en vivo (Tu código actual)
+        // =========================================================
+        if (currentUser && currentUser.role === 'admin') {
+            db.collection('datos_sistema').doc('punto_de_venta').onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    if (data.inventory) state.inventory = data.inventory;
+                    if (data.users) state.users = data.users;
+                    if (data.branch_aliases) state.branch_aliases = data.branch_aliases;
+                    
+                    if (data.products) {
+                        state.products = data.products.map(p => ({
+                            ...p, price: p.price !== undefined ? p.price : p.pricePerKg, saleType: p.saleType || 'kg'
+                        }));
+                    }
+                    renderProducts();
+                    renderAlmacen();
+                    if (document.getElementById('tab-inventario-productos').classList.contains('active')) renderInventarioProductos();
+                    renderUsersTable();
                 }
-                renderProducts();
-                renderAlmacen();
-                if (document.getElementById('tab-inventario-productos').classList.contains('active')) renderInventarioProductos();
-                renderUsersTable();
-            }
-        });
+            });
 
-        // 2. Escuchar VENTAS en tiempo real (SOLO ADMIN)
-        const todayStr = new Date().toDateString();
-        db.collection('ventas')
-          .where('dateString', '==', todayStr)
-          .onSnapshot((snapshot) => {
-              if (!selectedFilterDate || new Date(selectedFilterDate).toDateString() === todayStr) {
-                  state.salesHistory = snapshot.docs.map(doc => doc.data());
-                  state.salesHistory.sort((a, b) => a.timestamp - b.timestamp);
-                  
-                  renderSalesHistory();
-                  updateStatistics();
-                  
-                  if(document.getElementById('tab-reporte-diario').classList.contains('active')) {
-                      generateDailyReport();
-                  }
-              }
-          });
+            const todayStr = new Date().toDateString();
+            db.collection('ventas').where('dateString', '==', todayStr).onSnapshot((snapshot) => {
+                if (!selectedFilterDate || new Date(selectedFilterDate).toDateString() === todayStr) {
+                    state.salesHistory = snapshot.docs.map(doc => doc.data());
+                    state.salesHistory.sort((a, b) => a.timestamp - b.timestamp);
+                    renderSalesHistory();
+                    updateStatistics();
+                    if(document.getElementById('tab-reporte-diario').classList.contains('active')) { generateDailyReport(); }
+                }
+            });
+        } 
+        // =========================================================
+        // 2. SI ERES CAJERO: Escuchas SOLO la campanita de precios
+        // =========================================================
+        else if (currentUser && currentUser.role === 'empleado') {
+            let primeraCarga = true; // Para no descargar datos repetidos al iniciar sesión
+            
+            db.collection('datos_sistema').doc('campanita_precios').onSnapshot(async (doc) => {
+                // Ignoramos el primer toque al abrir el sistema, porque ya cargamos los datos
+                if (primeraCarga) {
+                    primeraCarga = false; 
+                    return; 
+                }
+                
+                // ¡LA CAMPANA SONÓ! Alguien editó un producto. Descargamos el catálogo en silencio.
+                try {
+                    const sysDoc = await db.collection('datos_sistema').doc('punto_de_venta').get({ source: 'server' });
+                    if (sysDoc.exists) {
+                        const data = sysDoc.data();
+                        if (data.products) {
+                            state.products = data.products.map(p => ({
+                                ...p, price: p.price !== undefined ? p.price : p.pricePerKg, saleType: p.saleType || 'kg'
+                            }));
+                            
+                            // Actualizamos la pantalla del cajero
+                            renderProducts(); 
+                            if(typeof updateQuickSaleButtons === 'function') updateQuickSaleButtons();
+                            
+                            // Le avisamos al cajero que hubo un cambio
+                            showToast('🔄 Lista de precios actualizada por el Administrador', 'success');
+                        }
+                    }
+                } catch(e) { console.error("Error actualizando precios en vivo:", e); }
+            });
+        }
     }
 
     async function refreshAdminData() {
