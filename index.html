@@ -1152,38 +1152,46 @@ showToast('Producto guardado correctamente');
       } catch (error) { showToast("Error de conexión", "error"); }
     }
 
-    // ============ ACTUALIZACIÓN EN TIEMPO REAL (VERSIÓN CAMPANITA INTELIGENTE) ============
+    // ============ ACTUALIZACIÓN EN TIEMPO REAL (CERO COSTOS) ============
+    // ============ ACTUALIZACIÓN EN TIEMPO REAL (VERSIÓN CERO COSTOS + RADIO) ============
     function setupRealtimeUpdates() {
+        
+        // =========================================================
+        // 1. MODO ADMINISTRADOR: Escucha el Radio de Ventas
+        // =========================================================
         if (currentUser && currentUser.role === 'admin') {
-            db.collection('datos_sistema').doc('punto_de_venta').onSnapshot((doc) => {
-                if (doc.exists) {
-                    const data = doc.data();
-                    if (data.inventory) state.inventory = data.inventory;
-                    if (data.users) state.users = data.users;
-                    if (data.branch_aliases) state.branch_aliases = data.branch_aliases;
-                    if (data.products) {
-                        state.products = data.products.map(p => ({
-                            ...p, price: p.price !== undefined ? p.price : p.pricePerKg, saleType: p.saleType || 'kg'
-                        }));
-                    }
-                    renderProducts();
-                    renderAlmacen();
-                    if (document.getElementById('tab-inventario-productos').classList.contains('active')) renderInventarioProductos();
-                    renderUsersTable();
-                }
-            });
-
-            const todayStr = new Date().toDateString();
-            db.collection('ventas').where('dateString', '==', todayStr).onSnapshot((snapshot) => {
-                if (!selectedFilterDate || new Date(selectedFilterDate).toDateString() === todayStr) {
-                    state.salesHistory = snapshot.docs.map(doc => doc.data());
-                    state.salesHistory.sort((a, b) => a.timestamp - b.timestamp);
-                    renderSalesHistory();
-                    updateStatistics();
-                    if(document.getElementById('tab-reporte-diario').classList.contains('active')) { generateDailyReport(); }
-                }
-            });
+             let primeraCargaAdmin = true;
+             
+             // Escuchamos SOLO el minúsculo documento del radio (Costo: 1 lectura por venta)
+             db.collection('datos_sistema').doc('radio_admin').onSnapshot((doc) => {
+                 if (primeraCargaAdmin) { primeraCargaAdmin = false; return; }
+                 if (!doc.exists) return;
+                 
+                 const info = doc.data();
+                 
+                 // ¡LLEGÓ UNA VENTA NUEVA EN VIVO!
+                 if (info.accion === 'nueva_venta' && info.venta) {
+                     // Verificamos que sea de hoy y que no la tengamos ya repetida
+                     const isToday = info.venta.dateString === new Date().toDateString();
+                     const isNew = !state.salesHistory.some(s => s.timestamp === info.venta.timestamp);
+                     
+                     if (isToday && isNew) {
+                         // Metemos el ticket directo a la memoria y actualizamos la pantalla
+                         state.salesHistory.push(info.venta);
+                         state.salesHistory.sort((a, b) => a.timestamp - b.timestamp);
+                         
+                         // Recalcula colores y totales al instante
+                         renderSalesHistory(); 
+                         updateStatistics();
+                         showToast('💰 ¡Nueva venta registrada en la sucursal!', 'success');
+                     }
+                 }
+             });
         } 
+        
+        // =========================================================
+        // 2. MODO CAJERO: Escucha la Campanita de Precios
+        // =========================================================
         else if (currentUser && currentUser.role === 'empleado') {
             let primeraCarga = true; 
             
@@ -1193,16 +1201,13 @@ showToast('Producto guardado correctamente');
                 
                 const info = doc.data();
                 
-                // 👇 1. SI LA CAMPANA DICE QUE SE BORRÓ UNA VENTA 👇
                 if (info.accion === 'delete_sale') {
-                    // Borramos el ticket de la memoria local instantáneamente (0 Lecturas extra)
                     state.salesHistory = state.salesHistory.filter(s => s.timestamp !== info.id);
                     renderSalesHistory(); 
                     updateStatistics();
                     showToast('🗑️ Un administrador eliminó un ticket', 'error');
                 }
                 
-                // 👇 2. SI LA CAMPANA DICE QUE SE BORRÓ UN PRODUCTO 👇
                 if (info.accion === 'delete_product') {
                     state.products = state.products.filter(p => p.id !== info.id);
                     renderProducts();
@@ -1210,7 +1215,6 @@ showToast('Producto guardado correctamente');
                     showToast('🗑️ Un producto fue retirado del catálogo', 'error');
                 }
 
-                // 3. Siempre descargamos el catálogo de fondo para tener el stock restaurado o precios nuevos
                 try {
                     const sysDoc = await db.collection('datos_sistema').doc('punto_de_venta').get({ source: 'server' });
                     if (sysDoc.exists) {
@@ -1232,12 +1236,15 @@ showToast('Producto guardado correctamente');
     async function refreshAdminData() {
         showToast('Obteniendo información en tiempo real...');
         try {
-            // LIMPIAR CACHÉ PARA FORZAR DESCARGA FRESCA
+            // LIMPIAR CACHÉ PARA FORZAR DESCARGA FRESCA DE GRÁFICA SEMANAL
             window.cachedWeeklyVentas = null; 
             
-            const doc = await db.collection('datos_sistema').doc('punto_de_venta').get();
-            if(doc.exists) {
-                const parsed = doc.data();
+            // 👇 PARCHE 2: DESCARGA EFICIENTE 👇
+            // Descargamos el catálogo con "source: server" para asegurar que esté fresco
+            // pero SIN usar onSnapshot para no dejar la tubería abierta.
+            const docRef = await db.collection('datos_sistema').doc('punto_de_venta').get({ source: 'server' });
+            if(docRef.exists) {
+                const parsed = docRef.data();
                 if (parsed.inventory) state.inventory = parsed.inventory;
                 if (parsed.users) state.users = parsed.users;
                 if (parsed.products) {
@@ -1250,7 +1257,7 @@ showToast('Producto guardado correctamente');
             }
             
             const dateToFetch = selectedFilterDate ? new Date(selectedFilterDate).toDateString() : new Date().toDateString();
-            const snapshot = await db.collection('ventas').where('dateString', '==', dateToFetch).get();
+            const snapshot = await db.collection('ventas').where('dateString', '==', dateToFetch).get({ source: 'server' });
             state.salesHistory = snapshot.docs.map(d => d.data());
             
             state.salesHistory.sort((a, b) => a.timestamp - b.timestamp);
@@ -1356,31 +1363,31 @@ showToast('Producto guardado correctamente');
     }
 
     async function startApp() {
-        // Quitamos la pantalla de login y ponemos la de carga
         document.getElementById('login-screen').classList.add('hidden'); 
         document.getElementById('login-screen').classList.remove('flex');
         
         const loadingScreen = document.getElementById('loading-screen');
         loadingScreen.classList.remove('hidden');
-        loadingScreen.querySelector('h2').textContent = "Descargando ventas del día...";
+        loadingScreen.querySelector('h2').textContent = "Descargando datos...";
         
         applyRolePermissions(); 
         
-        // MAGIA: Descargar SÓLO las ventas de hoy (Ultra rápido y sin saturar memoria)
-        try {
-            const todayStr = new Date().toDateString();
-            const snapshot = await db.collection('ventas').where('dateString', '==', todayStr).get();
-            state.salesHistory = snapshot.docs.map(doc => doc.data());
-            
-            // Ordenar los tickets por hora para que no salgan revueltos
-            state.salesHistory.sort((a, b) => a.timestamp - b.timestamp);
-            
-        } catch (error) {
-            console.error("Error cargando ventas:", error);
-            state.salesHistory = [];
+        // 👇 PARCHE 1: EVITAR DOBLE DESCARGA 👇
+        // Solo el Admin necesita descargar todo el historial del día aquí.
+        // El empleado descargará sus propios tickets a través de su 'Campanita'.
+        if (currentUser && currentUser.role === 'admin') {
+            try {
+                const todayStr = new Date().toDateString();
+                const snapshot = await db.collection('ventas').where('dateString', '==', todayStr).get();
+                state.salesHistory = snapshot.docs.map(doc => doc.data());
+                state.salesHistory.sort((a, b) => a.timestamp - b.timestamp);
+            } catch (error) {
+                console.error("Error cargando ventas:", error);
+                state.salesHistory = [];
+            }
         }
+        // 👆 -------------------------------- 👆
 
-        // Quitamos la pantalla de carga y mostramos el sistema
         loadingScreen.classList.add('hidden');
         document.getElementById('app').classList.remove('hidden');
         
@@ -2448,21 +2455,32 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
       };
 
       await db.collection('ventas').doc(newSale.timestamp.toString()).set(newSale);
+      
 
-      // DESCUENTO AUTOMÁTICO DE PIEZAS VENDIDAS DE ESA SUCURSAL
-      state.cart.forEach(item => {
-          if (item.saleType === 'pieza') {
-              const pIndex = state.products.findIndex(p => p.id === item.productId);
-              if (pIndex !== -1) {
-                  let p = state.products[pIndex];
-                  if(!p.stocks) p.stocks = {};
-                  let stockActual = p.stocks[currentUser.branch];
-                  if (stockActual === undefined) stockActual = p.stock || 0;
-                  
-                  p.stocks[currentUser.branch] = stockActual - item.qty;
+      // 👇 NUEVO: EL CAJERO TE ENVÍA EL TICKET POR RADIO 👇
+      try {
+              await db.collection('datos_sistema').doc('radio_admin').set({
+                  accion: 'nueva_venta',
+                  venta: newSale,
+                  hora_aviso: Date.now()
+              });
+          } catch(e) { console.error("Error al avisar al admin", e); }
+          // 👆 -------------------------------------------- 👆
+
+          // DESCUENTO AUTOMÁTICO DE PIEZAS VENDIDAS DE ESA SUCURSAL
+          state.cart.forEach(item => {
+              if (item.saleType === 'pieza') {
+                  const pIndex = state.products.findIndex(p => p.id === item.productId);
+                  if (pIndex !== -1) {
+                      let p = state.products[pIndex];
+                      if(!p.stocks) p.stocks = {};
+                      let stockActual = p.stocks[currentUser.branch];
+                      if (stockActual === undefined) stockActual = p.stock || 0;
+                      
+                      p.stocks[currentUser.branch] = stockActual - item.qty;
+                  }
               }
-          }
-      });
+          });
 
       await db.collection('datos_sistema').doc('punto_de_venta').set({
           inventory: state.inventory,
