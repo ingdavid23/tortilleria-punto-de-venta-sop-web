@@ -1152,8 +1152,8 @@ showToast('Producto guardado correctamente');
       } catch (error) { showToast("Error de conexión", "error"); }
     }
 
-    // ============ ACTUALIZACIÓN EN TIEMPO REAL (VERSIÓN CERO COSTOS + RADIO) ============
-    function setupRealtimeUpdates() {
+  // ============ ACTUALIZACIÓN EN TIEMPO REAL (VERSIÓN CERO COSTOS + RADIO) ============
+  function setupRealtimeUpdates() {
         
         // =========================================================
         // 1. MODO ADMINISTRADOR: Escucha el Radio de Ventas
@@ -1161,7 +1161,6 @@ showToast('Producto guardado correctamente');
         if (currentUser && currentUser.role === 'admin') {
              let primeraCargaAdmin = true;
              
-             // Escuchamos el Radio (Costo: 1 lectura por venta)
              db.collection('datos_sistema').doc('radio_admin').onSnapshot((doc) => {
                  if (primeraCargaAdmin) { primeraCargaAdmin = false; return; }
                  if (!doc.exists) return;
@@ -1177,9 +1176,8 @@ showToast('Producto guardado correctamente');
                          state.salesHistory.push(info.venta);
                          state.salesHistory.sort((a, b) => a.timestamp - b.timestamp);
                          
-                         // 👇 NUEVO: DESCONTAR STOCK MATEMÁTICAMENTE EN LA PANTALLA DEL ADMIN (0 CONSUMO) 👇
+                         // Descontar Stock Matemáticamente en pantalla Admin (0 Consumo)
                          info.venta.items.forEach(item => {
-                             // Descontar Piezas
                              if (item.saleType === 'pieza') {
                                  const pIndex = state.products.findIndex(p => p.id === item.productId);
                                  if (pIndex !== -1) {
@@ -1189,9 +1187,7 @@ showToast('Producto guardado correctamente');
                                      if (stockActual === undefined) stockActual = p.stock || 0;
                                      p.stocks[info.venta.branch] = stockActual - item.qty;
                                  }
-                             } 
-                             // Descontar Harina (Kilos)
-                             else if (item.saleType === 'kg') {
+                             } else if (item.saleType === 'kg') {
                                  let inv = state.inventory[info.venta.branch];
                                  if (inv) {
                                      let kilosVendidos = item.qty / 1000;
@@ -1213,15 +1209,12 @@ showToast('Producto guardado correctamente');
                                  }
                              }
                          });
-                         // 👆 ----------------------------------------------------------------------- 👆
 
-                         // Redibujamos todo al instante
                          renderSalesHistory(); 
                          updateStatistics();
                          renderAlmacen();
                          renderProducts();
                          if(document.getElementById('tab-inventario-productos').classList.contains('active')) renderInventarioProductos();
-                         
                          showToast('💰 ¡Nueva venta registrada en la sucursal!', 'success');
                      }
                  }
@@ -1229,28 +1222,27 @@ showToast('Producto guardado correctamente');
         } 
         
         // =========================================================
-        // 2. MODO CAJERO: Escucha la Campanita de Precios
+        // 2. MODO CAJERO: Campanita de Precios + Radio de Ventas
         // =========================================================
         else if (currentUser && currentUser.role === 'empleado') {
-            let primeraCarga = true; 
+            let primeraCargaCampana = true; 
             
+            // A) Escucha de la Campanita (Cambios de catálogo o borrado de tickets)
             db.collection('datos_sistema').doc('campanita_precios').onSnapshot(async (doc) => {
-                if (primeraCarga) { primeraCarga = false; return; }
+                if (primeraCargaCampana) { primeraCargaCampana = false; return; }
                 if (!doc.exists) return;
                 
                 const info = doc.data();
                 
                 if (info.accion === 'delete_sale') {
                     state.salesHistory = state.salesHistory.filter(s => s.timestamp !== info.id);
-                    renderSalesHistory(); 
-                    updateStatistics();
+                    renderSalesHistory(); updateStatistics();
                     showToast('🗑️ Un administrador eliminó un ticket', 'error');
                 }
                 
                 if (info.accion === 'delete_product') {
                     state.products = state.products.filter(p => p.id !== info.id);
-                    renderProducts();
-                    renderSalesHistory();
+                    renderProducts(); renderSalesHistory();
                     showToast('🗑️ Un producto fue retirado del catálogo', 'error');
                 }
 
@@ -1268,6 +1260,29 @@ showToast('Producto guardado correctamente');
                         }
                     }
                 } catch(e) { console.error("Error actualizando en vivo:", e); }
+            });
+
+            // B) Escucha del Radio (Para sincronizar ventas si hay 2 tablets en la misma sucursal)
+            let primeraCargaRadio = true;
+            db.collection('datos_sistema').doc('radio_admin').onSnapshot((doc) => {
+                 if (primeraCargaRadio) { primeraCargaRadio = false; return; }
+                 if (!doc.exists) return;
+                 
+                 const info = doc.data();
+                 
+                 if (info.accion === 'nueva_venta' && info.venta) {
+                     const isToday = info.venta.dateString === new Date().toDateString();
+                     const isMyBranch = info.venta.branch === currentUser.branch;
+                     const isNew = !state.salesHistory.some(s => s.timestamp === info.venta.timestamp);
+                     
+                     // Si la venta es de hoy, ES DE MI SUCURSAL, y no la tengo ya guardada
+                     if (isToday && isMyBranch && isNew) {
+                         state.salesHistory.push(info.venta);
+                         state.salesHistory.sort((a, b) => a.timestamp - b.timestamp);
+                         renderSalesHistory(); 
+                         updateStatistics();
+                     }
+                 }
             });
         }
     }
@@ -1402,6 +1417,7 @@ showToast('Producto guardado correctamente');
     }
 
     async function startApp() {
+        // Quitamos la pantalla de login y ponemos la de carga
         document.getElementById('login-screen').classList.add('hidden'); 
         document.getElementById('login-screen').classList.remove('flex');
         
@@ -1411,22 +1427,27 @@ showToast('Producto guardado correctamente');
         
         applyRolePermissions(); 
         
-        // 👇 PARCHE 1: EVITAR DOBLE DESCARGA 👇
-        // Solo el Admin necesita descargar todo el historial del día aquí.
-        // El empleado descargará sus propios tickets a través de su 'Campanita'.
-        if (currentUser && currentUser.role === 'admin') {
-            try {
-                const todayStr = new Date().toDateString();
-                const snapshot = await db.collection('ventas').where('dateString', '==', todayStr).get();
-                state.salesHistory = snapshot.docs.map(doc => doc.data());
-                state.salesHistory.sort((a, b) => a.timestamp - b.timestamp);
-            } catch (error) {
-                console.error("Error cargando ventas:", error);
-                state.salesHistory = [];
+        // 👇 SOLUCIÓN: PERMITIR LA DESCARGA INICIAL AL CAJERO 👇
+        try {
+            const todayStr = new Date().toDateString();
+            const snapshot = await db.collection('ventas').where('dateString', '==', todayStr).get();
+            let ventasDescargadas = snapshot.docs.map(doc => doc.data());
+            
+            // Si es cajero, borramos de su memoria local los tickets de otras sucursales
+            if (currentUser.role !== 'admin') {
+                ventasDescargadas = ventasDescargadas.filter(s => s.branch === currentUser.branch);
             }
+            
+            state.salesHistory = ventasDescargadas;
+            state.salesHistory.sort((a, b) => a.timestamp - b.timestamp);
+            
+        } catch (error) {
+            console.error("Error cargando ventas:", error);
+            state.salesHistory = [];
         }
-        // 👆 -------------------------------- 👆
+        // 👆 -------------------------------------------------- 👆
 
+        // Quitamos la pantalla de carga y mostramos el sistema
         loadingScreen.classList.add('hidden');
         document.getElementById('app').classList.remove('hidden');
         
@@ -1435,7 +1456,6 @@ showToast('Producto guardado correctamente');
         renderAlmacen();
         updateStatistics();
     }
-
     // ============ MOSTRAR/OCULTAR CONTRASEÑA ============
     function togglePassword() {
         const pwdInput = document.getElementById('login-password');
