@@ -1005,17 +1005,24 @@ showToast('Producto guardado correctamente');
 
     async function deleteProduct(id) {
         if (confirm('¿Estás seguro de eliminar este producto del sistema?')) {
-            // Eliminamos el producto de la memoria local
             state.products = state.products.filter(p => p.id !== id);
             
-            // 👇 ACTUALIZAMOS TODAS LAS PANTALLAS AL INSTANTE (0 Consumo) 👇
             renderProducts();
             if(document.getElementById('tab-inventario-productos').classList.contains('active')) renderInventarioProductos();
-            renderSalesHistory(); // Recalcula las cajas de colores al momento
+            renderSalesHistory(); 
             updateStatistics();
             
-            // Subimos el cambio a la nube
             await saveState();
+            
+            // 👇 NUEVO: AVISAR A LOS CAJEROS 👇
+            try {
+                await db.collection('datos_sistema').doc('campanita_precios').set({
+                    ultimaActualizacion: Date.now(),
+                    accion: 'delete_product',
+                    id: id // Mandamos el ID del producto
+                });
+            } catch(e) {}
+
             showToast('Producto eliminado', 'error'); 
         }
     }
@@ -1145,10 +1152,8 @@ showToast('Producto guardado correctamente');
       } catch (error) { showToast("Error de conexión", "error"); }
     }
 
+    // ============ ACTUALIZACIÓN EN TIEMPO REAL (VERSIÓN CAMPANITA INTELIGENTE) ============
     function setupRealtimeUpdates() {
-        // =========================================================
-        // 1. SI ERES ADMIN: Escuchas TODO en vivo (Tu código actual)
-        // =========================================================
         if (currentUser && currentUser.role === 'admin') {
             db.collection('datos_sistema').doc('punto_de_venta').onSnapshot((doc) => {
                 if (doc.exists) {
@@ -1156,7 +1161,6 @@ showToast('Producto guardado correctamente');
                     if (data.inventory) state.inventory = data.inventory;
                     if (data.users) state.users = data.users;
                     if (data.branch_aliases) state.branch_aliases = data.branch_aliases;
-                    
                     if (data.products) {
                         state.products = data.products.map(p => ({
                             ...p, price: p.price !== undefined ? p.price : p.pricePerKg, saleType: p.saleType || 'kg'
@@ -1180,38 +1184,47 @@ showToast('Producto guardado correctamente');
                 }
             });
         } 
-        // =========================================================
-        // 2. SI ERES CAJERO: Escuchas SOLO la campanita de precios
-        // =========================================================
         else if (currentUser && currentUser.role === 'empleado') {
-            let primeraCarga = true; // Para no descargar datos repetidos al iniciar sesión
+            let primeraCarga = true; 
             
             db.collection('datos_sistema').doc('campanita_precios').onSnapshot(async (doc) => {
-                // Ignoramos el primer toque al abrir el sistema, porque ya cargamos los datos
-                if (primeraCarga) {
-                    primeraCarga = false; 
-                    return; 
+                if (primeraCarga) { primeraCarga = false; return; }
+                if (!doc.exists) return;
+                
+                const info = doc.data();
+                
+                // 👇 1. SI LA CAMPANA DICE QUE SE BORRÓ UNA VENTA 👇
+                if (info.accion === 'delete_sale') {
+                    // Borramos el ticket de la memoria local instantáneamente (0 Lecturas extra)
+                    state.salesHistory = state.salesHistory.filter(s => s.timestamp !== info.id);
+                    renderSalesHistory(); 
+                    updateStatistics();
+                    showToast('🗑️ Un administrador eliminó un ticket', 'error');
                 }
                 
-                // ¡LA CAMPANA SONÓ! Alguien editó un producto. Descargamos el catálogo en silencio.
+                // 👇 2. SI LA CAMPANA DICE QUE SE BORRÓ UN PRODUCTO 👇
+                if (info.accion === 'delete_product') {
+                    state.products = state.products.filter(p => p.id !== info.id);
+                    renderProducts();
+                    renderSalesHistory();
+                    showToast('🗑️ Un producto fue retirado del catálogo', 'error');
+                }
+
+                // 3. Siempre descargamos el catálogo de fondo para tener el stock restaurado o precios nuevos
                 try {
                     const sysDoc = await db.collection('datos_sistema').doc('punto_de_venta').get({ source: 'server' });
                     if (sysDoc.exists) {
                         const data = sysDoc.data();
+                        if (data.inventory) state.inventory = data.inventory; 
                         if (data.products) {
                             state.products = data.products.map(p => ({
                                 ...p, price: p.price !== undefined ? p.price : p.pricePerKg, saleType: p.saleType || 'kg'
                             }));
-                            
-                            // Actualizamos la pantalla del cajero
                             renderProducts(); 
                             if(typeof updateQuickSaleButtons === 'function') updateQuickSaleButtons();
-                            
-                            // Le avisamos al cajero que hubo un cambio
-                            showToast('🔄 Lista de precios actualizada por el Administrador', 'success');
                         }
                     }
-                } catch(e) { console.error("Error actualizando precios en vivo:", e); }
+                } catch(e) { console.error("Error actualizando en vivo:", e); }
             });
         }
     }
@@ -2596,7 +2609,6 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
             const saleToDelete = state.salesHistory.find(s => s.timestamp === timestamp);
             
             if (saleToDelete) {
-                // 1. Restaurar kilos de harina localmente
                 const kilosRestaurar = saleToDelete.items.reduce((sum, item) => {
                     if (item.saleType === 'kg') return sum + (item.qty / 1000);
                     return sum;
@@ -2614,7 +2626,6 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
                     }
                 }
 
-                // 2. Restaurar piezas de stock localmente
                 saleToDelete.items.forEach(item => {
                     if (item.saleType === 'pieza') {
                         const pIndex = state.products.findIndex(p => p.id === item.productId);
@@ -2628,22 +2639,27 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
                 });
             }
 
-            // 3. ELIMINAMOS EL TICKET DE LA MEMORIA LOCAL
             state.salesHistory = state.salesHistory.filter(s => s.timestamp !== timestamp);
             
-            // 👇 LA MAGIA: ACTUALIZAMOS LA PANTALLA AL INSTANTE (0 Consumo) 👇
             renderSalesHistory(); 
             updateStatistics(); 
             renderAlmacen(); 
             showToast('Borrando ticket en segundo plano...', 'success');
 
-            // 4. Borramos en la nube silenciosamente en el fondo
             try {
                 await db.collection('ventas').doc(timestamp.toString()).delete();
                 await db.collection('datos_sistema').doc('punto_de_venta').set({
                     inventory: state.inventory,
                     products: state.products
                 }, { merge: true });
+                
+                // 👇 NUEVO: AVISAR A LOS CAJEROS CON EL MENSAJE SECRETO 👇
+                await db.collection('datos_sistema').doc('campanita_precios').set({
+                    ultimaActualizacion: Date.now(),
+                    accion: 'delete_sale',
+                    id: timestamp // Mandamos el ID exacto del ticket a borrar
+                });
+                // 👆 -------------------------------------------------- 👆
                 
                 showToast('✅ Venta eliminada e inventario restaurado');
             } catch(e) {
