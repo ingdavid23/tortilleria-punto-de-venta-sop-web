@@ -1005,10 +1005,17 @@ showToast('Producto guardado correctamente');
 
     async function deleteProduct(id) {
         if (confirm('¿Estás seguro de eliminar este producto del sistema?')) {
+            // Eliminamos el producto de la memoria local
             state.products = state.products.filter(p => p.id !== id);
-            await saveState();
+            
+            // 👇 ACTUALIZAMOS TODAS LAS PANTALLAS AL INSTANTE (0 Consumo) 👇
             renderProducts();
             if(document.getElementById('tab-inventario-productos').classList.contains('active')) renderInventarioProductos();
+            renderSalesHistory(); // Recalcula las cajas de colores al momento
+            updateStatistics();
+            
+            // Subimos el cambio a la nube
+            await saveState();
             showToast('Producto eliminado', 'error'); 
         }
     }
@@ -2589,7 +2596,7 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
             const saleToDelete = state.salesHistory.find(s => s.timestamp === timestamp);
             
             if (saleToDelete) {
-                // Restaurar kilos de harina
+                // 1. Restaurar kilos de harina localmente
                 const kilosRestaurar = saleToDelete.items.reduce((sum, item) => {
                     if (item.saleType === 'kg') return sum + (item.qty / 1000);
                     return sum;
@@ -2607,7 +2614,7 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
                     }
                 }
 
-                // Restaurar piezas de stock
+                // 2. Restaurar piezas de stock localmente
                 saleToDelete.items.forEach(item => {
                     if (item.saleType === 'pieza') {
                         const pIndex = state.products.findIndex(p => p.id === item.productId);
@@ -2621,19 +2628,24 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
                 });
             }
 
+            // 3. ELIMINAMOS EL TICKET DE LA MEMORIA LOCAL
             state.salesHistory = state.salesHistory.filter(s => s.timestamp !== timestamp);
             
+            // 👇 LA MAGIA: ACTUALIZAMOS LA PANTALLA AL INSTANTE (0 Consumo) 👇
+            renderSalesHistory(); 
+            updateStatistics(); 
+            renderAlmacen(); 
+            showToast('Borrando ticket en segundo plano...', 'success');
+
+            // 4. Borramos en la nube silenciosamente en el fondo
             try {
                 await db.collection('ventas').doc(timestamp.toString()).delete();
                 await db.collection('datos_sistema').doc('punto_de_venta').set({
                     inventory: state.inventory,
                     products: state.products
                 }, { merge: true });
-
-                renderSalesHistory(); 
-                updateStatistics(); 
-                renderAlmacen(); 
-                showToast('Venta eliminada e inventario restaurado');
+                
+                showToast('✅ Venta eliminada e inventario restaurado');
             } catch(e) {
                 console.error(e);
                 showToast('Error al borrar de la nube', 'error');
