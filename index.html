@@ -1932,7 +1932,7 @@ ESTADO: ${estado}`;
       
       if (tabName === 'reporte-diario') generateDailyReport(); 
       else if (tabName === 'reporte-semanal') generateWeeklyReport(); 
-      else if (tabName === 'estadisticas') { if(currentUser && currentUser.role === 'admin') refreshAdminData(); else updateStatistics(); }
+      else if (tabName === 'estadisticas') { updateStatistics(); }
       else if (tabName === 'almacen') renderAlmacen();
       else if (tabName === 'calendario') renderHistorialCalendar();
       else if (tabName === 'inventario-productos') renderInventarioProductos();
@@ -2893,6 +2893,13 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
                 </div>`;
             }).join('');
         }
+
+        // 👇 NUEVO MURO DE CONTENCIÓN: AHORRO MASIVO DE LECTURAS 👇
+        const tabEstadisticas = document.getElementById('tab-estadisticas');
+        if (!tabEstadisticas.classList.contains('active')) {
+            return; // Si la pestaña no está abierta, salimos de la función y NO descargamos 7 días.
+        }
+        // 👆 --------------------------------------------------- 👆
 
         try {
             const hace7Dias = new Date();
