@@ -1152,7 +1152,6 @@ showToast('Producto guardado correctamente');
       } catch (error) { showToast("Error de conexión", "error"); }
     }
 
-    // ============ ACTUALIZACIÓN EN TIEMPO REAL (CERO COSTOS) ============
     // ============ ACTUALIZACIÓN EN TIEMPO REAL (VERSIÓN CERO COSTOS + RADIO) ============
     function setupRealtimeUpdates() {
         
@@ -1162,7 +1161,7 @@ showToast('Producto guardado correctamente');
         if (currentUser && currentUser.role === 'admin') {
              let primeraCargaAdmin = true;
              
-             // Escuchamos SOLO el minúsculo documento del radio (Costo: 1 lectura por venta)
+             // Escuchamos el Radio (Costo: 1 lectura por venta)
              db.collection('datos_sistema').doc('radio_admin').onSnapshot((doc) => {
                  if (primeraCargaAdmin) { primeraCargaAdmin = false; return; }
                  if (!doc.exists) return;
@@ -1171,18 +1170,58 @@ showToast('Producto guardado correctamente');
                  
                  // ¡LLEGÓ UNA VENTA NUEVA EN VIVO!
                  if (info.accion === 'nueva_venta' && info.venta) {
-                     // Verificamos que sea de hoy y que no la tengamos ya repetida
                      const isToday = info.venta.dateString === new Date().toDateString();
                      const isNew = !state.salesHistory.some(s => s.timestamp === info.venta.timestamp);
                      
                      if (isToday && isNew) {
-                         // Metemos el ticket directo a la memoria y actualizamos la pantalla
                          state.salesHistory.push(info.venta);
                          state.salesHistory.sort((a, b) => a.timestamp - b.timestamp);
                          
-                         // Recalcula colores y totales al instante
+                         // 👇 NUEVO: DESCONTAR STOCK MATEMÁTICAMENTE EN LA PANTALLA DEL ADMIN (0 CONSUMO) 👇
+                         info.venta.items.forEach(item => {
+                             // Descontar Piezas
+                             if (item.saleType === 'pieza') {
+                                 const pIndex = state.products.findIndex(p => p.id === item.productId);
+                                 if (pIndex !== -1) {
+                                     let p = state.products[pIndex];
+                                     if(!p.stocks) p.stocks = {};
+                                     let stockActual = p.stocks[info.venta.branch];
+                                     if (stockActual === undefined) stockActual = p.stock || 0;
+                                     p.stocks[info.venta.branch] = stockActual - item.qty;
+                                 }
+                             } 
+                             // Descontar Harina (Kilos)
+                             else if (item.saleType === 'kg') {
+                                 let inv = state.inventory[info.venta.branch];
+                                 if (inv) {
+                                     let kilosVendidos = item.qty / 1000;
+                                     let bultosNecesarios = kilosVendidos / 41;
+                                     let remainingToDeduct = bultosNecesarios;
+                                     const flourTypes = ['maseca', 'blanca', 'amarilla', 'fardo'];
+                                     while (remainingToDeduct > 0.0001) {
+                                         flourTypes.sort((a, b) => (inv[b] || 0) - (inv[a] || 0));
+                                         let highestFlour = flourTypes[0];
+                                         if (inv[highestFlour] >= remainingToDeduct) {
+                                             inv[highestFlour] -= remainingToDeduct;
+                                             remainingToDeduct = 0; 
+                                         } else {
+                                             remainingToDeduct -= inv[highestFlour];
+                                             inv[highestFlour] = 0;
+                                         }
+                                     }
+                                     inv.yieldRemainingKg -= kilosVendidos;
+                                 }
+                             }
+                         });
+                         // 👆 ----------------------------------------------------------------------- 👆
+
+                         // Redibujamos todo al instante
                          renderSalesHistory(); 
                          updateStatistics();
+                         renderAlmacen();
+                         renderProducts();
+                         if(document.getElementById('tab-inventario-productos').classList.contains('active')) renderInventarioProductos();
+                         
                          showToast('💰 ¡Nueva venta registrada en la sucursal!', 'success');
                      }
                  }
@@ -2482,22 +2521,28 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
               }
           });
 
-      await db.collection('datos_sistema').doc('punto_de_venta').set({
-          inventory: state.inventory,
-          products: state.products 
-      }, { merge: true });
+          await db.collection('datos_sistema').doc('punto_de_venta').set({
+              inventory: state.inventory,
+              products: state.products 
+          }, { merge: true });
 
-      state.salesHistory.push(newSale); 
-      clearCart(); 
-      const flourSelect = document.getElementById('sale-flour-type');
-      if (flourSelect) flourSelect.value = ''; 
-      
-      renderSalesHistory(); 
-      renderAlmacen(); 
-      updateStatistics();
-      showToast(`Venta procesada: $${total.toFixed(2)}`);
-      
-  } catch (error) { 
+          state.salesHistory.push(newSale); 
+          clearCart(); 
+          const flourSelect = document.getElementById('sale-flour-type');
+          if (flourSelect) flourSelect.value = ''; 
+          
+          renderSalesHistory(); 
+          renderAlmacen(); 
+          updateStatistics();
+          
+          // 👇 NUEVO: ACTUALIZAR CATÁLOGO E INVENTARIO EN PANTALLA (0 CONSUMO) 👇
+          renderProducts(); 
+          if(document.getElementById('tab-inventario-productos').classList.contains('active')) renderInventarioProductos();
+          // 👆 ---------------------------------------------------------------- 👆
+          
+          showToast(`Venta procesada: $${total.toFixed(2)}`);
+          
+      } catch (error) {
       console.error(error);
       showToast("Error al procesar venta en la red", "error"); 
   } finally {
