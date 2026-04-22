@@ -1427,25 +1427,25 @@ showToast('Producto guardado correctamente');
         
         applyRolePermissions(); 
         
-        // 👇 SOLUCIÓN: PERMITIR LA DESCARGA INICIAL AL CAJERO 👇
+        // 👇 PARCHE 1: QUE EL CAJERO SOLO DESCARGUE LO SUYO DESDE FIREBASE 👇
         try {
             const todayStr = new Date().toDateString();
-            const snapshot = await db.collection('ventas').where('dateString', '==', todayStr).get();
-            let ventasDescargadas = snapshot.docs.map(doc => doc.data());
+            let queryVentas = db.collection('ventas').where('dateString', '==', todayStr);
             
-            // Si es cajero, borramos de su memoria local los tickets de otras sucursales
-            if (currentUser.role !== 'admin') {
-                ventasDescargadas = ventasDescargadas.filter(s => s.branch === currentUser.branch);
+            // Le decimos a Firebase que filtre ANTES de enviarnos los datos
+            if (currentUser && currentUser.role !== 'admin') {
+                queryVentas = queryVentas.where('branch', '==', currentUser.branch);
             }
             
-            state.salesHistory = ventasDescargadas;
+            const snapshot = await queryVentas.get();
+            state.salesHistory = snapshot.docs.map(doc => doc.data());
             state.salesHistory.sort((a, b) => a.timestamp - b.timestamp);
             
         } catch (error) {
             console.error("Error cargando ventas:", error);
             state.salesHistory = [];
         }
-        // 👆 -------------------------------------------------- 👆
+        // 👆 ---------------------------------------------------------------- 👆
 
         // Quitamos la pantalla de carga y mostramos el sistema
         loadingScreen.classList.add('hidden');
@@ -1961,24 +1961,37 @@ ESTADO: ${estado}`;
         const daysWithSales = new Set();
         const todayStr = new Date().toDateString();
 
+        // 👇 DESDE AQUÍ REEMPLAZAS 👇
         try {
-            const startOfMonth = new Date(year, month, 1).getTime();
-            const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59).getTime();
+            // 👇 PARCHE 3: MEMORIA CACHÉ PARA EL CALENDARIO 👇
+            const cacheKey = `cal_${year}_${month}`;
+            if (!window.monthlySalesCache) window.monthlySalesCache = {};
+            
+            // Solo descargamos de internet si no tenemos este mes en la memoria
+            if (!window.monthlySalesCache[cacheKey]) {
+                const startOfMonth = new Date(year, month, 1).getTime();
+                const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59).getTime();
 
-            const snapshot = await db.collection('ventas')
-                .where('timestamp', '>=', startOfMonth)
-                .where('timestamp', '<=', endOfMonth)
-                .get();
+                const snapshot = await db.collection('ventas')
+                    .where('timestamp', '>=', startOfMonth)
+                    .where('timestamp', '<=', endOfMonth)
+                    .get();
 
-            snapshot.docs.forEach(doc => {
-                const sale = doc.data();
+                window.monthlySalesCache[cacheKey] = snapshot.docs.map(doc => doc.data());
+            }
+
+            // Usamos la memoria local para dibujar los puntitos
+            window.monthlySalesCache[cacheKey].forEach(sale => {
                 if (currentUser.role === 'admin' || sale.branch === currentUser.branch) {
                     daysWithSales.add(sale.dateString);
                 }
             });
+            // 👆 -------------------------------------------------- 👆
+            
         } catch (error) {
             console.error("Error cargando calendario:", error);
         }
+        // 👆 HASTA AQUÍ REEMPLAZAS 👆
         
         grid.innerHTML = '';
         for (let i = 0; i < firstDay; i++) { grid.innerHTML += `<div class="p-2"></div>`; }
@@ -3595,18 +3608,19 @@ Bultos totales disponibles: *${totalBultosDisponibles.toFixed(2)}*
         tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-400 font-bold animate-pulse">Cargando registros desde la nube...</td></tr>';
         
         try {
-            const snapshot = await db.collection('entradas_stock').get();
+            // 👇 PARCHE 2: DESCARGAR SOLO 150 DOCUMENTOS USANDO LIMIT 👇
+            const snapshot = await db.collection('entradas_stock')
+                                     .orderBy('timestamp', 'desc')
+                                     .limit(150)
+                                     .get();
+            
             let logs = snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
             
-            // Ordenar del más nuevo al más viejo
-            logs.sort((a, b) => b.timestamp - a.timestamp);
-            // Solo mostramos los últimos 150 para que la pantalla cargue rápido
-            logs = logs.slice(0, 150);
-
             if (logs.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">No hay movimientos registrados.</td></tr>';
                 return;
             }
+            // 👆 ------------------------------------------------------ 👆
 
             const aliases = state.branch_aliases || {};
 
